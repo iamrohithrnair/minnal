@@ -46,14 +46,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
           submodules: recursive
           fetch-depth: 0
-
-      - name: Configure SSH for cargo git dependencies
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -303,7 +297,12 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
 
-          git clone git@github.com:codeslord/homebrew-minnal.git /tmp/homebrew-minnal
+          if ! git clone git@github.com:codeslord/homebrew-minnal.git /tmp/homebrew-minnal; then
+            echo "::warning::codeslord/homebrew-minnal is not available; skipping Homebrew tap update"
+            exit 0
+          fi
+
+          mkdir -p /tmp/homebrew-minnal/Formula
 
           cat > /tmp/homebrew-minnal/Formula/minnal.rb << FORMULA
           class Minnal < Formula
