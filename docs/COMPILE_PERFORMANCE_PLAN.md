@@ -20,14 +20,14 @@ See also:
 Measured locally on the current tree:
 
 - Warm `cargo check --quiet`: **~8.5s**
-- Warm `scripts/dev_cargo.sh build --release -p jcode --bin jcode --quiet`: **~47.3s**
+- Warm `scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet`: **~47.3s**
 
 Additional observations from this audit:
 
 - A previous warm-ish `cargo check` run landed around **~12.3s**.
 - A less-warm `cargo check --timings` run landed around **~23.8s**.
 - The previous local default `clang + mold` setup failed during release linking on this machine.
-- `clang + lld` links the release `jcode` binary successfully here.
+- `clang + lld` links the release `minnal` binary successfully here.
 
 ## Near-Term Targets
 
@@ -67,7 +67,7 @@ even if they cannot reach the same fast path.
 - Use `scripts/dev_cargo.sh` for local self-dev builds:
   - enables `sccache` automatically if installed
   - prefers `clang + lld` on Linux x86_64
-  - uses the dedicated Cargo `selfdev` profile for `jcode` self-dev build/reload paths
+  - uses the dedicated Cargo `selfdev` profile for `minnal` self-dev build/reload paths
   - can still opt into `mold` via `JCODE_FAST_LINKER=mold`
 - Route refactor-shadow builds through that wrapper.
 
@@ -76,8 +76,8 @@ even if they cannot reach the same fast path.
 Standard self-dev checkpoints now live behind `scripts/bench_selfdev_checkpoints.sh`, which runs:
 - cold `cargo check`
 - warm touched-file `cargo check`
-- cold self-dev `jcode` build
-- warm touched-file self-dev `jcode` build
+- cold self-dev `minnal` build
+- warm touched-file self-dev `minnal` build
 
 Use it when capturing comparable before/after numbers for refactors.
 
@@ -93,12 +93,12 @@ Use it when capturing comparable before/after numbers for refactors.
 - 2026-03-30: removed the per-build `build.rs` timestamp/build-number churn from local source
   builds. `JCODE_VERSION` for source builds is now stable per `Cargo.toml` version + git hash,
   while UI/version build-time display comes from the binary mtime at runtime. Validation on this
-  machine: two no-op release-jcode runs measured **221.688s then 0.559s**, confirming the main
+  machine: two no-op release-minnal runs measured **221.688s then 0.559s**, confirming the main
   crate no longer recompiles just because build metadata changed.
 - 2026-04-09: introduced a dedicated Cargo `selfdev` profile for self-dev iteration. On this
-  machine, the warm local `jcode` self-dev build path dropped from about **56.1s** for
-  `scripts/dev_cargo.sh build --release -p jcode --bin jcode --quiet` to about **16.0s** for
-  `scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode --quiet`, while keeping the
+  machine, the warm local `minnal` self-dev build path dropped from about **56.1s** for
+  `scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet` to about **16.0s** for
+  `scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet`, while keeping the
   normal release/distribution profile unchanged.
 - 2026-04-18: added `scripts/bench_selfdev_checkpoints.sh` to standardize cold/warm self-dev
   checkpoints. First local checkpoint attempt on this machine surfaced two environment blockers:
@@ -171,11 +171,11 @@ Use it when capturing comparable before/after numbers for refactors.
   features, aligning Jcode-owned `crossterm` dependencies on 0.29, and replacing `qr2term` with
   direct `qrcode` rendering. This removed the duplicate `crossterm 0.28` path from the `jcode`
   tree while preserving login QR output. Validation: `cargo check --profile selfdev -p jcode --bin
-  jcode`, `cargo test --profile selfdev login_qr --lib -- --nocapture`, and coordinated
+  minnal`, `cargo test --profile selfdev login_qr --lib -- --nocapture`, and coordinated
   `selfdev build` passed.
 - 2026-05-05: removed unused `reqwest/blocking` from `jcode-provider-core`; static search showed
   no blocking API usage in that crate. Validation: `cargo check --profile selfdev -p
-  jcode-provider-core` and full `cargo check --profile selfdev -p jcode --bin jcode` passed.
+  jcode-provider-core` and full `cargo check --profile selfdev -p jcode --bin minnal` passed.
 - 2026-05-03: added `JCODE_DEV_FEATURE_PROFILE` to `scripts/dev_cargo.sh` so compile-speed probes and
   narrow inner-loop builds can consistently select feature sets without repeating Cargo flags. Profiles:
   `default`, `minimal`/`none` (`--no-default-features`), `pdf` (`--no-default-features --features pdf`),
@@ -538,8 +538,8 @@ Use:
 
 ```bash
 scripts/dev_cargo.sh check --quiet
-scripts/dev_cargo.sh build --release -p jcode --bin jcode --quiet
-scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode --quiet
+scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet
+scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet
 scripts/dev_cargo.sh --print-setup
 ```
 
@@ -547,7 +547,7 @@ For narrower feature-set probes, set `JCODE_DEV_FEATURE_PROFILE` instead of spel
 
 ```bash
 JCODE_DEV_FEATURE_PROFILE=minimal scripts/dev_cargo.sh check -p jcode --lib --quiet
-JCODE_DEV_FEATURE_PROFILE=pdf scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode --quiet
+JCODE_DEV_FEATURE_PROFILE=pdf scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet
 JCODE_DEV_FEATURE_PROFILE=full scripts/dev_cargo.sh check -p jcode --lib --quiet
 ```
 
@@ -578,9 +578,9 @@ The wrapper:
 Override linker mode explicitly when needed:
 
 ```bash
-JCODE_FAST_LINKER=lld scripts/dev_cargo.sh build --release -p jcode --bin jcode
-JCODE_FAST_LINKER=mold scripts/dev_cargo.sh build --release -p jcode --bin jcode
-JCODE_FAST_LINKER=system scripts/dev_cargo.sh build --release -p jcode --bin jcode
+JCODE_FAST_LINKER=lld scripts/dev_cargo.sh build --release -p jcode --bin minnal
+JCODE_FAST_LINKER=mold scripts/dev_cargo.sh build --release -p jcode --bin minnal
+JCODE_FAST_LINKER=system scripts/dev_cargo.sh build --release -p jcode --bin minnal
 ```
 
 For compile timing, prefer repeatable touched-file measurements over no-op hot-cache reruns:

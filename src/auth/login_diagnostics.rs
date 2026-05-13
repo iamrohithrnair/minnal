@@ -102,7 +102,7 @@ pub fn auth_failure_recovery_hint(provider_id: &str, reason: AuthFailureReason) 
         | AuthFailureReason::CallbackTimeout
         | AuthFailureReason::CallbackPortUnavailable
         | AuthFailureReason::NonInteractiveTerminal => format!(
-            "Try a manual-safe fallback: `jcode login --provider {} --print-auth-url`, then complete with `--callback-url` or `--auth-code`.",
+            "Try a manual-safe fallback: `minnal login --provider {} --print-auth-url`, then complete with `--callback-url` or `--auth-code`.",
             provider
         ),
         AuthFailureReason::ManualInputMissing => {
@@ -112,7 +112,7 @@ pub fn auth_failure_recovery_hint(provider_id: &str, reason: AuthFailureReason) 
             "Check whether jcode can write its config directory, or retry inside an isolated sandbox with `bash scripts/onboarding_sandbox.sh fresh`.".to_string()
         }
         AuthFailureReason::PostLoginValidationFailed => format!(
-            "Credentials were saved, but runtime verification failed. Run `jcode auth-test --provider {}` and `jcode auth doctor {}` for guided diagnosis.",
+            "Credentials were saved, but runtime verification failed. Run `minnal auth-test --provider {}` and `jcode auth doctor {}` for guided diagnosis.",
             provider, provider
         ),
         AuthFailureReason::ImportUnavailable => {
@@ -129,7 +129,7 @@ pub fn auth_failure_recovery_hint(provider_id: &str, reason: AuthFailureReason) 
             provider
         ),
         AuthFailureReason::OAuthExchangeFailed => format!(
-            "Retry the OAuth flow, and if it keeps failing use `jcode login --provider {} --print-auth-url` so the callback can be completed manually.",
+            "Retry the OAuth flow, and if it keeps failing use `minnal login --provider {} --print-auth-url` so the callback can be completed manually.",
             provider
         ),
         AuthFailureReason::Unknown => {

@@ -250,7 +250,7 @@ pub fn spawn_command_in_new_terminal_with(
 }
 
 fn build_spawn_command(term: &str, command: &TerminalCommand, cwd: &Path) -> Option<Command> {
-    let title = command.title.as_deref().unwrap_or("jcode");
+    let title = command.title.as_deref().unwrap_or("minnal");
     let mut cmd = Command::new(term);
     cmd.current_dir(cwd)
         .stdin(Stdio::null())
@@ -326,7 +326,7 @@ fn build_spawn_command(term: &str, command: &TerminalCommand, cwd: &Path) -> Opt
             cmd.args([
                 "-a",
                 "Terminal",
-                command.program.to_str().unwrap_or("jcode"),
+                command.program.to_str().unwrap_or("minnal"),
                 "--args",
             ]);
             cmd.args(&command.args);
@@ -377,8 +377,8 @@ mod tests {
 
     #[test]
     fn shell_command_quotes_arguments() {
-        let shell = shell_command(&["jcode".to_string(), "it's ok".to_string()]);
+        let shell = shell_command(&["minnal".to_string(), "it's ok".to_string()]);
         #[cfg(unix)]
-        assert_eq!(shell, "'jcode' 'it'\"'\"'s ok'");
+        assert_eq!(shell, "'minnal' 'it'\"'\"'s ok'");
     }
 }

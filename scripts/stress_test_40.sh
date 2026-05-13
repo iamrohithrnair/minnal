@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Stress test: spawn 40 jcode TUI client instances rapidly
+# Stress test: spawn 40 minnal TUI client instances rapidly
 # Measures startup time, memory usage, CPU, fd count, socket health
 #
 set -euo pipefail
@@ -39,17 +39,17 @@ snapshot() {
     free -m >> "$LOG_DIR/snapshots.log" 2>/dev/null
     echo "" >> "$LOG_DIR/snapshots.log"
 
-    # jcode process count and total RSS
-    local jcode_procs=$(pgrep -c jcode 2>/dev/null || echo 0)
+    # minnal process count and total RSS
+    local jcode_procs=$(pgrep -c minnal 2>/dev/null || echo 0)
     local total_rss=0
     local total_vms=0
-    for pid in $(pgrep jcode 2>/dev/null); do
+    for pid in $(pgrep minnal 2>/dev/null); do
         local rss=$(awk '/^VmRSS:/{print $2}' /proc/$pid/status 2>/dev/null || echo 0)
         local vms=$(awk '/^VmSize:/{print $2}' /proc/$pid/status 2>/dev/null || echo 0)
         total_rss=$((total_rss + rss))
         total_vms=$((total_vms + vms))
     done
-    echo "jcode_processes: $jcode_procs" >> "$LOG_DIR/snapshots.log"
+    echo "minnal_processes: $jcode_procs" >> "$LOG_DIR/snapshots.log"
     echo "total_rss_kb: $total_rss" >> "$LOG_DIR/snapshots.log"
     echo "total_vms_kb: $total_vms" >> "$LOG_DIR/snapshots.log"
 
@@ -125,8 +125,8 @@ echo "=== Pre-flight checks ==="
 
 # Check if server is running
 if ! [ -S "$MAIN_SOCK" ]; then
-    echo "ERROR: No jcode server running at $MAIN_SOCK"
-    echo "Start one with: jcode serve &"
+    echo "ERROR: No minnal server running at $MAIN_SOCK"
+    echo "Start one with: minnal serve &"
     exit 1
 fi
 
@@ -138,8 +138,8 @@ snapshot "baseline"
 echo ""
 
 # --- Record system baseline ---
-BASELINE_RSS=$(pgrep jcode 2>/dev/null | while read pid; do awk '/^VmRSS:/{print $2}' /proc/$pid/status 2>/dev/null; done | paste -sd+ | bc 2>/dev/null || echo 0)
-BASELINE_PROCS=$(pgrep -c jcode 2>/dev/null || echo 0)
+BASELINE_RSS=$(pgrep minnal 2>/dev/null | while read pid; do awk '/^VmRSS:/{print $2}' /proc/$pid/status 2>/dev/null; done | paste -sd+ | bc 2>/dev/null || echo 0)
+BASELINE_PROCS=$(pgrep -c minnal 2>/dev/null || echo 0)
 BASELINE_SERVER_PID=$(get_server_pid)
 BASELINE_FDS=$(ls /proc/${BASELINE_SERVER_PID:-0}/fd 2>/dev/null | wc -l)
 
@@ -154,9 +154,9 @@ echo "=== Starting background monitor ==="
 (
     while true; do
         ts=$(date +%s)
-        jcode_procs=$(pgrep -c jcode 2>/dev/null || echo 0)
+        jcode_procs=$(pgrep -c minnal 2>/dev/null || echo 0)
         total_rss=0
-        for pid in $(pgrep jcode 2>/dev/null); do
+        for pid in $(pgrep minnal 2>/dev/null); do
             rss=$(awk '/^VmRSS:/{print $2}' /proc/$pid/status 2>/dev/null || echo 0)
             total_rss=$((total_rss + rss))
         done
@@ -174,11 +174,11 @@ echo "Monitor PID: $MONITOR_PID"
 echo ""
 
 # --- Spawn instances ---
-echo "=== Spawning $NUM_INSTANCES jcode instances ==="
+echo "=== Spawning $NUM_INSTANCES minnal instances ==="
 PIDS=()
 SPAWN_TIMES=()
 
-# Use script to give each instance a pty (jcode requires tty)
+# Use script to give each instance a pty (minnal requires tty)
 for i in $(seq 1 $NUM_INSTANCES); do
     local_start=$(date +%s%N)
 
@@ -268,9 +268,9 @@ echo ""
 
 # --- Post-kill: check for leaked resources ---
 echo "=== Post-kill resource check ==="
-POST_PROCS=$(pgrep -c jcode 2>/dev/null || echo 0)
+POST_PROCS=$(pgrep -c minnal 2>/dev/null || echo 0)
 POST_RSS=0
-for pid in $(pgrep jcode 2>/dev/null); do
+for pid in $(pgrep minnal 2>/dev/null); do
     rss=$(awk '/^VmRSS:/{print $2}' /proc/$pid/status 2>/dev/null || echo 0)
     POST_RSS=$((POST_RSS + rss))
 done

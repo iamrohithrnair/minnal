@@ -37,7 +37,7 @@ fi
 
 echo ""
 echo "Test 3: End-to-end trace"
-if [[ ! -x "$repo_root/target/release/jcode" ]]; then
+if [[ ! -x "$repo_root/target/release/minnal" ]]; then
   (cd "$repo_root" && "$cargo_exec" build --release)
 fi
 
@@ -46,7 +46,7 @@ trap 'rm -rf "$workdir"' EXIT
 
 set +e
 output=$(JCODE_HOME="$workdir" PATH="$repo_root/target/release:$PATH" \
-  jcode run --no-update --trace --provider "$provider" "$prompt" 2>&1)
+  minnal run --no-update --trace --provider "$provider" "$prompt" 2>&1)
 status=$?
 set -e
 

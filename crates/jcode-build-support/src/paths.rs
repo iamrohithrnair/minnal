@@ -54,12 +54,12 @@ pub fn find_repo_in_ancestors(start: &Path) -> Option<PathBuf> {
 }
 
 pub fn binary_stem() -> &'static str {
-    "jcode"
+    "minnal"
 }
 
 pub fn binary_name() -> &'static str {
     if cfg!(windows) {
-        "jcode.exe"
+        "minnal.exe"
     } else {
         binary_stem()
     }
@@ -113,10 +113,10 @@ pub fn selfdev_build_command_for_target(
         explicit => explicit,
     };
     let specs = match target {
-        SelfDevBuildTarget::Tui => vec![("jcode", "jcode")],
+        SelfDevBuildTarget::Tui => vec![("jcode", "minnal")],
         SelfDevBuildTarget::Desktop => vec![("jcode-desktop", "jcode-desktop")],
         SelfDevBuildTarget::All | SelfDevBuildTarget::Auto => {
-            vec![("jcode", "jcode"), ("jcode-desktop", "jcode-desktop")]
+            vec![("jcode", "minnal"), ("jcode-desktop", "jcode-desktop")]
         }
     };
     let wrapper = repo_dir.join("scripts").join("dev_cargo.sh");
@@ -291,7 +291,7 @@ pub fn launcher_dir() -> Result<PathBuf> {
     }
 }
 
-/// Path to the launcher binary (`~/.local/bin/jcode` by default).
+/// Path to the launcher binary (`~/.local/bin/minnal` by default).
 pub fn launcher_binary_path() -> Result<PathBuf> {
     Ok(launcher_dir()?.join(binary_name()))
 }

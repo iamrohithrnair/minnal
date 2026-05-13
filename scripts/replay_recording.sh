@@ -133,11 +133,11 @@ wf-recorder -g "0,0 $GEOMETRY" -f "$OUTPUT_FILE" &
 RECORDER_PID=$!
 sleep 1  # Let recorder initialize
 
-# Start jcode in a new kitty window
-echo "🚀 Starting jcode..."
-kitty --title "jcode-replay" -e bash -c "cd $(pwd) && ~/.cargo/bin/jcode; read -p 'Press Enter to close...'" &
+# Start minnal in a new kitty window
+echo "🚀 Starting minnal..."
+kitty --title "jcode-replay" -e bash -c "cd $(pwd) && minnal; read -p 'Press Enter to close...'" &
 KITTY_PID=$!
-sleep 2  # Wait for jcode to start
+sleep 2  # Wait for minnal to start
 
 # Focus the new window
 sleep 0.5

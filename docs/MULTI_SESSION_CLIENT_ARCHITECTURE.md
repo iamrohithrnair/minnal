@@ -494,7 +494,7 @@ This avoids conflicts between text entry and spatial movement.
 ### Pop out to independent window
 
 1. User selects a workspace surface.
-2. Client spawns a independent jcode client attached to the same session.
+2. Client spawns a independent minnal client attached to the same session.
 3. Independent surface becomes the active interactive owner.
 4. Workspace surface is removed or downgraded to passive.
 
@@ -574,7 +574,7 @@ smooth Niri-like experience.
 ### Phase 4: pop-out support
 
 - Add commands to open a hosted session in a independent client.
-- Preserve current `jcode --resume <session>` workflow.
+- Preserve current `minnal --resume <session>` workflow.
 
 ### Phase 5: dock support
 

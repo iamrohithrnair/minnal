@@ -689,7 +689,7 @@ pub(super) fn launch_prompt_in_new_session_local(
         app.set_status_notice("Prompt launched in new session");
     } else {
         app.push_display_message(DisplayMessage::system(format!(
-            "↗ New session **{}** created for the next prompt.\n\nNo terminal was opened automatically. Resume manually:\n```\njcode --resume {}\n```",
+            "↗ New session **{}** created for the next prompt.\n\nNo terminal was opened automatically. Resume manually:\n```\nminnal --resume {}\n```",
             session_name, session_id
         )));
         app.set_status_notice("Prompt session created");
@@ -737,7 +737,7 @@ fn launch_review_window_local(
         app.set_status_notice(format!("{} launched", label));
     } else {
         app.push_display_message(DisplayMessage::system(format!(
-            "🔍 {} session **{}** created.\n\nNo terminal was opened automatically. Resume manually:\n```\njcode --resume {}\n```",
+            "🔍 {} session **{}** created.\n\nNo terminal was opened automatically. Resume manually:\n```\nminnal --resume {}\n```",
             label, session_name, session_id
         )));
         app.set_status_notice(format!("{} session created", label));

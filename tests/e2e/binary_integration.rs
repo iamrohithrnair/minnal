@@ -77,13 +77,13 @@ async fn binary_integration_openai_provider() -> Result<()> {
     Ok(())
 }
 
-/// Test that jcode version command works
+/// Test that minnal version command works
 #[tokio::test]
 async fn binary_version_command() -> Result<()> {
     use std::process::Command;
     let _env = setup_test_env()?;
 
-    let output = Command::new(env!("CARGO_BIN_EXE_jcode"))
+    let output = Command::new(env!("CARGO_BIN_EXE_minnal"))
         .arg("--version")
         .output()?;
 
@@ -91,8 +91,8 @@ async fn binary_version_command() -> Result<()> {
 
     assert!(output.status.success(), "Version command should succeed");
     assert!(
-        stdout.contains("jcode") || stdout.contains("20"),
-        "Version should contain 'jcode' or date. Got: {}",
+        stdout.contains("minnal") || stdout.contains("20"),
+        "Version should contain 'minnal' or date. Got: {}",
         stdout
     );
 
@@ -101,7 +101,7 @@ async fn binary_version_command() -> Result<()> {
 
 /// Test full server reload handoff against a real spawned server process.
 ///
-/// Requires a built release binary at target/release/jcode because the reload
+/// Requires a built release binary at target/release/minnal because the reload
 /// flow execs into the repo's reload candidate.
 #[tokio::test]
 #[ignore]
@@ -132,7 +132,7 @@ async fn binary_integration_reload_handoff() -> Result<()> {
     let debug_socket_path = runtime_dir.join("jcode-debug.sock");
 
     let stderr_file = std::fs::File::create(&stderr_path)?;
-    let mut child = Command::new(env!("CARGO_BIN_EXE_jcode"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_minnal"))
         .arg("--no-update")
         .arg("--socket")
         .arg(&socket_path)
@@ -228,7 +228,7 @@ async fn binary_integration_reload_handoff() -> Result<()> {
 
 /// Test repeated self-dev reload handoff against a real TUI client running in a PTY.
 ///
-/// Requires a built release binary at target/release/jcode because the
+/// Requires a built release binary at target/release/minnal because the
 /// self-dev server reload path execs into the repo's reload candidate.
 #[cfg(unix)]
 #[tokio::test]
@@ -368,7 +368,7 @@ async fn binary_integration_selfdev_client_reload_resumes_session() -> Result<()
     let socket_path = runtime_dir.join("jcode.sock");
     let debug_socket_path = runtime_dir.join("jcode-debug.sock");
     let starter_binary = temp_root.path().join("jcode-selfdev-client-starter");
-    std::fs::copy(env!("CARGO_BIN_EXE_jcode"), &starter_binary)?;
+    std::fs::copy(env!("CARGO_BIN_EXE_minnal"), &starter_binary)?;
     let starter_mtime = std::fs::metadata(&release_binary)?
         .modified()?
         .checked_sub(Duration::from_secs(60))
@@ -530,7 +530,7 @@ async fn binary_integration_selfdev_full_reload_resumes_session_quickly() -> Res
     let socket_path = runtime_dir.join("jcode.sock");
     let debug_socket_path = runtime_dir.join("jcode-debug.sock");
     let starter_binary = temp_root.path().join("jcode-selfdev-full-reload-starter");
-    std::fs::copy(env!("CARGO_BIN_EXE_jcode"), &starter_binary)?;
+    std::fs::copy(env!("CARGO_BIN_EXE_minnal"), &starter_binary)?;
     let starter_mtime = std::fs::metadata(&release_binary)?
         .modified()?
         .checked_sub(Duration::from_secs(60))

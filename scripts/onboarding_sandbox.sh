@@ -39,15 +39,15 @@ Commands:
   status                 Show sandbox paths and current contents
   reset                  Delete the sandbox entirely
   shell                  Open a clean shell with sandbox env vars set
-  jcode [args...]        Run jcode inside the sandbox
-  auth-status            Run 'jcode auth status' inside the sandbox
-  fresh [args...]        Reset sandbox, then launch jcode with args
-  login <provider> ...   Run 'jcode --provider <provider> login ...' in sandbox
+  minnal [args...]        Run minnal inside the sandbox
+  auth-status            Run 'minnal auth status' inside the sandbox
+  fresh [args...]        Reset sandbox, then launch minnal with args
+  login <provider> ...   Run 'minnal --provider <provider> login ...' in sandbox
   fixture-list           List saved local auth fixtures
   fixture-save <name>    Save current sandbox auth state as a local fixture
   fixture-load <name>    Load a saved auth fixture into this sandbox
   fixture-run <name> -- [args...]
-                         Load a fixture, then run jcode with args
+                         Load a fixture, then run minnal with args
   mobile-start [scenario]
                          Start jcode-mobile-sim in background (default: onboarding)
   mobile-serve [scenario]
@@ -117,11 +117,11 @@ open_shell() {
 }
 
 run_jcode() {
-  local binary_path="$repo_root/target/debug/jcode"
+  local binary_path="$repo_root/target/debug/minnal"
   if [[ -x "$binary_path" ]]; then
     run_in_sandbox "$binary_path" "$@"
   else
-    run_in_sandbox cargo run --bin jcode -- "$@"
+    run_in_sandbox cargo run --bin minnal -- "$@"
   fi
 }
 
@@ -161,7 +161,7 @@ case "$command" in
   shell)
     open_shell
     ;;
-  jcode)
+  minnal|jcode)
     run_jcode "$@"
     ;;
   auth-status)

@@ -44,8 +44,8 @@ scripts/onboarding_sandbox.sh auth-status
 scripts/onboarding_sandbox.sh fixture-run normal-openai -- auth-test --provider openai --no-smoke
 
 # Run arbitrary jcode commands in the sandbox
-scripts/onboarding_sandbox.sh jcode auth status
-scripts/onboarding_sandbox.sh jcode pair
+scripts/onboarding_sandbox.sh minnal auth status
+scripts/onboarding_sandbox.sh minnal pair
 ```
 
 ## Reusable local auth fixtures
@@ -71,7 +71,7 @@ scripts/onboarding_sandbox.sh fixture-save normal-openai
 # Fast repeat loop after that
 scripts/onboarding_sandbox.sh fixture-load normal-openai
 scripts/onboarding_sandbox.sh auth-status
-scripts/onboarding_sandbox.sh jcode auth-test --provider openai
+scripts/onboarding_sandbox.sh minnal auth-test --provider openai
 ```
 
 The lower-level helper can also be used directly:

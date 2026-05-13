@@ -248,7 +248,7 @@ impl SelfDevTool {
             return Ok(ToolOutput::new(
                 format!(
                     "No binary found at {}.\n\
-                     Run 'jcode self-dev --build' first, or build with 'scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode' and then try reload again.",
+                     Run 'minnal self-dev --build' first, or build with 'scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal' and then try reload again.",
                     target_binary.display()
                 )
                 .to_string(),

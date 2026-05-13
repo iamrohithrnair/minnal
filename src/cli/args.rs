@@ -27,9 +27,9 @@ pub(crate) enum ProviderAuthArg {
 }
 
 #[derive(Parser, Debug)]
-#[command(name = "jcode")]
+#[command(name = "minnal")]
 #[command(version = env!("JCODE_VERSION"))]
-#[command(about = "J-Code: A coding agent using Claude Max or ChatGPT Pro subscriptions")]
+#[command(about = "Minnal: A coding agent using Claude Max or ChatGPT Pro subscriptions")]
 pub(crate) struct Args {
     /// Provider to use (jcode, claude, openai, openai-api, openrouter, azure, opencode, opencode-go, zai, 302ai, baseten, cortecs, comtegra, deepseek, fpt, firmware, huggingface, moonshotai, nebius, scaleway, stackit, groq, mistral, perplexity, togetherai, deepinfra, xai, lmstudio, ollama, chutes, cerebras, alibaba-coding-plan, openai-compatible, cursor, copilot, gemini, antigravity, google, or auto-detect)
     #[arg(short, long, default_value = "auto", global = true)]
@@ -202,7 +202,7 @@ pub(crate) enum Command {
         build: bool,
     },
 
-    /// Debug socket CLI - interact with running jcode server
+    /// Debug socket CLI - interact with running minnal server
     Debug {
         /// Debug command to run (list, start, sessions, create_session, message, tool, state, history, etc.)
         #[arg(default_value = "help")]
@@ -273,7 +273,7 @@ pub(crate) enum Command {
         session: Option<String>,
     },
 
-    /// Run configured dictation: send to last-focused jcode client or type raw text
+    /// Run configured dictation: send to last-focused minnal client or type raw text
     Dictate {
         /// Type the transcript into the focused app instead of sending to jcode
         #[arg(long)]
@@ -393,7 +393,7 @@ pub(crate) enum Command {
 pub(crate) enum RestartCommand {
     /// Save a reboot snapshot of currently active jcode windows
     Save {
-        /// Restore this reboot snapshot automatically the next time plain `jcode` starts
+        /// Restore this reboot snapshot automatically the next time plain `minnal` starts
         #[arg(long)]
         auto_restore: bool,
     },

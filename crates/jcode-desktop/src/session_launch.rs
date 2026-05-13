@@ -101,12 +101,12 @@ enum DesktopSessionCommand {
 pub fn launch_resume_session(session_id: &str, title: &str) -> Result<()> {
     let title = format!("jcode · {}", compact_title(title));
     let candidates = terminal_candidates(&title, &["--resume", session_id]);
-    launch_first_available_terminal(candidates, &format!("jcode --resume {session_id}"))
+    launch_first_available_terminal(candidates, &format!("minnal --resume {session_id}"))
 }
 
 pub fn launch_new_session() -> Result<()> {
     let candidates = terminal_candidates("jcode · new session", &["--fresh-spawn"]);
-    launch_first_available_terminal(candidates, "jcode")
+    launch_first_available_terminal(candidates, "minnal")
 }
 
 pub fn send_message_to_session(session_id: &str, _title: &str, message: &str) -> Result<()> {
@@ -124,7 +124,7 @@ pub fn send_message_to_session(session_id: &str, _title: &str, message: &str) ->
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
-        .with_context(|| format!("failed to spawn jcode run for {session_id}"))?;
+        .with_context(|| format!("failed to spawn minnal run for {session_id}"))?;
 
     Ok(())
 }
@@ -625,7 +625,7 @@ fn ensure_server_running() -> Result<()> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
-        .context("failed to spawn jcode serve")?;
+        .context("failed to spawn minnal serve")?;
 
     connect_server_with_retry(SERVER_START_TIMEOUT).map(|_| ())
 }
@@ -650,11 +650,11 @@ fn connect_server_with_retry_path(socket_path: &PathBuf, timeout: Duration) -> R
     match last_error {
         Some(error) => Err(error).with_context(|| {
             format!(
-                "timed out connecting to jcode server at {}",
+                "timed out connecting to minnal server at {}",
                 socket_path.display()
             )
         }),
-        None => anyhow::bail!("timed out connecting to jcode server"),
+        None => anyhow::bail!("timed out connecting to minnal server"),
     }
 }
 
@@ -741,13 +741,13 @@ fn read_session_id_from_events(
     while started.elapsed() < timeout {
         line.clear();
         match reader.read_line(&mut line) {
-            Ok(0) => anyhow::bail!("jcode server disconnected before assigning a session"),
+            Ok(0) => anyhow::bail!("minnal server disconnected before assigning a session"),
             Ok(_) => {
                 let value: Value = serde_json::from_str(line.trim())
-                    .context("failed to parse jcode server event")?;
+                    .context("failed to parse minnal server event")?;
                 if value.get("type").and_then(Value::as_str) == Some("session") {
                     let Some(session_id) = value.get("session_id").and_then(Value::as_str) else {
-                        anyhow::bail!("jcode server sent malformed session event");
+                        anyhow::bail!("minnal server sent malformed session event");
                     };
                     return Ok(Some(session_id.to_string()));
                 }
@@ -761,7 +761,7 @@ fn read_session_id_from_events(
                         .get("message")
                         .and_then(Value::as_str)
                         .unwrap_or("unknown server error");
-                    anyhow::bail!("jcode server rejected fresh session: {message}");
+                    anyhow::bail!("minnal server rejected fresh session: {message}");
                 }
                 if value.get("type").and_then(Value::as_str) == Some("done")
                     && complete_request_id
@@ -775,11 +775,11 @@ fn read_session_id_from_events(
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) => {}
-            Err(error) => return Err(error).context("failed to read jcode server event"),
+            Err(error) => return Err(error).context("failed to read minnal server event"),
         }
     }
 
-    anyhow::bail!("timed out waiting for jcode server session id")
+    anyhow::bail!("timed out waiting for minnal server session id")
 }
 
 #[cfg(unix)]
@@ -798,15 +798,15 @@ fn read_session_id_from_state(
     while started.elapsed() < timeout {
         line.clear();
         match reader.read_line(&mut line) {
-            Ok(0) => anyhow::bail!("jcode server disconnected before returning state"),
+            Ok(0) => anyhow::bail!("minnal server disconnected before returning state"),
             Ok(_) => {
                 let value: Value = serde_json::from_str(line.trim())
-                    .context("failed to parse jcode server event")?;
+                    .context("failed to parse minnal server event")?;
                 if value.get("type").and_then(Value::as_str) == Some("state")
                     && value.get("id").and_then(Value::as_u64) == Some(state_request_id)
                 {
                     let Some(session_id) = value.get("session_id").and_then(Value::as_str) else {
-                        anyhow::bail!("jcode server sent malformed state event");
+                        anyhow::bail!("minnal server sent malformed state event");
                     };
                     return Ok(session_id.to_string());
                 }
@@ -822,7 +822,7 @@ fn read_session_id_from_state(
                         .get("message")
                         .and_then(Value::as_str)
                         .unwrap_or("unknown server error");
-                    anyhow::bail!("jcode server rejected state request: {message}");
+                    anyhow::bail!("minnal server rejected state request: {message}");
                 }
             }
             Err(error)
@@ -830,11 +830,11 @@ fn read_session_id_from_state(
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) => {}
-            Err(error) => return Err(error).context("failed to read jcode server event"),
+            Err(error) => return Err(error).context("failed to read minnal server event"),
         }
     }
 
-    anyhow::bail!("timed out waiting for jcode server state")
+    anyhow::bail!("timed out waiting for minnal server state")
 }
 
 #[cfg(unix)]
@@ -853,10 +853,10 @@ fn read_model_changed(
     while started.elapsed() < timeout {
         line.clear();
         match reader.read_line(&mut line) {
-            Ok(0) => anyhow::bail!("jcode server disconnected before switching model"),
+            Ok(0) => anyhow::bail!("minnal server disconnected before switching model"),
             Ok(_) => {
                 let value: Value = serde_json::from_str(line.trim())
-                    .context("failed to parse jcode server event")?;
+                    .context("failed to parse minnal server event")?;
                 if value.get("type").and_then(Value::as_str) == Some("model_changed")
                     && value.get("id").and_then(Value::as_u64) == Some(request_id)
                 {
@@ -877,7 +877,7 @@ fn read_model_changed(
                         .get("message")
                         .and_then(Value::as_str)
                         .unwrap_or("unknown server error");
-                    anyhow::bail!("jcode server rejected model switch: {message}");
+                    anyhow::bail!("minnal server rejected model switch: {message}");
                 }
             }
             Err(error)
@@ -885,11 +885,11 @@ fn read_model_changed(
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) => {}
-            Err(error) => return Err(error).context("failed to read jcode server event"),
+            Err(error) => return Err(error).context("failed to read minnal server event"),
         }
     }
 
-    anyhow::bail!("timed out waiting for jcode server model switch")
+    anyhow::bail!("timed out waiting for minnal server model switch")
 }
 
 #[cfg(unix)]
@@ -908,10 +908,10 @@ fn read_history_reasoning_effort(
     while started.elapsed() < timeout {
         line.clear();
         match reader.read_line(&mut line) {
-            Ok(0) => anyhow::bail!("jcode server disconnected before loading history"),
+            Ok(0) => anyhow::bail!("minnal server disconnected before loading history"),
             Ok(_) => {
                 let value: Value = serde_json::from_str(line.trim())
-                    .context("failed to parse jcode server event")?;
+                    .context("failed to parse minnal server event")?;
                 if value.get("type").and_then(Value::as_str) == Some("history")
                     && value.get("id").and_then(Value::as_u64) == Some(request_id)
                 {
@@ -929,7 +929,7 @@ fn read_history_reasoning_effort(
                         .get("message")
                         .and_then(Value::as_str)
                         .unwrap_or("unknown server error");
-                    anyhow::bail!("jcode server rejected history request: {message}");
+                    anyhow::bail!("minnal server rejected history request: {message}");
                 }
             }
             Err(error)
@@ -937,11 +937,11 @@ fn read_history_reasoning_effort(
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) => {}
-            Err(error) => return Err(error).context("failed to read jcode server event"),
+            Err(error) => return Err(error).context("failed to read minnal server event"),
         }
     }
 
-    anyhow::bail!("timed out waiting for jcode server history")
+    anyhow::bail!("timed out waiting for minnal server history")
 }
 
 #[cfg(unix)]
@@ -960,10 +960,10 @@ fn read_reasoning_effort_changed(
     while started.elapsed() < timeout {
         line.clear();
         match reader.read_line(&mut line) {
-            Ok(0) => anyhow::bail!("jcode server disconnected before switching reasoning effort"),
+            Ok(0) => anyhow::bail!("minnal server disconnected before switching reasoning effort"),
             Ok(_) => {
                 let value: Value = serde_json::from_str(line.trim())
-                    .context("failed to parse jcode server event")?;
+                    .context("failed to parse minnal server event")?;
                 if value.get("type").and_then(Value::as_str) == Some("reasoning_effort_changed")
                     && value.get("id").and_then(Value::as_u64) == Some(request_id)
                 {
@@ -984,7 +984,7 @@ fn read_reasoning_effort_changed(
                         .get("message")
                         .and_then(Value::as_str)
                         .unwrap_or("unknown server error");
-                    anyhow::bail!("jcode server rejected reasoning effort switch: {message}");
+                    anyhow::bail!("minnal server rejected reasoning effort switch: {message}");
                 }
             }
             Err(error)
@@ -992,11 +992,11 @@ fn read_reasoning_effort_changed(
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) => {}
-            Err(error) => return Err(error).context("failed to read jcode server event"),
+            Err(error) => return Err(error).context("failed to read minnal server event"),
         }
     }
 
-    anyhow::bail!("timed out waiting for jcode server reasoning effort switch")
+    anyhow::bail!("timed out waiting for minnal server reasoning effort switch")
 }
 
 #[cfg(unix)]
@@ -1015,10 +1015,10 @@ fn read_model_catalog(
     while started.elapsed() < timeout {
         line.clear();
         match reader.read_line(&mut line) {
-            Ok(0) => anyhow::bail!("jcode server disconnected before loading model catalog"),
+            Ok(0) => anyhow::bail!("minnal server disconnected before loading model catalog"),
             Ok(_) => {
                 let value: Value = serde_json::from_str(line.trim())
-                    .context("failed to parse jcode server event")?;
+                    .context("failed to parse minnal server event")?;
                 if value.get("type").and_then(Value::as_str) == Some("history")
                     && value.get("id").and_then(Value::as_u64) == Some(request_id)
                 {
@@ -1026,7 +1026,7 @@ fn read_model_catalog(
                         send_desktop_event_ref(event_tx, event);
                         return Ok(());
                     }
-                    anyhow::bail!("jcode server returned malformed model catalog");
+                    anyhow::bail!("minnal server returned malformed model catalog");
                 }
                 if let Some(event) = desktop_event_from_server_value(&value) {
                     if !matches!(event, DesktopSessionEvent::Done) {
@@ -1040,7 +1040,7 @@ fn read_model_catalog(
                         .get("message")
                         .and_then(Value::as_str)
                         .unwrap_or("unknown server error");
-                    anyhow::bail!("jcode server rejected model catalog request: {message}");
+                    anyhow::bail!("minnal server rejected model catalog request: {message}");
                 }
             }
             Err(error)
@@ -1048,11 +1048,11 @@ fn read_model_catalog(
                     error.kind(),
                     io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
                 ) => {}
-            Err(error) => return Err(error).context("failed to read jcode server event"),
+            Err(error) => return Err(error).context("failed to read minnal server event"),
         }
     }
 
-    anyhow::bail!("timed out waiting for jcode server model catalog")
+    anyhow::bail!("timed out waiting for minnal server model catalog")
 }
 
 #[cfg(unix)]
@@ -1098,7 +1098,7 @@ fn drain_session_events(
             {
                 continue;
             }
-            Err(error) => return Err(error).context("failed to read jcode server event"),
+            Err(error) => return Err(error).context("failed to read minnal server event"),
             Ok(_) => {
                 if let Ok(value) = serde_json::from_str::<Value>(line.trim()) {
                     if value.get("type").and_then(Value::as_str) == Some("reloading") {
@@ -1520,7 +1520,7 @@ fn terminal_command(
 }
 
 fn jcode_bin() -> String {
-    std::env::var("JCODE_BIN").unwrap_or_else(|_| "jcode".to_string())
+    std::env::var("JCODE_BIN").unwrap_or_else(|_| "minnal".to_string())
 }
 
 fn compact_title(title: &str) -> String {

@@ -829,12 +829,14 @@ pub fn download_and_install_blocking_with_progress(
             }
             let dest = extract_dir.join(&file_name);
             entry.unpack(&dest)?;
-            if file_name.starts_with("jcode") && !file_name.ends_with(".bin") {
+            if (file_name == get_asset_name() || file_name == format!("{}.exe", get_asset_name()))
+                && !file_name.ends_with(".bin")
+            {
                 extracted_binary = Some(dest);
             }
         }
         let Some(extracted_binary) = extracted_binary else {
-            anyhow::bail!("Could not find jcode binary inside tar.gz archive");
+            anyhow::bail!("Could not find minnal binary inside tar.gz archive");
         };
         crate::platform::set_permissions_executable(&extracted_binary)?;
 

@@ -423,14 +423,14 @@ pub(super) fn poll_local_transfer_prepare(app: &mut App) -> bool {
                         }
                         Ok(false) => {
                             app.push_display_message(DisplayMessage::system(format!(
-                                "↗ Transfer session **{}** created.\n\nNo terminal was opened automatically. Resume manually:\n```\njcode --resume {}\n```",
+                                "↗ Transfer session **{}** created.\n\nNo terminal was opened automatically. Resume manually:\n```\nminnal --resume {}\n```",
                                 prepared.session_name, prepared.session_id
                             )));
                             app.set_status_notice("Transfer session created");
                         }
                         Err(error) => {
                             app.push_display_message(DisplayMessage::error(format!(
-                                "Transfer session **{}** was created but failed to open a window: {}\n\nResume manually: `jcode --resume {}`",
+                                "Transfer session **{}** was created but failed to open a window: {}\n\nResume manually: `minnal --resume {}`",
                                 prepared.session_name, error, prepared.session_id
                             )));
                             app.set_status_notice("Transfer open failed");
@@ -714,7 +714,8 @@ fn handle_subagent_model_command(app: &mut App, trimmed: &str) -> bool {
 
     if app.is_remote {
         app.push_display_message(DisplayMessage::error(
-            "`/subagent-model` requires a live jcode server connection in remote mode.".to_string(),
+            "`/subagent-model` requires a live minnal server connection in remote mode."
+                .to_string(),
         ));
         return true;
     }
@@ -760,7 +761,7 @@ fn handle_subagent_command(app: &mut App, trimmed: &str) -> bool {
 
     if app.is_remote {
         app.push_display_message(DisplayMessage::error(
-            "`/subagent` requires a live jcode server connection in remote mode.".to_string(),
+            "`/subagent` requires a live minnal server connection in remote mode.".to_string(),
         ));
         return true;
     }
@@ -996,7 +997,7 @@ fn git_command_repo_dir(app: &App) -> Result<PathBuf, String> {
         }
 
         return Err(format!(
-            "Unable to run `/git`: session working directory `{}` is not accessible from this jcode client.",
+            "Unable to run `/git`: session working directory `{}` is not accessible from this minnal client.",
             path.display()
         ));
     }
@@ -1633,7 +1634,7 @@ fn handle_selfdev_command(app: &mut App, trimmed: &str) -> bool {
                     "Created self-dev session `{}` but could not auto-open a supported terminal.\n\nRun manually:\n`{}`",
                     launch.session_id,
                     launch.command_preview().unwrap_or_else(|| format!(
-                        "jcode --resume {} self-dev",
+                        "minnal --resume {} self-dev",
                         launch.session_id
                     ))
                 )

@@ -12,8 +12,8 @@ Usage:
 Targets:
   check            Run cargo check --quiet
   build            Run cargo build --quiet
-  release-jcode    Run scripts/dev_cargo.sh build --release -p jcode --bin jcode --quiet
-  selfdev-jcode    Run scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode --quiet
+  release-jcode    Run scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet
+  selfdev-jcode    Run scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet
 
 Options:
   --cold                 Run cargo clean before timing the first run
@@ -120,10 +120,10 @@ case "$target" in
     cmd=(cargo build --quiet)
     ;;
   release-jcode)
-    cmd=(scripts/dev_cargo.sh build --release -p jcode --bin jcode --quiet)
+    cmd=(scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet)
     ;;
   selfdev-jcode)
-    cmd=(scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode --quiet)
+    cmd=(scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet)
     ;;
   *)
     printf 'error: unsupported target: %s\n' "$target" >&2

@@ -484,7 +484,7 @@ pub fn run_pair_command(list: bool, revoke: Option<String>) -> Result<()> {
         eprintln!("    \x1b[2m[gateway]\x1b[0m");
         eprintln!("    \x1b[2menabled = true\x1b[0m");
         eprintln!("    \x1b[2mport = {}\x1b[0m\n", gw_config.port);
-        eprintln!("  Then restart the jcode server.\n");
+        eprintln!("  Then restart the minnal server.\n");
     }
 
     let code = registry.generate_pairing_code();
@@ -640,10 +640,10 @@ pub async fn run_browser(action: &str) -> Result<()> {
                 println!("\nBuilt-in browser tool is ready.");
             } else if status.responding && !status.compatible {
                 println!(
-                    "\nThe browser bridge is connected, but the installed Firefox extension is out of date for this jcode build. Run `jcode browser setup` to repair or update it."
+                    "\nThe browser bridge is connected, but the installed Firefox extension is out of date for this jcode build. Run `minnal browser setup` to repair or update it."
                 );
             } else {
-                println!("\nRun `jcode browser setup` to install or repair it.");
+                println!("\nRun `minnal browser setup` to install or repair it.");
             }
         }
         other => {

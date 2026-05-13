@@ -386,7 +386,7 @@ impl MultiProvider {
                     claude.set_model(&model)?;
                 } else {
                     anyhow::bail!(
-                        "Claude credentials not available. Run `jcode login --provider claude` first."
+                        "Claude credentials not available. Run `minnal login --provider claude` first."
                     );
                 }
                 self.set_active_provider(ActiveProvider::Claude);
@@ -395,7 +395,7 @@ impl MultiProvider {
             ActiveProvider::OpenAI => {
                 let Some(openai) = self.openai_provider() else {
                     anyhow::bail!(
-                        "OpenAI credentials not available. Run `jcode login --provider openai` first."
+                        "OpenAI credentials not available. Run `minnal login --provider openai` first."
                     );
                 };
                 openai.set_model(model)?;
@@ -405,7 +405,7 @@ impl MultiProvider {
             ActiveProvider::Copilot => {
                 let Some(copilot) = self.copilot_provider() else {
                     anyhow::bail!(
-                        "GitHub Copilot credentials not available. Run `jcode login --provider copilot` first."
+                        "GitHub Copilot credentials not available. Run `minnal login --provider copilot` first."
                     );
                 };
                 copilot.set_model(model)?;
@@ -415,7 +415,7 @@ impl MultiProvider {
             ActiveProvider::Antigravity => {
                 let Some(antigravity) = self.antigravity_provider() else {
                     anyhow::bail!(
-                        "Antigravity credentials not available. Run `jcode login --provider antigravity` first."
+                        "Antigravity credentials not available. Run `minnal login --provider antigravity` first."
                     );
                 };
                 antigravity.set_model(model)?;
@@ -425,7 +425,7 @@ impl MultiProvider {
             ActiveProvider::Gemini => {
                 let Some(gemini) = self.gemini_provider() else {
                     anyhow::bail!(
-                        "Gemini credentials not available. Run `jcode login --provider gemini` first."
+                        "Gemini credentials not available. Run `minnal login --provider gemini` first."
                     );
                 };
                 gemini.set_model(model)?;
@@ -435,7 +435,7 @@ impl MultiProvider {
             ActiveProvider::Cursor => {
                 let Some(cursor) = self.cursor_provider() else {
                     anyhow::bail!(
-                        "Cursor credentials not available. Run `jcode login --provider cursor` first."
+                        "Cursor credentials not available. Run `minnal login --provider cursor` first."
                     );
                 };
                 cursor.set_model(model)?;
@@ -455,7 +455,7 @@ impl MultiProvider {
             ActiveProvider::OpenRouter => {
                 let Some(openrouter) = self.openrouter_provider() else {
                     anyhow::bail!(
-                        "OpenRouter/OpenAI-compatible credentials not available. Set the configured API key or run `jcode login --provider openrouter` first."
+                        "OpenRouter/OpenAI-compatible credentials not available. Set the configured API key or run `minnal login --provider openrouter` first."
                     );
                 };
                 openrouter.set_model(model)?;
@@ -477,7 +477,7 @@ impl MultiProvider {
         let resolved = crate::provider_catalog::resolve_openai_compatible_profile(profile);
         if !crate::provider_catalog::openai_compatible_profile_is_configured(profile) {
             anyhow::bail!(
-                "{} credentials not available. Run `jcode login --provider {}` first.",
+                "{} credentials not available. Run `minnal login --provider {}` first.",
                 resolved.display_name,
                 resolved.id,
             );

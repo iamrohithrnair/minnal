@@ -171,14 +171,14 @@ pub async fn run_login(
         ProviderChoice::Auto => {
             if options.uses_scriptable_flow()? {
                 anyhow::bail!(
-                    "Scriptable login flags require an explicit provider. Use `jcode login --provider <provider> ...`."
+                    "Scriptable login flags require an explicit provider. Use `minnal login --provider <provider> ...`."
                 );
             }
             crate::telemetry::record_setup_step_once("login_picker_opened");
             let providers = crate::provider_catalog::cli_login_providers();
             if !io::stdin().is_terminal() {
                 anyhow::bail!(
-                    "`jcode login --provider auto` requires an interactive terminal. Use `jcode login --provider <provider>` in non-interactive mode."
+                    "`minnal login --provider auto` requires an interactive terminal. Use `minnal login --provider <provider>` in non-interactive mode."
                 );
             }
             if let Some(imported) =
@@ -427,7 +427,7 @@ fn maybe_persist_default_provider_after_login(
     }
 }
 
-/// Best-effort: tell a running jcode server that on-disk auth has changed so it
+/// Best-effort: tell a running minnal server that on-disk auth has changed so it
 /// can hot-initialize any newly-configured providers. No-op if no server is running.
 async fn notify_running_server_auth_changed_best_effort(provider: Option<&str>) {
     let Ok(mut client) = crate::server::Client::connect().await else {

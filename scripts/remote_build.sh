@@ -31,7 +31,7 @@ Behavior:
   - Default cargo subcommand is 'build'
   - Sync-back defaults to ON for 'build', OFF for other subcommands
   - For build sync-back, copies target/{debug|release}/<artifact> from remote to local
-    (artifact defaults to 'jcode', or '--bin <name>' when provided)
+    (artifact defaults to 'minnal', or '--bin <name>' when provided)
   - Default config file is ~/.config/jcode/remote-build.env
 EOF
 }
@@ -162,7 +162,7 @@ else
     build_mode="debug"
 fi
 
-artifact_name="jcode"
+artifact_name="minnal"
 if [[ "$SUBCOMMAND" == "build" ]]; then
     for ((i=0; i<${#POSITIONAL[@]}; i++)); do
         if [[ "${POSITIONAL[$i]}" == "--bin" && $((i + 1)) -lt ${#POSITIONAL[@]} ]]; then

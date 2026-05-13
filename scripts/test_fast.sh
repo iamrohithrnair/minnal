@@ -12,9 +12,9 @@ echo "=== Fast test loop (lib + bins) ==="
 run_cargo test --lib --bins "$@"
 
 echo ""
-if [[ -x "$repo_root/target/release/jcode" ]]; then
+if [[ -x "$repo_root/target/release/minnal" ]]; then
   echo "=== Startup regression check (release binary) ==="
-  "$repo_root/scripts/check_startup_budget.sh" "$repo_root/target/release/jcode"
+  "$repo_root/scripts/check_startup_budget.sh" "$repo_root/target/release/minnal"
   echo ""
 else
   echo "Skipping startup regression check: build release first with cargo build --release"

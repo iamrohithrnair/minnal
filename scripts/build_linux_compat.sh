@@ -87,9 +87,9 @@ docker run --rm \
 	    export CARGO_TARGET_DIR=/work/target/linux-compat
 	    export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-1}"
 	    export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS="${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS:--C link-arg=-static-libgcc}"
-	    cargo build --profile "$JCODE_COMPAT_PROFILE" --target "$JCODE_COMPAT_TARGET" -p jcode --bin jcode
+	    cargo build --profile "$JCODE_COMPAT_PROFILE" --target "$JCODE_COMPAT_TARGET" -p jcode --bin minnal
 
-	    cp "$CARGO_TARGET_DIR/$JCODE_COMPAT_TARGET/$JCODE_COMPAT_PROFILE/jcode" "/out/'"$artifact"'.bin"
+	    cp "$CARGO_TARGET_DIR/$JCODE_COMPAT_TARGET/$JCODE_COMPAT_PROFILE/minnal" "/out/'"$artifact"'.bin"
 	    chmod +x "/out/'"$artifact"'.bin"
 	    cat > "/out/'"$artifact"'" <<WRAPPER
 #!/usr/bin/env sh
@@ -117,7 +117,7 @@ WRAPPER
 	    # Preserve the OpenSSL runtime libraries used by the build image. Some
 	    # Terminal-Bench containers are older than the build host and either lack
 	    # libssl entirely or expose a different SONAME. The Harbor adapter uploads
-	    # these sibling libraries and sets LD_LIBRARY_PATH for the jcode process.
+	    # these sibling libraries and sets LD_LIBRARY_PATH for the minnal process.
 	    ldd "/out/'"$artifact"'.bin" \
 	      | awk "/lib(ssl|crypto)[.]so/ { print \$3 }" \
 	      | while read -r lib; do

@@ -96,7 +96,7 @@ impl SimulatorState {
                 pairing: PairingForm::default(),
                 saved_servers: Vec::new(),
                 selected_server: None,
-                status_message: Some("Ready to pair with a jcode server.".to_string()),
+                status_message: Some("Ready to pair with a minnal server.".to_string()),
                 error_message: None,
                 messages: Vec::new(),
                 draft_message: String::new(),
@@ -134,7 +134,7 @@ impl SimulatorState {
                     },
                     saved_servers: vec![server.clone()],
                     selected_server: Some(server),
-                    status_message: Some("Connected to simulated jcode server.".to_string()),
+                    status_message: Some("Connected to simulated minnal server.".to_string()),
                     error_message: None,
                     messages: vec![
                         ChatMessage {
@@ -228,7 +228,7 @@ impl SimulatorState {
                 let mut state = Self::for_scenario(ScenarioName::ConnectedChat);
                 state.connection_state = ConnectionState::Connecting;
                 state.status_message =
-                    Some("Reconnecting to simulated jcode server...".to_string());
+                    Some("Reconnecting to simulated minnal server...".to_string());
                 state
             }
             ScenarioName::OfflineQueuedMessage => {
@@ -719,7 +719,7 @@ fn reduce(mut state: SimulatorState, action: SimulatorAction) -> Reduction {
             state.sessions = vec![session_id];
             state.available_models = vec!["gpt-5".to_string(), "claude-sonnet-4".to_string()];
             state.model_name = Some("gpt-5".to_string());
-            state.status_message = Some("Connected to simulated jcode server.".to_string());
+            state.status_message = Some("Connected to simulated minnal server.".to_string());
             state.error_message = None;
             if state.messages.is_empty() {
                 state.messages.push(ChatMessage {

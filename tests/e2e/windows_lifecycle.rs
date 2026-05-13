@@ -19,11 +19,11 @@ impl SpawnedWindowsServer {
             .join("target")
             .join("x86_64-pc-windows-msvc")
             .join("release")
-            .join("jcode.exe");
+            .join("minnal.exe");
         if release_binary.exists() {
             return release_binary;
         }
-        std::path::PathBuf::from(env!("CARGO_BIN_EXE_jcode"))
+        std::path::PathBuf::from(env!("CARGO_BIN_EXE_minnal"))
     }
 
     fn spawn(prefix: &str) -> Result<Self> {

@@ -280,7 +280,7 @@ fn read_choice() -> String {
 #[cfg(target_os = "macos")]
 fn macos_guided_ghostty_message(current_terminal: MacTerminalKind) -> String {
     format!(
-        "I want to upgrade my macOS terminal setup for jcode. Please guide me step-by-step, wait for confirmation between steps, and keep each step concise.\n\nCurrent terminal: {}\nGoal: install Ghostty and use it for jcode.\n\nPlease help me with:\n1) Detecting if Homebrew is installed (and installing it if missing)\n2) Installing Ghostty\n3) Launching Ghostty and setting it as my preferred terminal for jcode\n4) Optional: adding a macOS keyboard shortcut/launcher flow for jcode\n5) Verifying jcode runs in Ghostty and that inline images/graphics work\n\nAssume I am not an expert; provide exact commands and where to click in macOS settings when needed.",
+        "I want to upgrade my macOS terminal setup for jcode. Please guide me step-by-step, wait for confirmation between steps, and keep each step concise.\n\nCurrent terminal: {}\nGoal: install Ghostty and use it for jcode.\n\nPlease help me with:\n1) Detecting if Homebrew is installed (and installing it if missing)\n2) Installing Ghostty\n3) Launching Ghostty and setting it as my preferred terminal for jcode\n4) Optional: adding a macOS keyboard shortcut/launcher flow for jcode\n5) Verifying minnal runs in Ghostty and that inline images/graphics work\n\nAssume I am not an expert; provide exact commands and where to click in macOS settings when needed.",
         current_terminal.label()
     )
 }
@@ -348,7 +348,7 @@ fn nudge_macos_ghostty(state: &mut SetupHintsState) -> Option<String> {
     }
 }
 
-/// Manual `jcode setup-hotkey` command.
+/// Manual `minnal setup-hotkey` command.
 ///
 /// Runs the full interactive setup flow regardless of launch count.
 pub fn run_setup_hotkey(_listen_macos_hotkey: bool) -> Result<()> {
@@ -360,7 +360,7 @@ pub fn run_setup_hotkey(_listen_macos_hotkey: bool) -> Result<()> {
 
         let mut state = SetupHintsState::load();
         let terminal = effective_macos_terminal();
-        eprintln!("\x1b[1mjcode setup-hotkey\x1b[0m");
+        eprintln!("\x1b[1mminnal setup-hotkey\x1b[0m");
         eprintln!();
         eprintln!("  Preferred terminal: {}", terminal.label());
         eprintln!("  Installing a LaunchAgent so Alt+; opens jcode from anywhere.");

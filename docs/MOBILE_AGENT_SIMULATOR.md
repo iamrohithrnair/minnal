@@ -61,7 +61,7 @@ graph TB
 
     subgraph Agents["AI agents and tests"]
         CLI["sim CLI"]
-        Debug["jcode debug/tester integration"]
+        Debug["minnal debug/tester integration"]
         CI["Linux CI"]
     end
 
@@ -171,7 +171,7 @@ Build deterministic fixtures for onboarding, pairing success/failure, reconnects
 
 ### M8: Fake jcode backend
 
-Implement a simulated jcode server backend for health, pairing, token auth, WebSocket lifecycle, sessions, streaming deltas, text replacement, tool calls, errors, and reconnects.
+Implement a simulated minnal server backend for health, pairing, token auth, WebSocket lifecycle, sessions, streaming deltas, text replacement, tool calls, errors, and reconnects.
 
 ### M9: Replay and golden tests
 
@@ -193,9 +193,9 @@ Expose bounds and `hit_test(x,y)` so agents can interact spatially like a human.
 
 Provide high-level assertions for screen, text, node state, message stream, transitions/effects, and absence of error banners.
 
-### M14: jcode debug/tester integration
+### M14: minnal debug/tester integration
 
-Expose simulator lifecycle through jcode tooling so agents can spawn, drive, inspect, capture, and clean up simulator instances.
+Expose simulator lifecycle through minnal tooling so agents can spawn, drive, inspect, capture, and clean up simulator instances.
 
 ### M15: Rust networking/protocol ownership
 

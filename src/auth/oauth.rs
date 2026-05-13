@@ -87,7 +87,7 @@ fn ensure_claude_inference_scope(scopes: &[String], action: &str) -> Result<()> 
     }
 
     anyhow::bail!(
-        "Claude OAuth {} returned a token without the required user:inference scope (scopes: {}). Re-run `jcode login --provider claude` so jcode opens the Claude.ai OAuth flow, or import/use a fresh Claude Code login.",
+        "Claude OAuth {} returned a token without the required user:inference scope (scopes: {}). Re-run `minnal login --provider claude` so jcode opens the Claude.ai OAuth flow, or import/use a fresh Claude Code login.",
         action,
         scopes.join(" ")
     )
@@ -696,7 +696,7 @@ async fn exchange_claude_code_at_url(
         let text = resp.text().await?;
         if status == reqwest::StatusCode::FORBIDDEN && looks_like_cloudflare_challenge(&text) {
             anyhow::bail!(
-                "Token exchange was blocked by Cloudflare before Anthropic returned OAuth tokens. jcode now matches Claude Code's JSON token exchange, but this network/IP is still being challenged. Switch VPN exit IP or network, then retry with `jcode login --provider claude --no-browser` and paste the callback URL."
+                "Token exchange was blocked by Cloudflare before Anthropic returned OAuth tokens. jcode now matches Claude Code's JSON token exchange, but this network/IP is still being challenged. Switch VPN exit IP or network, then retry with `minnal login --provider claude --no-browser` and paste the callback URL."
             );
         }
         anyhow::bail!("Token exchange failed (HTTP {}): {}", status, text);
@@ -995,7 +995,7 @@ pub fn load_claude_tokens() -> Result<OAuthTokens> {
         });
     }
 
-    anyhow::bail!("No Claude Max OAuth credentials found. Run 'jcode login --provider claude'.");
+    anyhow::bail!("No Claude Max OAuth credentials found. Run 'minnal login --provider claude'.");
 }
 
 /// Load Claude tokens for a specific stored account label.

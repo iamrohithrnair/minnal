@@ -31,9 +31,9 @@ $installScript = Join-Path $repoRoot 'scripts\install.ps1'
     -SkipAlacrittySetup `
     -SkipHotkeySetup
 
-$launcherPath = Join-Path $installDir 'jcode.exe'
-$versionDir = Join-Path $localAppData ('jcode\builds\versions\' + $Version.TrimStart('v') + '\jcode.exe')
-$stablePath = Join-Path $localAppData 'jcode\builds\stable\jcode.exe'
+$launcherPath = Join-Path $installDir 'minnal.exe'
+$versionDir = Join-Path $localAppData ('jcode\builds\versions\' + $Version.TrimStart('v') + '\minnal.exe')
+$stablePath = Join-Path $localAppData 'jcode\builds\stable\minnal.exe'
 
 foreach ($path in @($launcherPath, $versionDir, $stablePath)) {
     if (-not (Test-Path -LiteralPath $path)) {
@@ -46,7 +46,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Installed launcher failed to run --version"
 }
 
-if ($versionOutput -notmatch 'jcode') {
+if ($versionOutput -notmatch 'minnal') {
     throw "Installed launcher returned unexpected version output: $versionOutput"
 }
 

@@ -155,7 +155,7 @@ pub async fn run_tui_client(
         );
     } else {
         crate::process_title::set_client_generic_title(super::selfdev::client_selfdev_requested());
-        let _ = crossterm::execute!(std::io::stdout(), crossterm::terminal::SetTitle("jcode"));
+        let _ = crossterm::execute!(std::io::stdout(), crossterm::terminal::SetTitle("minnal"));
     }
     startup_profile::mark("terminal_title");
 
@@ -1028,7 +1028,7 @@ pub fn list_sessions() -> Result<()> {
                             );
                             warned_no_terminal = true;
                         }
-                        eprintln!("  jcode --resume {}", session_id);
+                        eprintln!("  minnal --resume {}", session_id);
                     }
                     Err(e) => {
                         eprintln!("Failed to spawn session {}: {}", session_id, e);

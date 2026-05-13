@@ -194,7 +194,7 @@ mod tests {
             AutomationRequest {
                 id: "assert-text".to_string(),
                 method: "assert_text".to_string(),
-                params: json!({"contains": "Connected to simulated jcode server."}),
+                params: json!({"contains": "Connected to simulated minnal server."}),
             },
         )
         .await?;

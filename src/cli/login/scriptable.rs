@@ -151,7 +151,7 @@ pub(super) async fn start_scriptable_login(
         }
         LoginProviderTarget::Google => {
             let creds = auth::google::load_credentials().context(
-                "Google/Gmail scriptable auth requires saved OAuth credentials first. Run `jcode login --provider google` once or save google credentials manually.",
+                "Google/Gmail scriptable auth requires saved OAuth credentials first. Run `minnal login --provider google` once or save google credentials manually.",
             )?;
             let tier = options
                 .google_access_tier
@@ -506,7 +506,7 @@ pub(super) async fn complete_scriptable_google_login(
         }
     };
     let creds = auth::google::load_credentials().context(
-        "Google/Gmail completion requires saved OAuth credentials first. Run `jcode login --provider google` once or save google credentials manually.",
+        "Google/Gmail completion requires saved OAuth credentials first. Run `minnal login --provider google` once or save google credentials manually.",
     )?;
     let tokens = auth::google::exchange_callback_input(
         &creds,
@@ -598,7 +598,7 @@ pub(super) fn require_scriptable_input(
 pub(super) fn load_pending_login(path: &PathBuf, provider: &str) -> Result<PendingScriptableLogin> {
     if !path.exists() {
         anyhow::bail!(
-            "No pending {} login state found. Run `jcode login --provider {} --print-auth-url` first.",
+            "No pending {} login state found. Run `minnal login --provider {} --print-auth-url` first.",
             provider,
             provider
         );
@@ -615,7 +615,7 @@ pub(super) fn load_pending_login(path: &PathBuf, provider: &str) -> Result<Pendi
         if record.expires_at_ms <= current_time_ms() {
             clear_pending_login(path);
             anyhow::bail!(
-                "Pending {} login state expired. Run `jcode login --provider {} --print-auth-url` again.",
+                "Pending {} login state expired. Run `minnal login --provider {} --print-auth-url` again.",
                 provider,
                 provider
             );
@@ -727,14 +727,14 @@ pub(super) fn scriptable_resume_command(provider: &str, input_kind: &str) -> Str
     match input_kind {
         "callback_url" => {
             format!(
-                "jcode login --provider {} --callback-url '<url-or-query>'",
+                "minnal login --provider {} --callback-url '<url-or-query>'",
                 provider
             )
         }
-        "auth_code" => format!("jcode login --provider {} --auth-code '<code>'", provider),
-        "complete" => format!("jcode login --provider {} --complete", provider),
+        "auth_code" => format!("minnal login --provider {} --auth-code '<code>'", provider),
+        "complete" => format!("minnal login --provider {} --complete", provider),
         _ => format!(
-            "jcode login --provider {} --callback-url '<url>'  # or --auth-code '<code>'",
+            "minnal login --provider {} --callback-url '<url>'  # or --auth-code '<code>'",
             provider
         ),
     }

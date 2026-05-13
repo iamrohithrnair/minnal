@@ -630,7 +630,7 @@ Avoid depending on `src/tui`.
 
 Use the existing server protocol:
 
-- connect to `jcode serve`
+- connect to `minnal serve`
 - subscribe/resume session
 - receive `ServerEvent`
 - send `Request::Message`, `Request::Cancel`, etc.

@@ -18,7 +18,7 @@ scripts/quick-release.sh --dry-run v0.5.5       # Build only, don't publish
 2. Verifies both binaries (ELF and Mach-O checks)
 3. Creates a git tag and pushes it (this also triggers CI for the Windows build)
 4. Uploads both binaries to a GitHub Release via `gh release create`
-5. Users can immediately run `jcode update`
+5. Users can immediately run `minnal update`
 
 ### Prerequisites
 
@@ -36,9 +36,9 @@ Already set up on the dev laptop (xps13):
 ~90s   Linux build finishes
 ~150s  macOS build finishes
 ~153s  Binaries uploaded, release live
-         ✅ Linux + macOS users can `jcode update`
+         ✅ Linux + macOS users can `minnal update`
 ~16m   CI finishes Windows build, uploads to same release
-         ✅ Windows users can `jcode update`
+         ✅ Windows users can `minnal update`
 ```
 
 ## CI Release (automated, ~11 min Linux+macOS, ~16 min Windows)

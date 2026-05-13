@@ -18,9 +18,9 @@ This document describes how jcode achieves cross-platform support for Linux, mac
 
 Current Windows install paths from `scripts/install.ps1`:
 
-- Launcher: `%LOCALAPPDATA%\\jcode\\bin\\jcode.exe`
-- Stable channel binary: `%LOCALAPPDATA%\\jcode\\builds\\stable\\jcode.exe`
-- Immutable versioned binaries: `%LOCALAPPDATA%\\jcode\\builds\\versions\\<version>\\jcode.exe`
+- Launcher: `%LOCALAPPDATA%\\jcode\\bin\\minnal.exe`
+- Stable channel binary: `%LOCALAPPDATA%\\jcode\\builds\\stable\\minnal.exe`
+- Immutable versioned binaries: `%LOCALAPPDATA%\\jcode\\builds\\versions\\<version>\\minnal.exe`
 
 Unlike the current Unix self-dev/local-build flow, the PowerShell installer currently installs the stable channel rather than a separate `current` channel.
 

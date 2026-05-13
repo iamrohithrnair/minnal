@@ -166,7 +166,7 @@ case "$cmd" in
     "$0" assert-screen onboarding >/dev/null
     "$0" assert-node pair.submit --enabled true --role button >/dev/null
     "$0" tap pair.submit >/dev/null
-    "$0" wait --screen chat --contains "Connected to simulated jcode server." >/dev/null
+    "$0" wait --screen chat --contains "Connected to simulated minnal server." >/dev/null
     "$0" type chat.draft "$message" >/dev/null
     "$0" key Enter chat.draft >/dev/null
     "$0" wait --contains "Simulated response to: $message" >/dev/null

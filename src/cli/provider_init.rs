@@ -375,7 +375,7 @@ pub fn prompt_login_provider_selection(
     heading: &str,
 ) -> Result<LoginProviderDescriptor> {
     prompt_login_provider_selection_optional(providers, heading)?.ok_or_else(|| {
-        anyhow::anyhow!("Login skipped. Run `jcode login` when you're ready to authenticate.")
+        anyhow::anyhow!("Login skipped. Run `minnal login` when you're ready to authenticate.")
     })
 }
 
@@ -582,7 +582,7 @@ fn provider_label_for_api_key_env(env_key: &str) -> String {
 
 fn provider_login_hint_for_api_key_env(env_key: &str) -> String {
     if env_key == "OPENROUTER_API_KEY" {
-        return "jcode login --provider openrouter".to_string();
+        return "minnal login --provider openrouter".to_string();
     }
 
     crate::provider_catalog::openai_compatible_profiles()
@@ -590,9 +590,9 @@ fn provider_login_hint_for_api_key_env(env_key: &str) -> String {
         .find_map(|profile| {
             let resolved = resolve_openai_compatible_profile(*profile);
             (resolved.api_key_env == env_key)
-                .then(|| format!("jcode login --provider {}", resolved.id))
+                .then(|| format!("minnal login --provider {}", resolved.id))
         })
-        .unwrap_or_else(|| "jcode login".to_string())
+        .unwrap_or_else(|| "minnal login".to_string())
 }
 
 fn ensure_external_api_key_auth_allowed_for_explicit_choice(env_key: &str) -> Result<()> {
@@ -699,7 +699,7 @@ fn ensure_openai_auth_allowed_for_explicit_choice() -> Result<()> {
     if maybe_prompt_for_generic_oauth_source(
         "OpenAI/Codex",
         auth::external::preferred_unconsented_openai_oauth_source(),
-        "jcode login --provider openai",
+        "minnal login --provider openai",
         false,
         || auth::codex::load_credentials().is_ok(),
     )? {
@@ -717,7 +717,7 @@ fn ensure_openai_auth_allowed_for_explicit_choice() -> Result<()> {
             "OpenAI/Codex",
             "Codex",
             &path,
-            "jcode login --provider openai"
+            "minnal login --provider openai"
         ));
     }
 
@@ -727,7 +727,7 @@ fn ensure_openai_auth_allowed_for_explicit_choice() -> Result<()> {
     }
 
     anyhow::bail!(
-        "Skipped trusting existing ~/.codex/auth.json credentials. Run `jcode login --provider openai` to authenticate jcode directly."
+        "Skipped trusting existing ~/.codex/auth.json credentials. Run `minnal login --provider openai` to authenticate jcode directly."
     )
 }
 
@@ -743,7 +743,7 @@ fn maybe_enable_legacy_codex_auth_for_auto(has_other_provider: bool) -> Result<b
         return maybe_prompt_for_generic_oauth_source(
             "OpenAI/Codex",
             Some(source),
-            "jcode login --provider openai",
+            "minnal login --provider openai",
             true,
             || auth::codex::load_credentials().is_ok(),
         );
@@ -764,7 +764,7 @@ fn maybe_enable_legacy_codex_auth_for_auto(has_other_provider: bool) -> Result<b
             "OpenAI/Codex",
             "Codex",
             &path,
-            "jcode login --provider openai",
+            "minnal login --provider openai",
         ));
         return Ok(false);
     }
@@ -785,7 +785,7 @@ fn ensure_claude_auth_allowed_for_explicit_choice() -> Result<()> {
     if maybe_prompt_for_generic_oauth_source(
         "Claude",
         auth::external::preferred_unconsented_anthropic_oauth_source(),
-        "jcode login --provider claude",
+        "minnal login --provider claude",
         false,
         || auth::claude::load_credentials().is_ok(),
     )? {
@@ -801,7 +801,7 @@ fn ensure_claude_auth_allowed_for_explicit_choice() -> Result<()> {
             "Claude",
             source.display_name(),
             &path,
-            "jcode login --provider claude"
+            "minnal login --provider claude"
         ));
     }
     if prompt_to_trust_external_auth("Claude", source.display_name(), &path)? {
@@ -809,7 +809,7 @@ fn ensure_claude_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting external Claude credentials. Run `jcode login --provider claude` to authenticate jcode directly."
+        "Skipped trusting external Claude credentials. Run `minnal login --provider claude` to authenticate jcode directly."
     )
 }
 
@@ -825,7 +825,7 @@ fn maybe_enable_claude_auth_for_auto(has_other_provider: bool) -> Result<bool> {
         return maybe_prompt_for_generic_oauth_source(
             "Claude",
             Some(source),
-            "jcode login --provider claude",
+            "minnal login --provider claude",
             true,
             || auth::claude::load_credentials().is_ok(),
         );
@@ -843,7 +843,7 @@ fn maybe_enable_claude_auth_for_auto(has_other_provider: bool) -> Result<bool> {
             "Claude",
             source.display_name(),
             &path,
-            "jcode login --provider claude",
+            "minnal login --provider claude",
         ));
         return Ok(false);
     }
@@ -862,7 +862,7 @@ fn ensure_gemini_auth_allowed_for_explicit_choice() -> Result<()> {
     if maybe_prompt_for_generic_oauth_source(
         "Gemini",
         auth::external::preferred_unconsented_gemini_oauth_source(),
-        "jcode login --provider gemini",
+        "minnal login --provider gemini",
         false,
         || auth::gemini::load_tokens().is_ok(),
     )? {
@@ -878,7 +878,7 @@ fn ensure_gemini_auth_allowed_for_explicit_choice() -> Result<()> {
             "Gemini",
             "Gemini CLI",
             &path,
-            "jcode login --provider gemini"
+            "minnal login --provider gemini"
         ));
     }
     if prompt_to_trust_external_auth("Gemini", "Gemini CLI", &path)? {
@@ -886,7 +886,7 @@ fn ensure_gemini_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting Gemini CLI credentials. Run `jcode login --provider gemini` to authenticate jcode directly."
+        "Skipped trusting Gemini CLI credentials. Run `minnal login --provider gemini` to authenticate jcode directly."
     )
 }
 
@@ -902,7 +902,7 @@ fn maybe_enable_gemini_auth_for_auto(has_other_provider: bool) -> Result<bool> {
         return maybe_prompt_for_generic_oauth_source(
             "Gemini",
             Some(source),
-            "jcode login --provider gemini",
+            "minnal login --provider gemini",
             true,
             || auth::gemini::load_tokens().is_ok(),
         );
@@ -920,7 +920,7 @@ fn maybe_enable_gemini_auth_for_auto(has_other_provider: bool) -> Result<bool> {
             "Gemini",
             "Gemini CLI",
             &path,
-            "jcode login --provider gemini",
+            "minnal login --provider gemini",
         ));
         return Ok(false);
     }
@@ -939,7 +939,7 @@ fn ensure_antigravity_auth_allowed_for_explicit_choice() -> Result<()> {
     if maybe_prompt_for_generic_oauth_source(
         "Antigravity",
         auth::external::preferred_unconsented_antigravity_oauth_source(),
-        "jcode login --provider antigravity",
+        "minnal login --provider antigravity",
         false,
         || auth::antigravity::load_tokens().is_ok(),
     )? {
@@ -962,7 +962,7 @@ fn ensure_copilot_auth_allowed_for_explicit_choice() -> Result<()> {
             "GitHub Copilot",
             source.display_name(),
             &path,
-            "jcode login --provider copilot"
+            "minnal login --provider copilot"
         ));
     }
     if prompt_to_trust_external_auth("GitHub Copilot", source.display_name(), &path)? {
@@ -970,7 +970,7 @@ fn ensure_copilot_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting external Copilot credentials. Run `jcode login --provider copilot` to authenticate jcode directly."
+        "Skipped trusting external Copilot credentials. Run `minnal login --provider copilot` to authenticate jcode directly."
     )
 }
 
@@ -990,7 +990,7 @@ fn maybe_enable_copilot_auth_for_auto(has_other_provider: bool) -> Result<bool> 
             "GitHub Copilot",
             source.display_name(),
             &path,
-            "jcode login --provider copilot",
+            "minnal login --provider copilot",
         ));
         return Ok(false);
     }
@@ -1014,7 +1014,7 @@ fn ensure_cursor_auth_allowed_for_explicit_choice() -> Result<()> {
             "Cursor",
             source.display_name(),
             &path,
-            "jcode login --provider cursor"
+            "minnal login --provider cursor"
         ));
     }
     if prompt_to_trust_external_auth("Cursor", source.display_name(), &path)? {
@@ -1022,7 +1022,7 @@ fn ensure_cursor_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting external Cursor credentials. Run `jcode login --provider cursor` to authenticate jcode directly."
+        "Skipped trusting external Cursor credentials. Run `minnal login --provider cursor` to authenticate jcode directly."
     )
 }
 
@@ -1042,7 +1042,7 @@ fn maybe_enable_cursor_auth_for_auto(has_other_provider: bool) -> Result<bool> {
             "Cursor",
             source.display_name(),
             &path,
-            "jcode login --provider cursor",
+            "minnal login --provider cursor",
         ));
         return Ok(false);
     }
@@ -1409,7 +1409,7 @@ async fn init_provider_with_options(
             init_notice(
                 "Note: Google/Gmail is not a model provider. Using auto-detect for model provider.",
             );
-            init_notice("Gmail tool is available if you've run `jcode login google`.");
+            init_notice("Gmail tool is available if you've run `minnal login google`.");
             unlock_model_provider();
             Arc::new(provider::MultiProvider::new_fast())
         }
@@ -1549,7 +1549,7 @@ async fn init_provider_with_options(
                 let non_interactive = std::env::var("JCODE_NON_INTERACTIVE").is_ok();
                 if non_interactive {
                     anyhow::bail!(
-                        "No credentials configured. Run 'jcode login' or set ANTHROPIC_API_KEY to authenticate."
+                        "No credentials configured. Run 'minnal login' or set ANTHROPIC_API_KEY to authenticate."
                     );
                 }
 

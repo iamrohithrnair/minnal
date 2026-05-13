@@ -348,7 +348,7 @@ fn resolve_resume_arg(args: &mut Args) -> Result<()> {
             Err(e) => {
                 eprintln!("Error: {}", e);
                 if !output::quiet_enabled() {
-                    eprintln!("\nUse `jcode --resume` to list available sessions.");
+                    eprintln!("\nUse `minnal --resume` to list available sessions.");
                 }
                 std::process::exit(1);
             }

@@ -7,8 +7,8 @@ pub(super) fn semver() -> &'static str {
 }
 
 /// True when this process is running from the stable release binary path.
-/// Only matches the explicit ~/.jcode/builds/stable/jcode path, NOT
-/// ~/.local/bin/jcode launcher path (which now points to current).
+/// Only matches the explicit ~/.jcode/builds/stable/minnal path, NOT
+/// ~/.local/bin/minnal launcher path (which now points to current).
 pub(super) fn is_running_stable_release() -> bool {
     static IS_STABLE: OnceLock<bool> = OnceLock::new();
     *IS_STABLE.get_or_init(|| {

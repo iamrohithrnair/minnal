@@ -12,7 +12,7 @@ Jcode supports two Bedrock auth styles:
 For the guided API-key flow, run:
 
 ```bash
-jcode login --provider bedrock
+minnal login --provider bedrock
 ```
 
 This saves `AWS_BEARER_TOKEN_BEDROCK` and `JCODE_BEDROCK_REGION` to `~/.config/jcode/bedrock.env`.
@@ -88,19 +88,19 @@ If you enable STS validation with `JCODE_BEDROCK_VALIDATE_STS=1`, allow `sts:Get
 ## Run Jcode with Bedrock
 
 ```bash
-jcode --provider bedrock --model anthropic.claude-3-5-sonnet-20241022-v2:0
+minnal --provider bedrock --model anthropic.claude-3-5-sonnet-20241022-v2:0
 ```
 
 or:
 
 ```bash
-jcode --model bedrock:anthropic.claude-3-5-sonnet-20241022-v2:0
+minnal --model bedrock:anthropic.claude-3-5-sonnet-20241022-v2:0
 ```
 
 Inference profile IDs/ARNs are accepted as model IDs, for example:
 
 ```bash
-jcode --model bedrock:us.anthropic.claude-3-5-sonnet-20241022-v2:0
+minnal --model bedrock:us.anthropic.claude-3-5-sonnet-20241022-v2:0
 ```
 
 Recommended active profile-style choices, when your account has access, include:

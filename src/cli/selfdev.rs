@@ -82,7 +82,7 @@ pub async fn run_self_dev(should_build: bool, resume_session: Option<String>) ->
     if !target_binary.exists() {
         anyhow::bail!(
             "No binary found at {:?}\n\
-             Run 'jcode self-dev --build' first, or build with '{}' and then publish current.",
+             Run 'minnal self-dev --build' first, or build with '{}' and then publish current.",
             target_binary,
             build::selfdev_build_command(&repo_dir).display,
         );

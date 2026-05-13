@@ -129,7 +129,7 @@ pub fn load_tokens() -> Result<AntigravityTokens> {
         crate::storage::harden_secret_file_permissions(&path);
         return crate::storage::read_json(&path).map_err(|_| {
             anyhow::anyhow!(
-                "No Antigravity tokens found. Run `jcode login --provider antigravity`."
+                "No Antigravity tokens found. Run `minnal login --provider antigravity`."
             )
         });
     }
@@ -144,7 +144,7 @@ pub fn load_tokens() -> Result<AntigravityTokens> {
         });
     }
 
-    anyhow::bail!("No Antigravity tokens found. Run `jcode login --provider antigravity`.");
+    anyhow::bail!("No Antigravity tokens found. Run `minnal login --provider antigravity`.");
 }
 
 pub fn save_tokens(tokens: &AntigravityTokens) -> Result<()> {

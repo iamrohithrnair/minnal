@@ -27,7 +27,7 @@ Commands:
   reset-sandbox                Remove only the current sandbox JCODE_HOME
   delete <name>                Delete a saved fixture
   env <name>                   Print exports for running against a loaded fixture
-  run <name> -- <args...>      Load fixture, then run jcode with args in sandbox
+  run <name> -- <args...>      Load fixture, then run minnal with args in sandbox
   help                         Show this help
 
 Environment overrides:
@@ -87,13 +87,13 @@ copy_dir_contents() {
 }
 
 run_jcode() {
-  local binary_path="$repo_root/target/debug/jcode"
+  local binary_path="$repo_root/target/debug/minnal"
   (
     cd "$repo_root"
     if [[ -x "$binary_path" ]]; then
       env JCODE_HOME="$jcode_home" JCODE_RUNTIME_DIR="$runtime_dir" "$binary_path" "$@"
     else
-      env JCODE_HOME="$jcode_home" JCODE_RUNTIME_DIR="$runtime_dir" cargo run --bin jcode -- "$@"
+      env JCODE_HOME="$jcode_home" JCODE_RUNTIME_DIR="$runtime_dir" cargo run --bin minnal -- "$@"
     fi
   )
 }

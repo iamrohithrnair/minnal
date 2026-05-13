@@ -149,7 +149,7 @@ cargo run -p jcode-mobile-sim -- assert-screen onboarding
 cargo run -p jcode-mobile-sim -- assert-node pair.submit --enabled true --role button
 cargo run -p jcode-mobile-sim -- tap pair.submit
 cargo run -p jcode-mobile-sim -- assert-screen chat
-cargo run -p jcode-mobile-sim -- assert-text "Connected to simulated jcode server."
+cargo run -p jcode-mobile-sim -- assert-text "Connected to simulated minnal server."
 cargo run -p jcode-mobile-sim -- set-field draft "hello simulator"
 cargo run -p jcode-mobile-sim -- tap chat.send
 cargo run -p jcode-mobile-sim -- assert-text "Simulated response to: hello simulator"

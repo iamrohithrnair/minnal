@@ -65,7 +65,7 @@ name = "jcode"
 path = "src/lib.rs"
 
 [[bin]]
-name = "jcode"
+name = "minnal"
 path = "src/main.rs"
 
 [[bin]]

@@ -31,7 +31,7 @@ echo "[1/5] Launching jcode..."
 kitten @ --to unix:$SOCK launch --type=os-window \
     --cwd "$DEMO_DIR" \
     --title "jcode-demo-$DEMO_NAME" \
-    "$repo_root/target/release/jcode"
+    "$repo_root/target/release/minnal"
 
 sleep 3  # Let jcode fully start
 

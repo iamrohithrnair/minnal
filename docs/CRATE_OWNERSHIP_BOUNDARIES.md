@@ -86,7 +86,7 @@ Use this checklist for every type or pure-helper migration. Copy it into the PR/
    - [ ] Did `cargo metadata`/`cargo check` avoid pulling root, TUI, provider, storage, server, or process dependencies into the type crate?
 4. Validate.
    - [ ] Is there a focused test filter that covers the moved type?
-   - [ ] Did `cargo check --profile selfdev -p <type-crate> -p jcode --bin jcode` pass?
+   - [ ] Did `cargo check --profile selfdev -p <type-crate> -p jcode --bin minnal` pass?
    - [ ] Did relevant focused root tests pass?
    - [ ] Did `cargo fmt` pass?
    - [ ] Did selfdev build and reload pass from a clean committed HEAD?
@@ -118,17 +118,17 @@ Focused validation matrix after the current DTO splits:
 
 | Area | Fast compile check | Focused root tests used during split | Notes |
 | --- | --- | --- | --- |
-| Usage DTOs | `cargo check --profile selfdev -p jcode-usage-types -p jcode --bin jcode` | Prefer exact tests under usage/copilot usage modules. Avoid bare `usage` as a required gate because it selects display/UI tests too. | DTO crate owns report and local counter contracts. Runtime fetch/cache/display stay root. |
-| Gateway DTOs | `cargo check --profile selfdev -p jcode-gateway-types -p jcode --bin jcode` | Focus gateway persistence/auth tests by exact test names when available. | Pairing/token HTTP/WebSocket behavior stays root. |
-| Ambient DTOs | `cargo check --profile selfdev -p jcode-ambient-types -p jcode --bin jcode` | Scheduler/type consumers only. | Ambient DTO crate owns usage records only. Queue/runtime/prompt behavior stays root. |
-| Ambient behavior modules | `cargo check --profile selfdev -p jcode --bin jcode` | `cargo test --profile selfdev -p jcode ambient::ambient_tests --lib`; `cargo test --profile selfdev -p jcode ambient::scheduler::tests --lib`; `cargo test --profile selfdev -p jcode ambient::runner::runner_tests --lib` | Avoid bare `ambient` as a required gate for module-only refactors because it selects cross-module TUI/config state tests. |
-| Memory activity DTOs | `cargo check --profile selfdev -p jcode-memory-types -p jcode-core -p jcode --bin jcode` | `cargo test --profile selfdev -p jcode runtime_memory_log --lib`; `cargo test --profile selfdev -p jcode tui::info_widget::tests --lib` | `memory::activity` currently matches no tests, so use consumer tests. |
-| Goal/todo/catchup core DTOs | `cargo check --profile selfdev -p jcode-core -p jcode --bin jcode` | Exact goal/todo/catchup filters if behavior changes. | Currently small/stable enough to leave in `jcode-core`; revisit if churn grows. |
+| Usage DTOs | `cargo check --profile selfdev -p jcode-usage-types -p jcode --bin minnal` | Prefer exact tests under usage/copilot usage modules. Avoid bare `usage` as a required gate because it selects display/UI tests too. | DTO crate owns report and local counter contracts. Runtime fetch/cache/display stay root. |
+| Gateway DTOs | `cargo check --profile selfdev -p jcode-gateway-types -p jcode --bin minnal` | Focus gateway persistence/auth tests by exact test names when available. | Pairing/token HTTP/WebSocket behavior stays root. |
+| Ambient DTOs | `cargo check --profile selfdev -p jcode-ambient-types -p jcode --bin minnal` | Scheduler/type consumers only. | Ambient DTO crate owns usage records only. Queue/runtime/prompt behavior stays root. |
+| Ambient behavior modules | `cargo check --profile selfdev -p jcode --bin minnal` | `cargo test --profile selfdev -p jcode ambient::ambient_tests --lib`; `cargo test --profile selfdev -p jcode ambient::scheduler::tests --lib`; `cargo test --profile selfdev -p jcode ambient::runner::runner_tests --lib` | Avoid bare `ambient` as a required gate for module-only refactors because it selects cross-module TUI/config state tests. |
+| Memory activity DTOs | `cargo check --profile selfdev -p jcode-memory-types -p jcode-core -p jcode --bin minnal` | `cargo test --profile selfdev -p jcode runtime_memory_log --lib`; `cargo test --profile selfdev -p jcode tui::info_widget::tests --lib` | `memory::activity` currently matches no tests, so use consumer tests. |
+| Goal/todo/catchup core DTOs | `cargo check --profile selfdev -p jcode-core -p jcode --bin minnal` | Exact goal/todo/catchup filters if behavior changes. | Currently small/stable enough to leave in `jcode-core`; revisit if churn grows. |
 
 
 ## Compile baseline observations
 
-Measured on 2026-04-30 with `scripts/dev_cargo.sh check --profile selfdev -p jcode --bin jcode` after the compile-speed boundary doc commit. This is a coarse mtime-touch benchmark, not a full statistical study, but it is enough to guide priorities.
+Measured on 2026-04-30 with `scripts/dev_cargo.sh check --profile selfdev -p jcode --bin minnal` after the compile-speed boundary doc commit. This is a coarse mtime-touch benchmark, not a full statistical study, but it is enough to guide priorities.
 
 | Scenario | Observed time | Interpretation |
 | --- | ---: | --- |

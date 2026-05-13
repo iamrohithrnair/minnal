@@ -8,7 +8,7 @@ This concept is derived from the current native iOS client in:
 
 ## Product framing
 
-jcode mobile is not a terminal emulator. It is a touch-first remote control and conversation surface for a jcode server running on a developer’s laptop or desktop.
+jcode mobile is not a terminal emulator. It is a touch-first remote control and conversation surface for a minnal server running on a developer’s laptop or desktop.
 
 Core themes:
 - dark, calm, focused
@@ -56,13 +56,13 @@ Core themes:
 
 ## 1. Onboarding
 
-Purpose: pair a phone with a running jcode server.
+Purpose: pair a phone with a running minnal server.
 
 Content:
 - animated terminal prompt mark
 - product title and pocket-assistant positioning
 - primary CTA: scan QR code
-- helper text referencing `jcode pair`
+- helper text referencing `minnal pair`
 - manual connection form with host, port, pair code, device name
 - secondary CTA: pair & connect
 

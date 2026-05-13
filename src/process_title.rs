@@ -1,7 +1,7 @@
 use crate::cli::args::{AmbientCommand, Args, Command};
 
 const LINUX_PROCESS_TITLE_LIMIT: usize = 15;
-const KILLALL_PROCESS_NAME: &str = "jcode";
+const KILLALL_PROCESS_NAME: &str = "minnal";
 
 fn compact_process_title(prefix: &str, name: Option<&str>) -> String {
     let mut title = prefix.to_string();
@@ -82,14 +82,14 @@ fn set_killall_process_name() {
 }
 
 pub(crate) fn set_server_title(server_name: &str) {
-    set_title(compact_process_title("jcode:s:", Some(server_name)));
+    set_title(compact_process_title("minnal:s:", Some(server_name)));
 }
 
 pub(crate) fn set_client_generic_title(is_selfdev: bool) {
     let prefix = if is_selfdev {
-        "jcode:selfdev"
+        "minnal:selfdev"
     } else {
-        "jcode:client"
+        "minnal:client"
     };
     set_title(compact_process_title(prefix, None));
 }
@@ -99,7 +99,7 @@ pub(crate) fn set_client_session_title(session_id: &str, is_selfdev: bool) {
 }
 
 pub(crate) fn set_client_display_title(session_name: &str, is_selfdev: bool) {
-    let prefix = if is_selfdev { "jcode:d:" } else { "jcode:c:" };
+    let prefix = if is_selfdev { "minnal:d:" } else { "minnal:c:" };
     set_title(compact_process_title(prefix, Some(session_name)));
 }
 
@@ -108,65 +108,68 @@ pub(crate) fn set_client_remote_display_title(
     session_name: &str,
     is_selfdev: bool,
 ) {
-    if server_name.is_empty() || server_name.eq_ignore_ascii_case("jcode") {
+    if server_name.is_empty()
+        || server_name.eq_ignore_ascii_case("minnal")
+        || server_name.eq_ignore_ascii_case("jcode")
+    {
         set_client_display_title(session_name, is_selfdev);
         return;
     }
-    let prefix = if is_selfdev { "jcode:d:" } else { "jcode:c:" };
+    let prefix = if is_selfdev { "minnal:d:" } else { "minnal:c:" };
     set_title(format!("{prefix}{server_name}/{session_name}"));
 }
 
 pub(crate) fn initial_title(args: &Args) -> String {
     match &args.command {
-        Some(Command::Serve { .. }) => "jcode:server".to_string(),
-        Some(Command::Connect) => "jcode:client".to_string(),
-        Some(Command::Run { .. }) => "jcode run".to_string(),
-        Some(Command::Login { .. }) => "jcode login".to_string(),
-        Some(Command::Repl) => "jcode repl".to_string(),
-        Some(Command::Update) => "jcode update".to_string(),
-        Some(Command::Version { .. }) => "jcode version".to_string(),
-        Some(Command::Usage { .. }) => "jcode usage".to_string(),
-        Some(Command::SelfDev { .. }) => "jcode:selfdev".to_string(),
-        Some(Command::Debug { .. }) => "jcode debug".to_string(),
-        Some(Command::Auth(_)) => "jcode auth".to_string(),
-        Some(Command::Provider(_)) => "jcode provider".to_string(),
-        Some(Command::Memory(_)) => "jcode memory".to_string(),
-        Some(Command::Session(_)) => "jcode session".to_string(),
+        Some(Command::Serve { .. }) => "minnal:server".to_string(),
+        Some(Command::Connect) => "minnal:client".to_string(),
+        Some(Command::Run { .. }) => "minnal run".to_string(),
+        Some(Command::Login { .. }) => "minnal login".to_string(),
+        Some(Command::Repl) => "minnal repl".to_string(),
+        Some(Command::Update) => "minnal update".to_string(),
+        Some(Command::Version { .. }) => "minnal version".to_string(),
+        Some(Command::Usage { .. }) => "minnal usage".to_string(),
+        Some(Command::SelfDev { .. }) => "minnal:selfdev".to_string(),
+        Some(Command::Debug { .. }) => "minnal debug".to_string(),
+        Some(Command::Auth(_)) => "minnal auth".to_string(),
+        Some(Command::Provider(_)) => "minnal provider".to_string(),
+        Some(Command::Memory(_)) => "minnal memory".to_string(),
+        Some(Command::Session(_)) => "minnal session".to_string(),
         Some(Command::Ambient(subcommand)) => match subcommand {
-            AmbientCommand::RunVisible => "jcode ambient visible".to_string(),
-            _ => "jcode ambient".to_string(),
+            AmbientCommand::RunVisible => "minnal ambient visible".to_string(),
+            _ => "minnal ambient".to_string(),
         },
-        Some(Command::Pair { .. }) => "jcode pair".to_string(),
-        Some(Command::Permissions) => "jcode permissions".to_string(),
-        Some(Command::Transcript { .. }) => "jcode transcript".to_string(),
-        Some(Command::Dictate { .. }) => "jcode dictate".to_string(),
+        Some(Command::Pair { .. }) => "minnal pair".to_string(),
+        Some(Command::Permissions) => "minnal permissions".to_string(),
+        Some(Command::Transcript { .. }) => "minnal transcript".to_string(),
+        Some(Command::Dictate { .. }) => "minnal dictate".to_string(),
         Some(Command::SetupHotkey {
             listen_macos_hotkey,
         }) => {
             if *listen_macos_hotkey {
-                "jcode hotkey listener".to_string()
+                "minnal hotkey listener".to_string()
             } else {
-                "jcode hotkey setup".to_string()
+                "minnal hotkey setup".to_string()
             }
         }
-        Some(Command::Browser { .. }) => "jcode browser".to_string(),
-        Some(Command::Replay { .. }) => "jcode replay".to_string(),
-        Some(Command::Model(_)) => "jcode model".to_string(),
-        Some(Command::AuthTest { .. }) => "jcode auth-test".to_string(),
-        Some(Command::Restart { .. }) => "jcode restart".to_string(),
-        Some(Command::SetupLauncher) => "jcode setup-launcher".to_string(),
+        Some(Command::Browser { .. }) => "minnal browser".to_string(),
+        Some(Command::Replay { .. }) => "minnal replay".to_string(),
+        Some(Command::Model(_)) => "minnal model".to_string(),
+        Some(Command::AuthTest { .. }) => "minnal auth-test".to_string(),
+        Some(Command::Restart { .. }) => "minnal restart".to_string(),
+        Some(Command::SetupLauncher) => "minnal setup-launcher".to_string(),
         None => {
             if let Some(resume) = args.resume.as_deref().filter(|resume| !resume.is_empty()) {
                 let prefix = if crate::cli::selfdev::client_selfdev_requested() {
-                    "jcode:d:"
+                    "minnal:d:"
                 } else {
-                    "jcode:c:"
+                    "minnal:c:"
                 };
                 compact_process_title(prefix, Some(&session_name(resume)))
             } else if crate::cli::selfdev::client_selfdev_requested() {
-                "jcode:selfdev".to_string()
+                "minnal:selfdev".to_string()
             } else {
-                "jcode:client".to_string()
+                "minnal:client".to_string()
             }
         }
     }
@@ -199,16 +202,16 @@ mod tests {
     #[test]
     fn initial_title_labels_server() {
         with_selfdev_env_removed(|| {
-            let args = Args::parse_from(["jcode", "serve"]);
-            assert_eq!(initial_title(&args), "jcode:server");
+            let args = Args::parse_from(["minnal", "serve"]);
+            assert_eq!(initial_title(&args), "minnal:server");
         });
     }
 
     #[test]
     fn initial_title_labels_resume_client_with_short_name() {
         with_selfdev_env_removed(|| {
-            let args = Args::parse_from(["jcode", "--resume", "session_fox_123"]);
-            assert_eq!(initial_title(&args), "jcode:c:fox");
+            let args = Args::parse_from(["minnal", "--resume", "session_fox_123"]);
+            assert_eq!(initial_title(&args), "minnal:c:fox");
         });
     }
 
@@ -252,8 +255,8 @@ mod tests {
     #[test]
     fn initial_title_labels_selfdev_command() {
         with_selfdev_env_removed(|| {
-            let args = Args::parse_from(["jcode", "self-dev"]);
-            assert_eq!(initial_title(&args), "jcode:selfdev");
+            let args = Args::parse_from(["minnal", "self-dev"]);
+            assert_eq!(initial_title(&args), "minnal:selfdev");
         });
     }
 }

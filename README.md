@@ -14,7 +14,7 @@ Built for multi-session workflows, infinite customizability, and performance.
 <br>
 
 <a href="https://github.com/1jehuang/jcode/releases/download/readme-assets/jcode-memory-demo.mp4">
-  <img src="https://github.com/1jehuang/jcode/releases/download/readme-assets/jcode-memory-demo.webp" alt="jcode memory demonstration" width="800">
+  <img src="https://github.com/1jehuang/jcode/releases/download/readme-assets/jcode-memory-demo.webp" alt="minnal memory demonstration" width="800">
 </a>
 
 <br>
@@ -33,7 +33,7 @@ Built for multi-session workflows, infinite customizability, and performance.
 
 ```bash
 # macOS & Linux
-curl -fsSL https://raw.githubusercontent.com/1jehuang/jcode/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.sh | bash
 ```
 
 Need Windows, Homebrew, source builds, provider setup, or tell your agent to set it up for you?
@@ -258,10 +258,10 @@ Memories are automatically consolidated every so often via the ambient mode. Thi
 <div align="center">
 
   <a href="https://github.com/1jehuang/jcode/releases/download/readme-assets/jcode-memory-demo.mp4">
-    <img src="https://github.com/1jehuang/jcode/releases/download/readme-assets/jcode-memory-demo.webp" alt="jcode memory demonstration" width="900">
+    <img src="https://github.com/1jehuang/jcode/releases/download/readme-assets/jcode-memory-demo.webp" alt="minnal memory demonstration" width="900">
   </a>
 
-  <p><em>jcode memory demonstration</em></p>
+  <p><em>minnal memory demonstration</em></p>
 
 </div>
 
@@ -310,17 +310,17 @@ jcode works with subscription-backed OAuth flows and many provider integrations,
 
 ### Supported built-in login flows
 
-- **Claude** (`jcode login --provider claude`)
-- **OpenAI / ChatGPT / Codex** (`jcode login --provider openai`)
-- **Google Gemini** (`jcode login --provider gemini`)
-- **GitHub Copilot** (`jcode login --provider copilot`)
-- **Azure OpenAI** (`jcode login --provider azure`)
-- **Alibaba Cloud Coding Plan** (`jcode login --provider alibaba-coding-plan`)
-- **Fireworks** (`jcode login --provider fireworks`)
-- **MiniMax** (`jcode login --provider minimax`)
-- **LM Studio** (`jcode login --provider lmstudio`)
-- **Ollama** (`jcode login --provider ollama`)
-- **Custom OpenAI-compatible endpoint** (`jcode login --provider openai-compatible`)
+- **Claude** (`minnal login --provider claude`)
+- **OpenAI / ChatGPT / Codex** (`minnal login --provider openai`)
+- **Google Gemini** (`minnal login --provider gemini`)
+- **GitHub Copilot** (`minnal login --provider copilot`)
+- **Azure OpenAI** (`minnal login --provider azure`)
+- **Alibaba Cloud Coding Plan** (`minnal login --provider alibaba-coding-plan`)
+- **Fireworks** (`minnal login --provider fireworks`)
+- **MiniMax** (`minnal login --provider minimax`)
+- **LM Studio** (`minnal login --provider lmstudio`)
+- **Ollama** (`minnal login --provider ollama`)
+- **Custom OpenAI-compatible endpoint** (`minnal login --provider openai-compatible`)
 
 For custom OpenAI-compatible endpoints, jcode now prompts for the API base and supports local localhost servers without requiring an API key.
 
@@ -334,7 +334,7 @@ For agents and scripts, the preferred path is the one-shot provider profile comm
 
 ```bash
 # Secret-safe setup for a hosted OpenAI-compatible API.
-printf '%s' "$MY_API_KEY" | jcode provider add my-api \
+printf '%s' "$MY_API_KEY" | minnal provider add my-api \
   --base-url https://llm.example.com/v1 \
   --model my-model-id \
   --api-key-stdin \
@@ -342,16 +342,16 @@ printf '%s' "$MY_API_KEY" | jcode provider add my-api \
   --json
 
 # Smoke test the profile.
-jcode --provider-profile my-api auth-test --prompt 'Reply exactly JCODE_PROVIDER_SETUP_OK'
+minnal --provider-profile my-api auth-test --prompt 'Reply exactly JCODE_PROVIDER_SETUP_OK'
 
 # Use it directly.
-jcode --provider-profile my-api run 'hello'
+minnal --provider-profile my-api run 'hello'
 ```
 
 For local servers that do not require auth:
 
 ```bash
-jcode provider add local-vllm \
+minnal provider add local-vllm \
   --base-url http://localhost:8000/v1 \
   --model Qwen/Qwen3-Coder-30B-A3B-Instruct \
   --no-api-key \
@@ -402,7 +402,7 @@ OPENAI_COMPAT_API_KEY=your-token-here
 
 Notes:
 
-- `jcode login --provider openai-compatible` can create or update this for you.
+- `minnal login --provider openai-compatible` can create or update this for you.
 - Plain `http://` is accepted for `localhost` and private LAN IPs. Public remote HTTP is still rejected.
 - HTTPS endpoints work as usual.
 
@@ -436,29 +436,29 @@ Example MCP config:
 
 On first run, jcode also tries to import MCP servers from `~/.claude/mcp.json` and `~/.codex/config.toml` if `~/.jcode/mcp.json` does not exist yet.
 
-For headless or SSH sessions, OAuth-style providers support `jcode login --provider <provider> --no-browser` (alias: `--headless`) so jcode prints the auth URL/QR and falls back to manual code or callback paste instead of trying to launch a local browser.
+For headless or SSH sessions, OAuth-style providers support `minnal login --provider <provider> --no-browser` (alias: `--headless`) so jcode prints the auth URL/QR and falls back to manual code or callback paste instead of trying to launch a local browser.
 
 For more scriptable remote flows, `claude`, `openai`, `gemini`, and `antigravity` also support a two-step pattern:
 
 ```bash
 # Step 1: print a resumable auth URL
-jcode login --provider openai --print-auth-url --json
+minnal login --provider openai --print-auth-url --json
 
 # Step 2: complete later with the callback URL or auth code
-jcode login --provider openai --callback-url 'http://localhost:1455/auth/callback?...'
-jcode login --provider gemini --auth-code '...'
+minnal login --provider openai --callback-url 'http://localhost:1455/auth/callback?...'
+minnal login --provider gemini --auth-code '...'
 ```
 
 Additional scriptable cases:
 
 ```bash
 # Copilot device flow: print URL + user code, then complete later
-jcode login --provider copilot --print-auth-url --json
-jcode login --provider copilot --complete
+minnal login --provider copilot --print-auth-url --json
+minnal login --provider copilot --complete
 
 # Gmail/Google OAuth after credentials are already configured
-jcode login --provider google --print-auth-url --google-access-tier readonly
-jcode login --provider google --callback-url 'http://127.0.0.1:8456?...'
+minnal login --provider google --print-auth-url --google-access-tier readonly
+minnal login --provider google --callback-url 'http://127.0.0.1:8456?...'
 ```
 
 Pending scriptable login state is stored under `~/.jcode/pending-login/`, automatically expires, and stale entries are cleaned up when new scriptable logins start or resume.
@@ -535,20 +535,20 @@ Build speed improvements: An incremental debug cargo build with cache enabled ta
 
 ```bash
 # Launch the TUI
-jcode
+minnal
 
 # Run a single command non-interactively
-jcode run "say hello"
+minnal run "say hello"
 
 # Resume a previous session by memorable name
-jcode --resume fox
+minnal --resume fox
 
 # Run as a persistent background server, then attach more clients
-jcode serve
-jcode connect
+minnal serve
+minnal connect
 
 # Send voice input from your configured STT command
-jcode dictate
+minnal dictate
 ```
 
 jcode supports interactive TUI use, non-interactive runs, persistent server/client workflows,
@@ -594,8 +594,8 @@ Current built-in tool actions include:
 Quick setup:
 
 ```bash
-jcode browser status
-jcode browser setup
+minnal browser status
+minnal browser setup
 ```
 
 Once setup is complete, the model can use the built-in `browser` tool directly. The UI also summarizes browser tool calls compactly, for example opening a URL, clicking a selector, or typing into a field without echoing sensitive typed text.
@@ -626,36 +626,36 @@ Notes:
 
 ### Setup
 
-If you want another agent to set up jcode for you, give it this prompt:
+If you want another agent to set up minnal for you, give it this prompt:
 
 ```text
-Set up jcode on this machine for me.
+Set up minnal on this machine for me.
 
-1. Detect the operating system, available package managers, and shell environment, then install jcode using the best matching command below instead of referring me somewhere else:
+1. Detect the operating system, available package managers, and shell environment, then install minnal using the best matching command below instead of referring me somewhere else:
 
    - macOS with Homebrew available:
      brew tap 1jehuang/jcode
      brew install jcode
 
    - macOS or Linux via install script:
-     curl -fsSL https://raw.githubusercontent.com/1jehuang/jcode/master/scripts/install.sh | bash
+     curl -fsSL https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.sh | bash
 
    - Windows PowerShell:
-     irm https://raw.githubusercontent.com/1jehuang/jcode/master/scripts/install.ps1 | iex
+     irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1 | iex
 
    - From source if the above paths are not appropriate:
-     git clone https://github.com/1jehuang/jcode.git
-     cd jcode
+     git clone https://github.com/codeslord/minnal.git
+     cd minnal
      cargo build --release
      scripts/install_release.sh
 
    - For local self-dev / refactor work on Linux x86_64, prefer:
-     scripts/dev_cargo.sh build --release -p jcode --bin jcode
+     scripts/dev_cargo.sh build --release -p jcode --bin minnal
      scripts/dev_cargo.sh --print-setup
      scripts/install_release.sh
 
-2. Verify that `jcode` is on my `PATH`.
-3. Launch `jcode` once in a new terminal window/session to confirm it starts successfully.
+2. Verify that `minnal` is on my `PATH`.
+3. Launch `minnal` once in a new terminal window/session to confirm it starts successfully.
 4. Before attempting any interactive login flow, assess which providers are already available non-interactively and prefer those first. Check existing local credentials, config files, CLI sessions, and environment variables such as:
    - Claude: `~/.jcode/auth.json`, `~/.claude/.credentials.json`, `~/.local/share/opencode/auth.json`, `ANTHROPIC_API_KEY`
    - OpenAI: `~/.jcode/openai-auth.json`, `~/.codex/auth.json`, `OPENAI_API_KEY`
@@ -666,20 +666,20 @@ Set up jcode on this machine for me.
    - Fireworks: `~/.config/jcode/fireworks.env`, `FIREWORKS_API_KEY`
    - MiniMax: `~/.config/jcode/minimax.env`, `MINIMAX_API_KEY`
    - Alibaba Cloud Coding Plan: existing jcode config/env if present
-5. Prefer whichever provider is already configured and verify it with `jcode auth-test --all-configured` or a provider-specific auth test when appropriate.
+5. Prefer whichever provider is already configured and verify it with `minnal auth-test --all-configured` or a provider-specific auth test when appropriate.
 6. Only if no usable provider is already configured, guide me through the minimal manual step needed:
-   - Claude: `jcode login --provider claude`
-   - GitHub Copilot: `jcode login --provider copilot`
-   - OpenAI: `jcode login --provider openai`
-   - Gemini: `jcode login --provider gemini`
-   - Azure OpenAI: `jcode login --provider azure`
-   - Fireworks: `jcode login --provider fireworks`
-   - MiniMax: `jcode login --provider minimax`
-   - Alibaba Cloud Coding Plan: `jcode login --provider alibaba-coding-plan`
+   - Claude: `minnal login --provider claude`
+   - GitHub Copilot: `minnal login --provider copilot`
+   - OpenAI: `minnal login --provider openai`
+   - Gemini: `minnal login --provider gemini`
+   - Azure OpenAI: `minnal login --provider azure`
+   - Fireworks: `minnal login --provider fireworks`
+   - MiniMax: `minnal login --provider minimax`
+   - Alibaba Cloud Coding Plan: `minnal login --provider alibaba-coding-plan`
    - OpenRouter: help me set `OPENROUTER_API_KEY`
    - Anthropic direct API: help me set `ANTHROPIC_API_KEY`
-7. After setup, run a simple smoke test with `jcode run "say hello"` and confirm it works.
-8. If I want browser automation, also check `jcode browser status`. If browser automation is not ready, run `jcode browser setup`, verify the built-in `browser` tool works, and explain any remaining manual step.
+7. After setup, run a simple smoke test with `minnal run "say hello"` and confirm it works.
+8. If I want browser automation, also check `minnal browser status`. If browser automation is not ready, run `minnal browser setup`, verify the built-in `browser` tool works, and explain any remaining manual step.
 9. Explain any manual step that still needs me, especially browser OAuth, device login, API key entry, or browser extension approval.
 ```
 
@@ -689,12 +689,12 @@ This is intended to be a copy-paste bootstrap prompt for jcode itself or any oth
 
 ```bash
 # macOS & Linux
-curl -fsSL https://raw.githubusercontent.com/1jehuang/jcode/master/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.sh | bash
 ```
 
 ```powershell
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/1jehuang/jcode/master/scripts/install.ps1 | iex
+irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1 | iex
 ```
 
 ### macOS via Homebrew
@@ -707,15 +707,15 @@ brew install jcode
 ### From Source (all platforms)
 
 ```bash
-git clone https://github.com/1jehuang/jcode.git
-cd jcode
+git clone https://github.com/codeslord/minnal.git
+cd minnal
 cargo build --release
 ```
 
 For local self-dev / refactor work on Linux x86_64, prefer:
 
 ```bash
-scripts/dev_cargo.sh build --release -p jcode --bin jcode
+scripts/dev_cargo.sh build --release -p jcode --bin minnal
 scripts/dev_cargo.sh --print-setup
 ```
 

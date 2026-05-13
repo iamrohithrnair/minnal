@@ -282,7 +282,7 @@
         "sessions": [
           "session_sim_1"
         ],
-        "status_message": "Connected to simulated jcode server."
+        "status_message": "Connected to simulated minnal server."
       },
       "before": {
         "active_session_id": null,
@@ -368,7 +368,7 @@
         "sessions": [
           "session_sim_1"
         ],
-        "status_message": "Connected to simulated jcode server."
+        "status_message": "Connected to simulated minnal server."
       },
       "before": {
         "active_session_id": "session_sim_1",
@@ -412,7 +412,7 @@
         "sessions": [
           "session_sim_1"
         ],
-        "status_message": "Connected to simulated jcode server."
+        "status_message": "Connected to simulated minnal server."
       },
       "effects": [],
       "seq": 4,
@@ -514,7 +514,7 @@
         "sessions": [
           "session_sim_1"
         ],
-        "status_message": "Connected to simulated jcode server."
+        "status_message": "Connected to simulated minnal server."
       },
       "effects": [
         {

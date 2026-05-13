@@ -31,12 +31,12 @@ pub async fn run_debug_command(
     if !crate::transport::is_socket_path(&debug_socket) {
         eprintln!("Debug socket not found at {:?}", debug_socket);
         eprintln!("\nMake sure:");
-        eprintln!("  1. A jcode server is running (jcode or jcode serve)");
+        eprintln!("  1. A minnal server is running (minnal or minnal serve)");
         eprintln!("  2. debug_socket is enabled in ~/.jcode/config.toml");
         eprintln!("     [display]");
         eprintln!("     debug_socket = true");
-        eprintln!("\nOr use 'jcode debug start' to start a server.");
-        eprintln!("Use 'jcode debug list' to see running servers.");
+        eprintln!("\nOr use 'minnal debug start' to start a server.");
+        eprintln!("Use 'minnal debug list' to see running servers.");
         anyhow::bail!("Debug socket not available");
     }
 
@@ -129,12 +129,12 @@ async fn debug_list_servers() -> Result<()> {
     }
 
     if servers.is_empty() {
-        println!("No running jcode servers found.");
-        println!("\nStart one with: jcode debug start");
+        println!("No running minnal servers found.");
+        println!("\nStart one with: minnal debug start");
         return Ok(());
     }
 
-    println!("Running jcode servers:\n");
+    println!("Running minnal servers:\n");
 
     for socket_path in servers {
         let debug_socket = {
@@ -178,7 +178,7 @@ async fn debug_list_servers() -> Result<()> {
     }
 
     println!("\nUse -s/--socket to target a specific server:");
-    println!("  jcode debug -s /path/to/socket.sock sessions");
+    println!("  minnal debug -s /path/to/socket.sock sessions");
 
     Ok(())
 }
@@ -236,7 +236,7 @@ async fn debug_start_server(arg: &str, socket_path: Option<String>) -> Result<()
             .is_ok()
     {
         eprintln!("Server already running at {}", socket);
-        eprintln!("Use 'jcode debug list' to see all servers.");
+        eprintln!("Use 'minnal debug list' to see all servers.");
         return Ok(());
     }
 
@@ -250,7 +250,7 @@ async fn debug_start_server(arg: &str, socket_path: Option<String>) -> Result<()
     };
     let _ = std::fs::remove_file(&debug_socket);
 
-    eprintln!("Starting jcode server...");
+    eprintln!("Starting minnal server...");
 
     let exe = std::env::current_exe()?;
     let mut cmd = std::process::Command::new(&exe);

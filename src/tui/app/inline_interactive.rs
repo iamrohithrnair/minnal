@@ -1620,7 +1620,7 @@ impl App {
         } else if spawned > 0 {
             let manual: Vec<String> = failed
                 .iter()
-                .map(|id| format!("  jcode --resume {}", id))
+                .map(|id| format!("  minnal --resume {}", id))
                 .collect();
             self.push_display_message(DisplayMessage::system(format!(
                 "Restored {} session(s) in new windows. {} failed:\n```\n{}\n```",
@@ -1631,7 +1631,7 @@ impl App {
         } else {
             let manual: Vec<String> = recovered
                 .iter()
-                .map(|id| format!("  jcode --resume {}", id))
+                .map(|id| format!("  minnal --resume {}", id))
                 .collect();
             self.push_display_message(DisplayMessage::system(format!(
                 "No terminal found. Resume manually:\n```\n{}\n```",

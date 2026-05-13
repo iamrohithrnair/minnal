@@ -47,7 +47,7 @@ graph TB
 
     subgraph "User Review"
         PH[Phone / Email]
-        CLI[jcode safety review]
+        CLI[minnal safety review]
         TW[TUI Review Panel]
     end
 
@@ -417,11 +417,11 @@ A review panel showing pending requests:
 **2. CLI**
 
 ```bash
-jcode safety review           # Interactive review of pending requests
-jcode safety list             # List all pending requests
-jcode safety approve <id>     # Approve a specific request
-jcode safety deny <id>        # Deny a specific request
-jcode safety log              # View decision history
+minnal safety review          # Interactive review of pending requests
+minnal safety list            # List all pending requests
+minnal safety approve <id>    # Approve a specific request
+minnal safety deny <id>       # Deny a specific request
+minnal safety log             # View decision history
 ```
 
 **3. Email / Remote**
@@ -524,7 +524,7 @@ pub enum Urgency {
 
 ### Phase 3: Review Interfaces
 - [ ] TUI review panel
-- [ ] CLI commands (`jcode safety review/list/approve/deny/log`)
+- [ ] CLI commands (`minnal safety review/list/approve/deny/log`)
 - [ ] Email approve/deny links (relay service)
 
 ### Phase 4: Configuration

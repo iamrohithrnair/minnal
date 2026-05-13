@@ -15,8 +15,8 @@ ref_socket="${JCODE_REF_SOCKET:-$default_socket}"
 ref_profile="${JCODE_REF_PROFILE:-debug}"
 
 case "$ref_profile" in
-  debug) default_bin="$repo_root/target/debug/jcode" ;;
-  release) default_bin="$repo_root/target/release/jcode" ;;
+  debug) default_bin="$repo_root/target/debug/minnal" ;;
+  release) default_bin="$repo_root/target/release/minnal" ;;
   *)
     printf 'error: unsupported JCODE_REF_PROFILE: %s (expected debug or release)\n' "$ref_profile" >&2
     exit 1
@@ -30,13 +30,13 @@ usage() {
 Usage:
   scripts/refactor_shadow.sh env
   scripts/refactor_shadow.sh build [--release]
-  scripts/refactor_shadow.sh serve [-- <jcode serve args>]
-  scripts/refactor_shadow.sh run [-- <jcode args>]
-  scripts/refactor_shadow.sh connect [-- <jcode connect args>]
+  scripts/refactor_shadow.sh serve [-- <minnal serve args>]
+  scripts/refactor_shadow.sh run [-- <minnal args>]
+  scripts/refactor_shadow.sh connect [-- <minnal connect args>]
   scripts/refactor_shadow.sh check
 
 What it does:
-  - Runs jcode in an isolated refactor environment
+  - Runs minnal in an isolated refactor environment
   - Uses separate JCODE_HOME and JCODE_SOCKET
   - Refuses to run against ~/.jcode to protect live sessions
 
@@ -83,7 +83,7 @@ ensure_socket_parent() {
 
 ensure_binary() {
   if [[ ! -x "$ref_bin" ]]; then
-    die "jcode binary not found or not executable: $ref_bin (run 'scripts/refactor_shadow.sh build')"
+    die "minnal binary not found or not executable: $ref_bin (run 'scripts/refactor_shadow.sh build')"
   fi
 }
 

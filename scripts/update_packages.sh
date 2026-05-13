@@ -8,10 +8,10 @@ VERSION_NUM="${VERSION#v}"
 
 echo "Updating packages for $VERSION..."
 
-LINUX_URL="https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-linux-x86_64.tar.gz"
-LINUX_ARM_URL="https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-linux-aarch64.tar.gz"
-MACOS_ARM_URL="https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-macos-aarch64.tar.gz"
-MACOS_INTEL_URL="https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-macos-x86_64.tar.gz"
+LINUX_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
+LINUX_ARM_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-aarch64.tar.gz"
+MACOS_ARM_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-aarch64.tar.gz"
+MACOS_INTEL_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-x86_64.tar.gz"
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
@@ -41,7 +41,7 @@ git clone --depth 1 git@github.com:1jehuang/homebrew-jcode.git "$BREW_DIR" 2>/de
 cat > "$BREW_DIR/Formula/jcode.rb" <<EOF
 class Jcode < Formula
   desc "AI coding agent powered by Claude and ChatGPT"
-  homepage "https://github.com/1jehuang/jcode"
+  homepage "https://github.com/codeslord/minnal"
   version "$VERSION_NUM"
   license "MIT"
 
@@ -51,7 +51,7 @@ class Jcode < Formula
       sha256 "$MACOS_ARM_SHA"
 
       def install
-        bin.install "jcode-macos-aarch64" => "jcode"
+        bin.install "minnal-macos-aarch64" => "minnal"
       end
     end
 
@@ -60,7 +60,7 @@ class Jcode < Formula
       sha256 "$MACOS_INTEL_SHA"
 
       def install
-        bin.install "jcode-macos-x86_64" => "jcode"
+        bin.install "minnal-macos-x86_64" => "minnal"
       end
     end
   end
@@ -71,11 +71,11 @@ class Jcode < Formula
       sha256 "$LINUX_SHA"
 
       def install
-        libexec.install "jcode-linux-x86_64", "jcode-linux-x86_64.bin"
+        libexec.install "minnal-linux-x86_64", "minnal-linux-x86_64.bin"
         libexec.install Dir["libssl.so*"], Dir["libcrypto.so*"]
-        (bin/"jcode").write <<~SH
+        (bin/"minnal").write <<~SH
           #!/bin/sh
-          exec "#{libexec}/jcode-linux-x86_64" "$@"
+          exec "#{libexec}/minnal-linux-x86_64" "$@"
         SH
       end
     end
@@ -85,13 +85,13 @@ class Jcode < Formula
       sha256 "$LINUX_ARM_SHA"
 
       def install
-        bin.install "jcode-linux-aarch64" => "jcode"
+        bin.install "minnal-linux-aarch64" => "minnal"
       end
     end
   end
 
   test do
-    assert_match "jcode", shell_output("#{bin}/jcode --version")
+    assert_match "minnal", shell_output("#{bin}/minnal --version")
   end
 end
 EOF
@@ -112,20 +112,20 @@ pkgver=$VERSION_NUM
 pkgrel=1
 pkgdesc="AI coding agent powered by Claude and ChatGPT"
 arch=('x86_64')
-url="https://github.com/1jehuang/jcode"
+url="https://github.com/codeslord/minnal"
 license=('MIT')
-provides=('jcode')
-conflicts=('jcode')
+provides=('minnal')
+conflicts=('minnal')
 source=("$LINUX_URL")
 sha256sums=('$LINUX_SHA')
 
 package() {
-    install -Dm755 "\${srcdir}/jcode-linux-x86_64" "\${pkgdir}/usr/lib/jcode/jcode-linux-x86_64"
-    install -Dm755 "\${srcdir}/jcode-linux-x86_64.bin" "\${pkgdir}/usr/lib/jcode/jcode-linux-x86_64.bin"
+    install -Dm755 "\${srcdir}/minnal-linux-x86_64" "\${pkgdir}/usr/lib/jcode/minnal-linux-x86_64"
+    install -Dm755 "\${srcdir}/minnal-linux-x86_64.bin" "\${pkgdir}/usr/lib/jcode/minnal-linux-x86_64.bin"
     install -Dm644 "\${srcdir}"/libssl.so* "\${pkgdir}/usr/lib/jcode/"
     install -Dm644 "\${srcdir}"/libcrypto.so* "\${pkgdir}/usr/lib/jcode/"
     mkdir -p "\${pkgdir}/usr/bin"
-    ln -s /usr/lib/jcode/jcode-linux-x86_64 "\${pkgdir}/usr/bin/jcode"
+    ln -s /usr/lib/jcode/minnal-linux-x86_64 "\${pkgdir}/usr/bin/minnal"
 }
 EOF
 

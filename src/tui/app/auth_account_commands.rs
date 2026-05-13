@@ -1070,7 +1070,7 @@ mod tests {
         let markdown = render_auth_doctor_markdown(Some("openai"));
         assert!(markdown.contains("**OpenAI** (`openai`)"));
         assert!(markdown.contains("**Next steps**"));
-        assert!(markdown.contains("jcode login --provider openai"));
+        assert!(markdown.contains("minnal login --provider openai"));
         assert!(markdown.contains("Review current state: `jcode auth status --json`"));
     }
 }

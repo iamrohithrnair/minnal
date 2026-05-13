@@ -71,7 +71,7 @@ inspection:
 - replay bundles
 - high-level assertions
 - fake backend scenarios
-- integration with jcode debug/tester tooling
+- integration with minnal debug/tester tooling
 
 The goal is for an agent to test autonomously in every way a human would, while
 also having richer semantic APIs than a human has.
@@ -175,7 +175,7 @@ Current fake backend behavior:
   `offline` or `unreachable`
 - message sends append `Simulated response to: <message>` and finish the turn
 
-This lets agents validate pairing and chat behavior without a real jcode server,
+This lets agents validate pairing and chat behavior without a real minnal server,
 MacBook, Xcode, Apple iOS Simulator, or iPhone.
 
 ## CLI usage

@@ -300,7 +300,7 @@ pub async fn ensure_browser_setup() -> Result<String> {
                             Ok(false) => {
                                 log.push_str("timed out\n");
                                 log.push_str(
-                                    "       Extension not detected. You can retry with: jcode browser setup\n",
+                                    "       Extension not detected. You can retry with: minnal browser setup\n",
                                 );
                                 log.push_str(
                                     "       Or manually install: Firefox > about:addons > Install from file > ",
@@ -327,7 +327,7 @@ pub async fn ensure_browser_setup() -> Result<String> {
                     "       Existing browser setup was already completed, so setup will not reopen the extension installer.\n",
                 );
                 log.push_str(
-                    "       Make sure Firefox is running with the Browser Agent Bridge extension enabled, then re-run `jcode browser status`.\n",
+                    "       Make sure Firefox is running with the Browser Agent Bridge extension enabled, then re-run `minnal browser status`.\n",
                 );
             }
         }
@@ -348,11 +348,11 @@ pub async fn ensure_browser_setup() -> Result<String> {
                 final_status.missing_actions.join(", ")
             ));
         }
-        log.push_str("Use `jcode browser status` to verify readiness after updating the extension in Firefox.\n");
+        log.push_str("Use `minnal browser status` to verify readiness after updating the extension in Firefox.\n");
     } else if final_status.binary_installed {
         log.push_str("\nSetup is not complete yet. Browser bridge binaries are installed, but the Firefox extension/bridge is not responding.\n");
         log.push_str(
-            "Use `jcode browser status` to re-check readiness after any manual Firefox step.\n",
+            "Use `minnal browser status` to re-check readiness after any manual Firefox step.\n",
         );
     } else {
         log.push_str("\nSetup is not complete yet. Browser bridge binary is still missing.\n");

@@ -10,16 +10,16 @@ run_cargo() {
     (cd "$repo_root" && "$cargo_exec" "$@")
 }
 
-echo "=== E2E Testing Script for jcode ==="
+echo "=== E2E Testing Script for minnal ==="
 echo ""
 
 # Test 1: Check binary exists and runs
-echo "Test 1: Check jcode binary..."
-if command -v jcode &> /dev/null; then
-    echo "✓ jcode binary found"
-    jcode --version
+echo "Test 1: Check minnal binary..."
+if command -v minnal &> /dev/null; then
+    echo "✓ minnal binary found"
+    minnal --version
 else
-    echo "✗ jcode binary not found"
+    echo "✗ minnal binary not found"
     exit 1
 fi
 
@@ -71,6 +71,6 @@ echo ""
 echo "=== All tests passed! ==="
 echo ""
 echo "To test interactively:"
-echo "  jcode        # Start TUI mode"
-echo "  jcode server # Start server mode"
-echo "  jcode client # Connect to server"
+echo "  minnal       # Start TUI mode"
+echo "  minnal server # Start server mode"
+echo "  minnal client # Connect to server"

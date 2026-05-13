@@ -745,7 +745,7 @@ memory { action: "tag", id: "...", tags: ["new", "tags"] }
 ### Phase 7: Full Integration ✅
 - [x] End-of-session extraction
 - [x] Sidecar consolidation on write (see below)
-- [x] User control CLI (`jcode memory` commands)
+- [x] User control CLI (`minnal memory` commands)
 - [x] Memory export/import
 
 ### Phase 7.5: Sidecar Consolidation (Inline, Per-Turn) ✅

@@ -199,7 +199,7 @@ pub fn visual_scene(tree: &UiTree) -> VisualScene {
         semantic_node_id: Some(tree.root.id.clone()),
         text: match tree.screen {
             Screen::Onboarding | Screen::Pairing => "Pair jcode".to_string(),
-            Screen::Chat => "jcode".to_string(),
+            Screen::Chat => "minnal".to_string(),
         },
         x: 154,
         y: 58,

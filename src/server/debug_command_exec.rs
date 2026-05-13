@@ -584,7 +584,7 @@ pub(super) async fn execute_debug_command(
             .unwrap_or_else(|| build::release_binary_path(&repo_dir));
         if !target_binary.exists() {
             return Err(anyhow::anyhow!(format!(
-                "No binary found at {}. Run 'jcode self-dev --build' first, or build with 'scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode' and publish current.",
+                "No binary found at {}. Run 'minnal self-dev --build' first, or build with 'scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal' and publish current.",
                 target_binary.display()
             )));
         }

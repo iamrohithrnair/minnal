@@ -28,7 +28,7 @@ cargo run -p jcode-mobile-sim -- assert-no-error --socket "$socket" >/dev/null
 
 cargo run -p jcode-mobile-sim -- tap --socket "$socket" pair.submit >/dev/null
 cargo run -p jcode-mobile-sim -- assert-screen --socket "$socket" chat >/dev/null
-cargo run -p jcode-mobile-sim -- assert-text --socket "$socket" "Connected to simulated jcode server." >/dev/null
+cargo run -p jcode-mobile-sim -- assert-text --socket "$socket" "Connected to simulated minnal server." >/dev/null
 
 cargo run -p jcode-mobile-sim -- set-field --socket "$socket" draft "$message" >/dev/null
 cargo run -p jcode-mobile-sim -- tap --socket "$socket" chat.send >/dev/null
