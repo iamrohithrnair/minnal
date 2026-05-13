@@ -24,7 +24,7 @@ if [[ "${1:-}" == "--dry-run" ]]; then
 fi
 
 VERSION="${1:?Usage: scripts/quick-release.sh [--dry-run] <version> [title]}"
-TITLE="${2:-$VERSION}"
+TITLE="${2:-minnal $VERSION}"
 VERSION_NUM="${VERSION#v}"
 
 if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -72,9 +72,9 @@ LINUX_PID=$!
 
 (
     JCODE_RELEASE_BUILD=1 JCODE_BUILD_SEMVER="$VERSION_NUM" cargo build --release --target aarch64-apple-darwin 2>/dev/null
-    cp target/aarch64-apple-darwin/release/jcode "$DIST/jcode-macos-aarch64"
-    chmod +x "$DIST/jcode-macos-aarch64"
-    (cd "$DIST" && tar czf jcode-macos-aarch64.tar.gz jcode-macos-aarch64)
+    cp target/aarch64-apple-darwin/release/jcode "$DIST/minnal-macos-aarch64"
+    chmod +x "$DIST/minnal-macos-aarch64"
+    (cd "$DIST" && tar czf minnal-macos-aarch64.tar.gz minnal-macos-aarch64)
     echo "  ✅ macOS done ($(( $(date +%s) - OVERALL_START ))s)"
 ) &
 MACOS_PID=$!
@@ -88,9 +88,9 @@ echo "Build time: ${BUILD_TIME}s"
 ls -lh "$DIST"/*.tar.gz
 
 # Verify binaries
-file "$DIST/jcode-linux-x86_64.bin" | grep -q 'ELF 64-bit' || { echo "Error: bad Linux binary"; exit 1; }
-head -1 "$DIST/jcode-linux-x86_64" | grep -q '^#!/' || { echo "Error: bad Linux wrapper"; exit 1; }
-file "$DIST/jcode-macos-aarch64" | grep -q 'Mach-O 64-bit' || { echo "Error: bad macOS binary"; exit 1; }
+file "$DIST/minnal-linux-x86_64.bin" | grep -q 'ELF 64-bit' || { echo "Error: bad Linux binary"; exit 1; }
+head -1 "$DIST/minnal-linux-x86_64" | grep -q '^#!/' || { echo "Error: bad Linux wrapper"; exit 1; }
+file "$DIST/minnal-macos-aarch64" | grep -q 'Mach-O 64-bit' || { echo "Error: bad macOS binary"; exit 1; }
 
 if $DRY_RUN; then
     echo ""
@@ -111,8 +111,8 @@ fi
 
 echo "▸ Creating GitHub release..."
 gh release create "$VERSION" \
-    "$DIST/jcode-linux-x86_64.tar.gz" \
-    "$DIST/jcode-macos-aarch64.tar.gz" \
+    "$DIST/minnal-linux-x86_64.tar.gz" \
+    "$DIST/minnal-macos-aarch64.tar.gz" \
     --title "$TITLE" \
     --generate-notes
 

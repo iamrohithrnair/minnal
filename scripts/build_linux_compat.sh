@@ -17,7 +17,7 @@ if [[ "$out_dir" != /* ]]; then
   out_dir="$repo_root/$out_dir"
 fi
 
-artifact="${JCODE_COMPAT_ARTIFACT:-jcode-linux-x86_64}"
+artifact="${JCODE_COMPAT_ARTIFACT:-minnal-linux-x86_64}"
 profile="${JCODE_COMPAT_PROFILE:-release}"
 image="${JCODE_COMPAT_IMAGE:-quay.io/pypa/manylinux2014_x86_64}"
 cache_root="${JCODE_COMPAT_CACHE_DIR:-$HOME/.cache/jcode-linux-compat}"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="1jehuang/jcode"
+REPO="codeslord/minnal"
 IS_WINDOWS=false
 
 info() { printf '\033[1;34m%s\033[0m\n' "$*"; }
@@ -13,23 +13,23 @@ ARCH="$(uname -m)"
 case "$OS" in
   Linux)
     case "$ARCH" in
-      x86_64)  ARTIFACT="jcode-linux-x86_64" ;;
-      aarch64|arm64) ARTIFACT="jcode-linux-aarch64" ;;
+      x86_64)  ARTIFACT="minnal-linux-x86_64" ;;
+      aarch64|arm64) ARTIFACT="minnal-linux-aarch64" ;;
       *)       err "Unsupported Linux architecture: $ARCH" ;;
     esac
     ;;
   Darwin)
     case "$ARCH" in
-      arm64)   ARTIFACT="jcode-macos-aarch64" ;;
-      x86_64)  ARTIFACT="jcode-macos-x86_64" ;;
+      arm64)   ARTIFACT="minnal-macos-aarch64" ;;
+      x86_64)  ARTIFACT="minnal-macos-x86_64" ;;
       *)       err "Unsupported macOS architecture: $ARCH" ;;
     esac
     ;;
   MINGW*|MSYS*|CYGWIN*)
     IS_WINDOWS=true
     case "$ARCH" in
-      x86_64|AMD64)  ARTIFACT="jcode-windows-x86_64" ;;
-      aarch64|arm64|ARM64) ARTIFACT="jcode-windows-aarch64" ;;
+      x86_64|AMD64)  ARTIFACT="minnal-windows-x86_64" ;;
+      aarch64|arm64|ARM64) ARTIFACT="minnal-windows-aarch64" ;;
       *)       err "Unsupported Windows architecture: $ARCH" ;;
     esac
     ;;

@@ -9,6 +9,7 @@ fn copilot_api_token_not_expired() {
     let token = CopilotApiToken {
         token: "test-token".to_string(),
         expires_at: future_ts,
+        api_endpoint: COPILOT_API_BASE.to_string(),
     };
     assert!(!token.is_expired());
 }
@@ -19,6 +20,7 @@ fn copilot_api_token_expired() {
     let token = CopilotApiToken {
         token: "test-token".to_string(),
         expires_at: past_ts,
+        api_endpoint: COPILOT_API_BASE.to_string(),
     };
     assert!(token.is_expired());
 }
@@ -29,6 +31,7 @@ fn copilot_api_token_expiring_within_buffer() {
     let token = CopilotApiToken {
         token: "test-token".to_string(),
         expires_at: almost_ts,
+        api_endpoint: COPILOT_API_BASE.to_string(),
     };
     assert!(token.is_expired());
 }
@@ -328,6 +331,8 @@ fn choose_default_model_with_opus() {
             vendor: String::new(),
             version: String::new(),
             model_picker_enabled: false,
+            policy: None,
+            supported_endpoints: Vec::new(),
             capabilities: Default::default(),
         },
         CopilotModelInfo {
@@ -336,6 +341,8 @@ fn choose_default_model_with_opus() {
             vendor: String::new(),
             version: String::new(),
             model_picker_enabled: false,
+            policy: None,
+            supported_endpoints: Vec::new(),
             capabilities: Default::default(),
         },
     ];
@@ -350,6 +357,8 @@ fn choose_default_model_without_opus() {
         vendor: String::new(),
         version: String::new(),
         model_picker_enabled: false,
+        policy: None,
+        supported_endpoints: Vec::new(),
         capabilities: Default::default(),
     }];
     assert_eq!(choose_default_model(&models), "claude-sonnet-4.6");
@@ -363,6 +372,8 @@ fn choose_default_model_with_sonnet_4_only() {
         vendor: String::new(),
         version: String::new(),
         model_picker_enabled: false,
+        policy: None,
+        supported_endpoints: Vec::new(),
         capabilities: Default::default(),
     }];
     assert_eq!(choose_default_model(&models), "claude-sonnet-4");
@@ -371,7 +382,50 @@ fn choose_default_model_with_sonnet_4_only() {
 #[test]
 fn choose_default_model_empty_list() {
     let models: Vec<CopilotModelInfo> = vec![];
-    assert_eq!(choose_default_model(&models), "claude-sonnet-4");
+    assert_eq!(choose_default_model(&models), "gpt-5-mini");
+}
+
+#[test]
+fn choose_default_model_skips_disabled_and_non_chat_models() {
+    let models = vec![
+        CopilotModelInfo {
+            id: "claude-sonnet-4.6".to_string(),
+            name: String::new(),
+            vendor: String::new(),
+            version: String::new(),
+            model_picker_enabled: true,
+            policy: Some(CopilotModelPolicy {
+                state: "disabled".to_string(),
+            }),
+            supported_endpoints: vec!["/chat/completions".to_string()],
+            capabilities: Default::default(),
+        },
+        CopilotModelInfo {
+            id: "gpt-5.4-mini".to_string(),
+            name: String::new(),
+            vendor: String::new(),
+            version: String::new(),
+            model_picker_enabled: true,
+            policy: Some(CopilotModelPolicy {
+                state: "enabled".to_string(),
+            }),
+            supported_endpoints: vec!["/responses".to_string()],
+            capabilities: Default::default(),
+        },
+        CopilotModelInfo {
+            id: "gpt-5-mini".to_string(),
+            name: String::new(),
+            vendor: String::new(),
+            version: String::new(),
+            model_picker_enabled: true,
+            policy: Some(CopilotModelPolicy {
+                state: "enabled".to_string(),
+            }),
+            supported_endpoints: vec!["/chat/completions".to_string()],
+            capabilities: Default::default(),
+        },
+    ];
+    assert_eq!(choose_default_model(&models), "gpt-5-mini");
 }
 
 #[test]
@@ -451,6 +505,7 @@ fn copilot_token_response_roundtrip() -> Result<()> {
     let resp = CopilotTokenResponse {
         token: "bearer_token_xxx".to_string(),
         expires_at: 1700000000,
+        endpoints: CopilotTokenEndpoints::default(),
     };
     let json = serde_json::to_string(&resp)?;
     let parsed: CopilotTokenResponse = serde_json::from_str(&json)?;

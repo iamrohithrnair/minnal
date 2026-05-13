@@ -118,6 +118,13 @@ pub struct AccessTokenResponse {
 pub struct CopilotTokenResponse {
     pub token: String,
     pub expires_at: i64,
+    #[serde(default)]
+    pub endpoints: CopilotTokenEndpoints,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+pub struct CopilotTokenEndpoints {
+    pub api: Option<String>,
 }
 
 /// Cached Copilot API token with expiry
@@ -125,6 +132,7 @@ pub struct CopilotTokenResponse {
 pub struct CopilotApiToken {
     pub token: String,
     pub expires_at: i64,
+    pub api_endpoint: String,
 }
 
 impl CopilotApiToken {
@@ -604,6 +612,9 @@ pub async fn exchange_github_token(
         .get(COPILOT_TOKEN_URL)
         .header("Authorization", format!("Token {}", github_token))
         .header("User-Agent", EDITOR_VERSION)
+        .header("Editor-Version", EDITOR_VERSION)
+        .header("Editor-Plugin-Version", EDITOR_PLUGIN_VERSION)
+        .header("Copilot-Integration-Id", COPILOT_INTEGRATION_ID)
         .send()
         .await
         .context("Failed to exchange GitHub token for Copilot token")?;
@@ -622,6 +633,15 @@ pub async fn exchange_github_token(
     Ok(CopilotApiToken {
         token: token_resp.token,
         expires_at: token_resp.expires_at,
+        api_endpoint: token_resp
+            .endpoints
+            .api
+            .as_deref()
+            .map(str::trim)
+            .filter(|endpoint| !endpoint.is_empty())
+            .unwrap_or(COPILOT_API_BASE)
+            .trim_end_matches('/')
+            .to_string(),
     })
 }
 
@@ -782,7 +802,17 @@ pub struct CopilotModelInfo {
     #[serde(default)]
     pub model_picker_enabled: bool,
     #[serde(default)]
+    pub policy: Option<CopilotModelPolicy>,
+    #[serde(default)]
+    pub supported_endpoints: Vec<String>,
+    #[serde(default)]
     pub capabilities: Option<CopilotModelCapabilities>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct CopilotModelPolicy {
+    #[serde(default)]
+    pub state: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -808,11 +838,11 @@ struct ModelsResponse {
 /// Fetch available models from the Copilot API.
 pub async fn fetch_available_models(
     client: &reqwest::Client,
-    bearer_token: &str,
+    api_token: &CopilotApiToken,
 ) -> Result<Vec<CopilotModelInfo>> {
     let resp = client
-        .get(format!("{}/models", COPILOT_API_BASE))
-        .header("Authorization", format!("Bearer {}", bearer_token))
+        .get(format!("{}/models", api_token.api_endpoint))
+        .header("Authorization", format!("Bearer {}", api_token.token))
         .header("Editor-Version", EDITOR_VERSION)
         .header("Editor-Plugin-Version", EDITOR_PLUGIN_VERSION)
         .header("Copilot-Integration-Id", COPILOT_INTEGRATION_ID)
@@ -834,19 +864,56 @@ pub async fn fetch_available_models(
     Ok(models_resp.data)
 }
 
-/// Determine the best default model based on available models.
-/// - If claude-opus-4.6 is available -> paid tier -> use claude-opus-4.6
-/// - Otherwise -> free/basic tier -> use claude-sonnet-4.6 or claude-sonnet-4
-pub fn choose_default_model(available_models: &[CopilotModelInfo]) -> String {
-    let model_ids: Vec<&str> = available_models.iter().map(|m| m.id.as_str()).collect();
+pub fn is_usable_chat_model(model: &CopilotModelInfo) -> bool {
+    let policy_allows = model
+        .policy
+        .as_ref()
+        .map(|policy| {
+            let state = policy.state.trim();
+            state.is_empty() || state.eq_ignore_ascii_case("enabled")
+        })
+        .unwrap_or(true);
+    let supports_chat = model.supported_endpoints.is_empty()
+        || model
+            .supported_endpoints
+            .iter()
+            .any(|endpoint| endpoint == "/chat/completions");
 
-    if model_ids.contains(&"claude-opus-4.6") {
-        "claude-opus-4.6".to_string()
-    } else if model_ids.contains(&"claude-sonnet-4.6") {
-        "claude-sonnet-4.6".to_string()
-    } else {
-        "claude-sonnet-4".to_string()
+    policy_allows && supports_chat
+}
+
+/// Determine the best default model based on available models.
+/// Ignores models that Copilot advertises in `/models` but marks disabled for
+/// the current account or unavailable on the chat completions transport.
+pub fn choose_default_model(available_models: &[CopilotModelInfo]) -> String {
+    let usable_model_ids: Vec<&str> = available_models
+        .iter()
+        .filter(|model| is_usable_chat_model(model))
+        .map(|model| model.id.as_str())
+        .collect();
+
+    for preferred in [
+        "gpt-5-mini",
+        "claude-haiku-4.5",
+        "claude-sonnet-4.5",
+        "claude-opus-4.7",
+        "claude-opus-4.6",
+        "claude-sonnet-4.6",
+        "claude-opus-4.5",
+        "gpt-4.1",
+        "gpt-4o",
+        "claude-sonnet-4",
+    ] {
+        if usable_model_ids.contains(&preferred) {
+            return preferred.to_string();
+        }
     }
+
+    usable_model_ids
+        .first()
+        .copied()
+        .unwrap_or("gpt-5-mini")
+        .to_string()
 }
 
 /// Fetch the authenticated GitHub username using an OAuth token.
