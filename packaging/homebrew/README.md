@@ -14,25 +14,22 @@ brew install minnal
 1. Bump `version` in `Cargo.toml` (and the matching `minnal` entry in
    `Cargo.lock`) and publish a GitHub release tagged `vX.Y.Z` on
    `codeslord/minnal`.
-2. Build release binaries for each supported target:
+2. Build release binaries for each supported Homebrew target:
    ```bash
-   rustup target add aarch64-apple-darwin x86_64-apple-darwin
+   rustup target add aarch64-apple-darwin
    cargo build --release --target aarch64-apple-darwin --bin minnal
-   cargo build --release --target x86_64-apple-darwin  --bin minnal
    ```
 3. Package and hash:
    ```bash
    mkdir -p dist
-   for t in aarch64-apple-darwin x86_64-apple-darwin; do
-     tar -czf "dist/minnal-${t}.tar.gz" -C "target/${t}/release" minnal
-   done
+   tar -czf dist/minnal-macos-aarch64.tar.gz -C target/aarch64-apple-darwin/release minnal
    shasum -a 256 dist/*.tar.gz
    ```
 4. Upload the tarballs to the GitHub release:
    ```bash
    gh release upload vX.Y.Z dist/minnal-*.tar.gz --repo codeslord/minnal
    ```
-5. Update `version` and the two `sha256` placeholders in `minnal.rb`, then copy
+5. Update `version` and the `sha256` placeholders in `minnal.rb`, then copy
    the file to `codeslord/homebrew-minnal` at `Formula/minnal.rb`, commit, and
    push.
 6. Verify:

@@ -384,13 +384,13 @@ function Get-MinnalWindowsArtifact {
 
     foreach ($arch in $candidates) {
         switch -Regex ($arch.Trim()) {
-            '^(X64|AMD64|x86_64)$' { return "minnal-windows-x86_64" }
+            '^(X64|AMD64|x86_64)$' { Write-Err "Unsupported architecture: $arch (supported: ARM64)" }
             '^(Arm64|ARM64|AARCH64|aarch64)$' { return "minnal-windows-aarch64" }
         }
     }
 
     $displayArch = if ($candidates.Count -gt 0) { $candidates -join ", " } else { "<unknown>" }
-    Write-Err "Unsupported architecture: $displayArch (supported: x86_64, ARM64)"
+    Write-Err "Unsupported architecture: $displayArch (supported: ARM64)"
 }
 
 $Artifact = Get-MinnalWindowsArtifact

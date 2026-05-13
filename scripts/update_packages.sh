@@ -11,7 +11,6 @@ echo "Updating packages for $VERSION..."
 LINUX_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
 LINUX_ARM_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-aarch64.tar.gz"
 MACOS_ARM_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-aarch64.tar.gz"
-MACOS_INTEL_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-x86_64.tar.gz"
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
@@ -20,17 +19,14 @@ echo "Downloading assets for checksums..."
 curl -sL "$LINUX_URL" -o "$tmpdir/linux.tar.gz"
 curl -sL "$LINUX_ARM_URL" -o "$tmpdir/linux-arm.tar.gz"
 curl -sL "$MACOS_ARM_URL" -o "$tmpdir/macos-arm.tar.gz"
-curl -sL "$MACOS_INTEL_URL" -o "$tmpdir/macos-intel.tar.gz"
 
 LINUX_SHA=$(sha256sum "$tmpdir/linux.tar.gz" | cut -d' ' -f1)
 LINUX_ARM_SHA=$(sha256sum "$tmpdir/linux-arm.tar.gz" | cut -d' ' -f1)
 MACOS_ARM_SHA=$(sha256sum "$tmpdir/macos-arm.tar.gz" | cut -d' ' -f1)
-MACOS_INTEL_SHA=$(sha256sum "$tmpdir/macos-intel.tar.gz" | cut -d' ' -f1)
 
   echo "  Linux SHA256: $LINUX_SHA"
 echo "  Linux ARM64 SHA256: $LINUX_ARM_SHA"
 echo "  macOS ARM64 SHA256: $MACOS_ARM_SHA"
-echo "  macOS Intel SHA256: $MACOS_INTEL_SHA"
 
 # --- Homebrew tap ---
 echo ""
@@ -55,14 +51,6 @@ class Minnal < Formula
       end
     end
 
-    on_intel do
-      url "$MACOS_INTEL_URL"
-      sha256 "$MACOS_INTEL_SHA"
-
-      def install
-        bin.install "minnal-macos-x86_64" => "minnal"
-      end
-    end
   end
 
   on_linux do

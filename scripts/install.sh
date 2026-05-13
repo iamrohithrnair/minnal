@@ -21,14 +21,14 @@ case "$OS" in
   Darwin)
     case "$ARCH" in
       arm64)   ARTIFACT="minnal-macos-aarch64" ;;
-      x86_64)  ARTIFACT="minnal-macos-x86_64" ;;
+      x86_64)  err "Unsupported macOS architecture: $ARCH (supported release: arm64)" ;;
       *)       err "Unsupported macOS architecture: $ARCH" ;;
     esac
     ;;
   MINGW*|MSYS*|CYGWIN*)
     IS_WINDOWS=true
     case "$ARCH" in
-      x86_64|AMD64)  ARTIFACT="minnal-windows-x86_64" ;;
+      x86_64|AMD64)  err "Unsupported Windows architecture: $ARCH (supported release: ARM64)" ;;
       aarch64|arm64|ARM64) ARTIFACT="minnal-windows-aarch64" ;;
       *)       err "Unsupported Windows architecture: $ARCH" ;;
     esac

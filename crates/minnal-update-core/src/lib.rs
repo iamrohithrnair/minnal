@@ -140,17 +140,9 @@ pub fn get_asset_name() -> &'static str {
     {
         "minnal-linux-aarch64"
     }
-    #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
-    {
-        "minnal-macos-x86_64"
-    }
     #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
     {
         "minnal-macos-aarch64"
-    }
-    #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
-    {
-        "minnal-windows-x86_64.exe"
     }
     #[cfg(all(target_os = "windows", target_arch = "aarch64"))]
     {
@@ -159,9 +151,7 @@ pub fn get_asset_name() -> &'static str {
     #[cfg(not(any(
         all(target_os = "linux", target_arch = "x86_64"),
         all(target_os = "linux", target_arch = "aarch64"),
-        all(target_os = "macos", target_arch = "x86_64"),
         all(target_os = "macos", target_arch = "aarch64"),
-        all(target_os = "windows", target_arch = "x86_64"),
         all(target_os = "windows", target_arch = "aarch64"),
     )))]
     {
@@ -323,7 +313,11 @@ mod tests {
 
     #[test]
     fn asset_name_is_supported() {
-        assert_ne!(get_asset_name(), "minnal-unknown");
+        let supported = cfg!(all(target_os = "linux", target_arch = "x86_64"))
+            || cfg!(all(target_os = "linux", target_arch = "aarch64"))
+            || cfg!(all(target_os = "macos", target_arch = "aarch64"))
+            || cfg!(all(target_os = "windows", target_arch = "aarch64"));
+        assert_eq!(get_asset_name() != "minnal-unknown", supported);
     }
 
     #[test]

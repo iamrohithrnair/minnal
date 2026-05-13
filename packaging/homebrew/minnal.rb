@@ -13,15 +13,6 @@ class Minnal < Formula
         bin.install "minnal-macos-aarch64" => "minnal"
       end
     end
-
-    on_intel do
-      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-macos-x86_64.tar.gz"
-      sha256 "REPLACE_WITH_MACOS_X86_64_SHA256"
-
-      def install
-        bin.install "minnal-macos-x86_64" => "minnal"
-      end
-    end
   end
 
   on_linux do

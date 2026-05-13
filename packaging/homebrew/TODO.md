@@ -15,7 +15,6 @@ Manual fallback if the tap update is skipped or fails:
    - `minnal-linux-x86_64.tar.gz`
    - `minnal-linux-aarch64.tar.gz`
    - `minnal-macos-aarch64.tar.gz`
-   - `minnal-macos-x86_64.tar.gz`
 4. Replace the placeholders in `packaging/homebrew/minnal.rb`, copy it to
    `Formula/minnal.rb` in `codeslord/homebrew-minnal`, commit, and push.
 5. Verify:
