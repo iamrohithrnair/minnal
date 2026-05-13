@@ -369,7 +369,7 @@ jobs:
           git config user.email "release@minnal.dev"
           git add Formula/minnal.rb
           git commit -m "Update to ${VERSION}" || echo "No changes"
-          git push
+          git push origin HEAD:main
 
       - name: Update AUR package
         env:
