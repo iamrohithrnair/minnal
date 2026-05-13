@@ -1,12 +1,12 @@
 use crate::build;
 use crate::storage;
 use anyhow::{Context, Result};
-use jcode_update_core::{
+use minnal_update_core::{
     BACKGROUND_UPDATE_THRESHOLD, estimate_release_update_duration, estimate_source_update_duration,
     format_duration_estimate, get_asset_name, summarize_git_pull_failure, update_estimate,
     verify_asset_checksum_text, version_is_newer,
 };
-pub use jcode_update_core::{
+pub use minnal_update_core::{
     DownloadProgress, GitHubAsset, GitHubRelease, PreparedUpdate, UpdateCheckResult,
     UpdateEstimate, format_download_progress_bar,
 };
@@ -58,11 +58,11 @@ fn unicode_display_width(s: &str) -> usize {
 }
 
 pub fn is_release_build() -> bool {
-    option_env!("JCODE_RELEASE_BUILD").is_some()
+    option_env!("MINNAL_RELEASE_BUILD").is_some()
 }
 
 fn current_update_semver() -> &'static str {
-    env!("JCODE_UPDATE_SEMVER")
+    env!("MINNAL_UPDATE_SEMVER")
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -118,15 +118,15 @@ impl UpdateMetadata {
 }
 
 fn metadata_path() -> Result<PathBuf> {
-    Ok(storage::jcode_dir()?.join("update_metadata.json"))
+    Ok(storage::minnal_dir()?.join("update_metadata.json"))
 }
 
 fn source_build_root() -> Result<PathBuf> {
-    Ok(storage::jcode_dir()?.join("builds").join("source"))
+    Ok(storage::minnal_dir()?.join("builds").join("source"))
 }
 
 fn source_build_repo_dir() -> Result<PathBuf> {
-    Ok(source_build_root()?.join("jcode"))
+    Ok(source_build_root()?.join("minnal"))
 }
 
 fn record_release_update_duration(duration: Duration) {
@@ -144,7 +144,7 @@ fn record_source_update_duration(duration: Duration) {
 }
 
 pub fn should_auto_update() -> bool {
-    if std::env::var("JCODE_NO_AUTO_UPDATE").is_ok() {
+    if std::env::var("MINNAL_NO_AUTO_UPDATE").is_ok() {
         return false;
     }
 
@@ -203,7 +203,7 @@ pub fn fetch_latest_release_blocking() -> Result<GitHubRelease> {
 
     let client = reqwest::blocking::Client::builder()
         .timeout(UPDATE_CHECK_TIMEOUT)
-        .user_agent("jcode-updater")
+        .user_agent("minnal-updater")
         .build()?;
 
     let response = client
@@ -228,7 +228,7 @@ fn latest_main_sha_blocking() -> Result<String> {
     let url = format!("https://api.github.com/repos/{}/commits/main", GITHUB_REPO);
     let client = reqwest::blocking::Client::builder()
         .timeout(UPDATE_CHECK_TIMEOUT)
-        .user_agent("jcode-updater")
+        .user_agent("minnal-updater")
         .build()?;
 
     let response = client
@@ -323,7 +323,7 @@ fn install_main_source_update_blocking(latest_sha: &str) -> Result<PathBuf> {
 }
 
 fn prepare_stable_update_blocking() -> Result<PreparedUpdate> {
-    let current_version = env!("JCODE_VERSION");
+    let current_version = env!("MINNAL_VERSION");
     let current_update_version = current_update_semver();
     let release = fetch_latest_release_blocking()?;
     let release_version = release.tag_name.trim_start_matches('v');
@@ -367,11 +367,11 @@ fn prepare_stable_update_blocking() -> Result<PreparedUpdate> {
 }
 
 fn prepare_main_update_blocking() -> Result<PreparedUpdate> {
-    let current_hash = env!("JCODE_GIT_HASH");
+    let current_hash = env!("MINNAL_GIT_HASH");
     if current_hash.is_empty() || current_hash == "unknown" {
         crate::logging::info("Main channel: no git hash in binary, skipping update check");
         return Ok(PreparedUpdate::None {
-            current: env!("JCODE_VERSION").to_string(),
+            current: env!("MINNAL_VERSION").to_string(),
         });
     }
 
@@ -577,7 +577,7 @@ fn check_for_stable_update_blocking() -> Result<Option<GitHubRelease>> {
 ///   - Tries to build from source if cargo is available
 ///   - Falls back to latest GitHub Release if not
 fn check_for_main_update_blocking() -> Result<Option<GitHubRelease>> {
-    let current_hash = env!("JCODE_GIT_HASH");
+    let current_hash = env!("MINNAL_GIT_HASH");
     if current_hash.is_empty() || current_hash == "unknown" {
         crate::logging::info("Main channel: no git hash in binary, skipping update check");
         return Ok(None);
@@ -650,13 +650,13 @@ fn has_cargo() -> bool {
         .unwrap_or(false)
 }
 
-/// Build jcode from source by cloning/pulling the repo and running cargo build
+/// Build minnal from source by cloning/pulling the repo and running cargo build
 fn build_from_source() -> Result<PathBuf> {
     let started = Instant::now();
     let build_dir = source_build_root()?;
     fs::create_dir_all(&build_dir)?;
 
-    let repo_dir = build_dir.join("jcode");
+    let repo_dir = build_dir.join("minnal");
 
     if repo_dir.join(".git").exists() {
         // Pull latest
@@ -700,7 +700,7 @@ fn build_from_source() -> Result<PathBuf> {
         let clone_url = format!("https://github.com/{}.git", GITHUB_REPO);
         let output = std::process::Command::new("git")
             .args([
-                "clone", "--depth", "1", "--branch", "main", &clone_url, "jcode",
+                "clone", "--depth", "1", "--branch", "main", &clone_url, "minnal",
             ])
             .current_dir(&build_dir)
             .output()
@@ -719,7 +719,7 @@ fn build_from_source() -> Result<PathBuf> {
     let output = std::process::Command::new("cargo")
         .args(["build", "--release"])
         .current_dir(&repo_dir)
-        .env("JCODE_RELEASE_BUILD", "1")
+        .env("MINNAL_RELEASE_BUILD", "1")
         .output()
         .context("Failed to run cargo build")?;
 
@@ -759,11 +759,11 @@ pub fn download_and_install_blocking_with_progress(
     let download_url = asset.browser_download_url.clone();
 
     let temp_dir = std::env::temp_dir();
-    let temp_path = temp_dir.join(format!("jcode-update-{}", std::process::id()));
+    let temp_path = temp_dir.join(format!("minnal-update-{}", std::process::id()));
 
     let client = reqwest::blocking::Client::builder()
         .timeout(DOWNLOAD_TIMEOUT)
-        .user_agent("jcode-updater")
+        .user_agent("minnal-updater")
         .build()?;
 
     let mut response = client
@@ -917,7 +917,7 @@ pub fn check_and_maybe_update(auto_install: bool) -> UpdateCheckResult {
 
     match check_for_update_blocking() {
         Ok(Some(release)) => {
-            let current = env!("JCODE_VERSION").to_string();
+            let current = env!("MINNAL_VERSION").to_string();
             let latest = release.tag_name.clone();
 
             Bus::global().publish(BusEvent::UpdateStatus(UpdateStatus::Available {
@@ -970,7 +970,7 @@ pub fn check_and_maybe_update(auto_install: bool) -> UpdateCheckResult {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jcode_update_core::parse_sha256sums;
+    use minnal_update_core::parse_sha256sums;
     use sha2::{Digest, Sha256};
 
     #[test]

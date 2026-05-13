@@ -11,16 +11,16 @@ Related docs:
 
 ## Source files audited
 
-- `ios/Sources/JCodeMobile/AppModel.swift`
-- `ios/Sources/JCodeMobile/ContentView.swift`
-- `ios/Sources/JCodeMobile/ImagePickerView.swift`
-- `ios/Sources/JCodeMobile/QRScannerView.swift`
-- `ios/Sources/JCodeMobile/SpeechRecognizer.swift`
-- `ios/Sources/JCodeKit/Connection.swift`
-- `ios/Sources/JCodeKit/CredentialStore.swift`
-- `ios/Sources/JCodeKit/JCodeClient.swift`
-- `ios/Sources/JCodeKit/Pairing.swift`
-- `ios/Sources/JCodeKit/Protocol.swift`
+- `ios/Sources/MinnalMobile/AppModel.swift`
+- `ios/Sources/MinnalMobile/ContentView.swift`
+- `ios/Sources/MinnalMobile/ImagePickerView.swift`
+- `ios/Sources/MinnalMobile/QRScannerView.swift`
+- `ios/Sources/MinnalMobile/SpeechRecognizer.swift`
+- `ios/Sources/MinnalKit/Connection.swift`
+- `ios/Sources/MinnalKit/CredentialStore.swift`
+- `ios/Sources/MinnalKit/MinnalClient.swift`
+- `ios/Sources/MinnalKit/Pairing.swift`
+- `ios/Sources/MinnalKit/Protocol.swift`
 
 ## Summary
 
@@ -75,7 +75,7 @@ Rust target:
 - `MobileAppState`
 - `MobileAction`
 - `MobileEffect`
-- reducers/state machines in `jcode-mobile-core`
+- reducers/state machines in `minnal-mobile-core`
 - stable serialization for snapshots and replay
 
 ### Pairing flow
@@ -104,7 +104,7 @@ Simulator requirement:
 
 ### Connection lifecycle and reconnect policy
 
-Current sources: `AppModel.connectSelected()`, `AppModel.disconnect()`, `AppModel.onDisconnected()`, `Connection.swift`, `JCodeClient.swift`
+Current sources: `AppModel.connectSelected()`, `AppModel.disconnect()`, `AppModel.onDisconnected()`, `Connection.swift`, `MinnalClient.swift`
 
 Move to Rust:
 
@@ -151,7 +151,7 @@ Move to Rust:
 
 ### Streaming response and history mapping
 
-Current sources: `AppModel.applyHistory()`, `appendAssistantChunk()`, `replaceAssistantText()`, `JCodeClient.handleServerEvent()`
+Current sources: `AppModel.applyHistory()`, `appendAssistantChunk()`, `replaceAssistantText()`, `MinnalClient.handleServerEvent()`
 
 Move to Rust:
 
@@ -206,11 +206,11 @@ Move credential data model, list/select/remove behavior, and migration/versionin
 
 ## Candidate Rust modules
 
-`crates/jcode-mobile-core` should likely split internally into:
+`crates/minnal-mobile-core` should likely split internally into:
 
 - `state`, `action`, `effect`, `reducer`, `protocol`, `chat`, `tools`, `pairing`, `connection`, `storage_model`, `semantic_ui`, `layout`, `scenario`, `replay`
 
-`crates/jcode-mobile-sim` should own:
+`crates/minnal-mobile-sim` should own:
 
 - simulator daemon, automation protocol, fake backend, CLI, visual shell integration, screenshot/layout export, replay execution
 
@@ -240,4 +240,4 @@ Move credential data model, list/select/remove behavior, and migration/versionin
 
 ## Completion status
 
-This audit completes milestone M3 at the documentation/planning level. The next implementation milestone is M4: expand `jcode-mobile-core` into the real shared mobile app state/effect/reducer/protocol core.
+This audit completes milestone M3 at the documentation/planning level. The next implementation milestone is M4: expand `minnal-mobile-core` into the real shared mobile app state/effect/reducer/protocol core.

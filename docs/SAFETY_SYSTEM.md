@@ -3,7 +3,7 @@
 > **Status:** Design
 > **Updated:** 2026-02-08
 
-A human-in-the-loop safety layer for unmonitored agent operations. Designed as an independent subsystem that any jcode feature can integrate with. Currently the only consumer is ambient mode, but the system is intentionally decoupled so it can be reused for future features.
+A human-in-the-loop safety layer for unmonitored agent operations. Designed as an independent subsystem that any minnal feature can integrate with. Currently the only consumer is ambient mode, but the system is intentionally decoupled so it can be reused for future features.
 
 ## Overview
 
@@ -166,7 +166,7 @@ sequenceDiagram
     RQ->>RQ: Store pending request
     RQ->>NF: Dispatch notification
 
-    NF->>US: Email: "jcode ambient wants to create a PR"
+    NF->>US: Email: "minnal ambient wants to create a PR"
     NF->>US: Desktop notification (if available)
 
     Note over AG: Agent decides: wait or move on?
@@ -292,7 +292,7 @@ provider = "twilio"
 
 # Webhook (if enabled)
 [safety.notifications.webhook]
-url = "https://example.com/jcode-safety"
+url = "https://example.com/minnal-safety"
 secret = "..."
 
 # Desktop notification (uses notify-send or similar)
@@ -364,7 +364,7 @@ Ambient cycle completed (4m 56s)
 Done:
 - Merged 2 duplicate memories (dark mode preference)
 - Pruned 1 stale memory (confidence: 0.02)
-- Extracted 3 memories from crashed session jcode-red-fox-1234
+- Extracted 3 memories from crashed session minnal-red-fox-1234
 - Verified 5 facts against codebase (all still valid)
 
 Needs your review:
@@ -377,10 +377,10 @@ Budget: 62% remaining today
 
 ### Delivery
 
-- **Always:** Written to `~/.jcode/ambient/transcripts/YYYY-MM-DD-HHMMSS.json`
+- **Always:** Written to `~/.minnal/ambient/transcripts/YYYY-MM-DD-HHMMSS.json`
 - **If email enabled:** Summary sent after each cycle (respecting batch interval)
 - **If TUI open:** Summary shown in ambient info widget
-- **CLI:** `jcode ambient log` to view recent transcripts
+- **CLI:** `minnal ambient log` to view recent transcripts
 
 ---
 
@@ -389,7 +389,7 @@ Budget: 62% remaining today
 ### Storage
 
 ```
-~/.jcode/safety/
+~/.minnal/safety/
 ├── queue.json              # Pending permission requests
 ├── history.json            # Past decisions (for learning patterns)
 └── config.json             # Cached safety configuration
@@ -397,7 +397,7 @@ Budget: 62% remaining today
 
 ### Review Interfaces
 
-**1. TUI (when jcode is open)**
+**1. TUI (when minnal is open)**
 
 A review panel showing pending requests:
 
@@ -449,7 +449,7 @@ This history could eventually feed into smarter classification — if the user a
 
 ## Integration API
 
-The safety system exposes a simple API for any jcode feature to use:
+The safety system exposes a simple API for any minnal feature to use:
 
 ```rust
 pub struct SafetySystem {

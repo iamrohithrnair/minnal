@@ -110,7 +110,7 @@ pub(crate) fn set_client_remote_display_title(
 ) {
     if server_name.is_empty()
         || server_name.eq_ignore_ascii_case("minnal")
-        || server_name.eq_ignore_ascii_case("jcode")
+        || server_name.eq_ignore_ascii_case("minnal")
     {
         set_client_display_title(session_name, is_selfdev);
         return;
@@ -228,9 +228,9 @@ mod tests {
     #[test]
     fn terminal_session_label_for_id_reads_custom_title_from_session() {
         let _guard = lock_test_env();
-        let previous_home = std::env::var_os("JCODE_HOME");
+        let previous_home = std::env::var_os("MINNAL_HOME");
         let temp = tempfile::tempdir().expect("temp dir");
-        crate::env::set_var("JCODE_HOME", temp.path());
+        crate::env::set_var("MINNAL_HOME", temp.path());
 
         let mut session = crate::session::Session::create_with_id(
             "session_fox_123".to_string(),
@@ -246,9 +246,9 @@ mod tests {
         );
 
         if let Some(previous_home) = previous_home {
-            crate::env::set_var("JCODE_HOME", previous_home);
+            crate::env::set_var("MINNAL_HOME", previous_home);
         } else {
-            crate::env::remove_var("JCODE_HOME");
+            crate::env::remove_var("MINNAL_HOME");
         }
     }
 

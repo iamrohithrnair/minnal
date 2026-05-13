@@ -1,6 +1,6 @@
-//! Logging infrastructure for jcode
+//! Logging infrastructure for minnal
 //!
-//! Logs to ~/.jcode/logs/ with automatic rotation
+//! Logs to ~/.minnal/logs/ with automatic rotation
 //!
 //! Supports thread-local context for server, session, provider, and model info.
 
@@ -157,7 +157,7 @@ impl Logger {
 
         // Use date-based log file
         let date = Local::now().format("%Y-%m-%d");
-        let path = log_dir.join(format!("jcode-{}.log", date));
+        let path = log_dir.join(format!("minnal-{}.log", date));
 
         let file = OpenOptions::new()
             .create(true)
@@ -173,11 +173,11 @@ impl Logger {
         let ctx = context_prefix();
         let line = format!("[{}] [{}] {}{}\n", timestamp, level, ctx, message);
         if let Err(err) = self.file.write_all(line.as_bytes()) {
-            eprintln!("jcode logger write failed: {err}");
+            eprintln!("minnal logger write failed: {err}");
             return;
         }
         if let Err(err) = self.file.flush() {
-            eprintln!("jcode logger flush failed: {err}");
+            eprintln!("minnal logger flush failed: {err}");
         }
     }
 }
@@ -232,13 +232,13 @@ pub fn warn(message: &str) {
     }
 }
 
-/// Log a debug message (only if JCODE_TRACE is set)
+/// Log a debug message (only if MINNAL_TRACE is set)
 #[expect(
     clippy::collapsible_if,
     reason = "Debug logging keeps env gating and logger access explicit"
 )]
 pub fn debug(message: &str) {
-    if std::env::var("JCODE_TRACE").is_ok() {
+    if std::env::var("MINNAL_TRACE").is_ok() {
         if let Ok(mut guard) = LOGGER.lock() {
             if let Some(logger) = guard.as_mut() {
                 logger.write("DEBUG", message);
@@ -317,7 +317,7 @@ pub fn current_session() -> Option<String> {
 pub fn log_path() -> Option<PathBuf> {
     let log_dir = log_dir()?;
     let date = Local::now().format("%Y-%m-%d");
-    Some(log_dir.join(format!("jcode-{}.log", date)))
+    Some(log_dir.join(format!("minnal-{}.log", date)))
 }
 
 /// Clean up old logs (keep last 7 days)
@@ -334,7 +334,7 @@ pub fn cleanup_old_logs() {
                 if modified < cutoff
                     && let Err(err) = fs::remove_file(entry.path())
                 {
-                    eprintln!("jcode logger cleanup failed: {err}");
+                    eprintln!("minnal logger cleanup failed: {err}");
                 }
             }
         }

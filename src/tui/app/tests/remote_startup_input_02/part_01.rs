@@ -212,7 +212,7 @@ fn test_remote_fallback_bedrock_arn_does_not_create_openrouter_route() {
 
 #[test]
 fn test_model_picker_ctrl_d_bedrock_selection_saves_bedrock_default() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.is_remote = true;
         app.remote_available_entries = vec!["amazon.nova-pro-v1:0".to_string()];
@@ -570,7 +570,7 @@ fn test_transfer_command_queues_pause_while_processing_locally() {
 
 #[test]
 fn test_create_transfer_session_from_parent_copies_todos_and_uses_compacted_context_only() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.session.working_dir = Some("/tmp".to_string());
         app.session.model = Some("test-model".to_string());

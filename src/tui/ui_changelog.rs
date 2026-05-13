@@ -66,7 +66,7 @@ fn parse_changelog_from_impl(changelog: &str) -> Vec<ChangelogEntry<'_>> {
 
 /// Parse the embedded changelog from the build-time environment.
 fn parse_changelog() -> Vec<ChangelogEntry<'static>> {
-    let changelog: &'static str = env!("JCODE_CHANGELOG");
+    let changelog: &'static str = env!("MINNAL_CHANGELOG");
     parse_changelog_from_impl(changelog)
 }
 
@@ -143,13 +143,13 @@ pub(super) fn get_grouped_changelog() -> Vec<ChangelogGroup> {
     GROUPS
         .get_or_init(|| {
             let entries = parse_changelog();
-            group_changelog_entries_impl(&entries, env!("JCODE_VERSION"), env!("JCODE_GIT_DATE"))
+            group_changelog_entries_impl(&entries, env!("MINNAL_VERSION"), env!("MINNAL_GIT_DATE"))
         })
         .clone()
 }
 
 /// Get changelog entries the user hasn't seen yet.
-/// Reads the last-seen commit hash from ~/.jcode/last_seen_changelog,
+/// Reads the last-seen commit hash from ~/.minnal/last_seen_changelog,
 /// filters the embedded changelog to only new entries, then saves the latest hash.
 /// Returns just the commit subjects (not the hashes).
 pub(super) fn get_unseen_changelog_entries() -> &'static Vec<String> {
@@ -161,8 +161,8 @@ pub(super) fn get_unseen_changelog_entries() -> &'static Vec<String> {
         }
 
         let state_file = dirs::home_dir()
-            .map(|h| h.join(".jcode").join("last_seen_changelog"))
-            .unwrap_or_else(|| std::path::PathBuf::from(".jcode/last_seen_changelog"));
+            .map(|h| h.join(".minnal").join("last_seen_changelog"))
+            .unwrap_or_else(|| std::path::PathBuf::from(".minnal/last_seen_changelog"));
 
         let last_seen_hash = std::fs::read_to_string(&state_file)
             .ok()

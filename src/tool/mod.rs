@@ -37,15 +37,15 @@ use crate::compaction::CompactionManager;
 use crate::provider::Provider;
 use crate::skill::SkillRegistry;
 use anyhow::Result;
-use jcode_message_types::ToolDefinition;
+use minnal_message_types::ToolDefinition;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-pub(crate) use jcode_tool_core::intent_schema_property;
-pub use jcode_tool_core::{StdinInputRequest, Tool, ToolContext, ToolExecutionMode};
-pub use jcode_tool_types::{ToolImage, ToolOutput};
+pub(crate) use minnal_tool_core::intent_schema_property;
+pub use minnal_tool_core::{StdinInputRequest, Tool, ToolContext, ToolExecutionMode};
+pub use minnal_tool_types::{ToolImage, ToolOutput};
 
 /// Registry of available tools (Arc-wrapped for sharing)
 ///

@@ -4,7 +4,7 @@ use crate::message::{ContentBlock, Role};
 use crate::protocol::ServerEvent;
 use crate::session::StoredDisplayRole;
 use anyhow::Result;
-use jcode_agent_runtime::{
+use minnal_agent_runtime::{
     InterruptSignal, SoftInterruptMessage, SoftInterruptQueue, SoftInterruptSource,
 };
 use std::sync::Arc;

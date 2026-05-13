@@ -84,13 +84,13 @@ const REGISTERED_COMMANDS: &[RegisteredCommand] = &[
     RegisteredCommand::public("/changelog", "Show recent changes in this build"),
     RegisteredCommand::public("/info", "Show session info and tokens"),
     RegisteredCommand::public("/usage", "Show connected provider usage limits"),
-    RegisteredCommand::public("/feedback", "Send feedback about jcode"),
-    RegisteredCommand::public("/subscription", "Show jcode subscription status"),
+    RegisteredCommand::public("/feedback", "Send feedback about minnal"),
+    RegisteredCommand::public("/subscription", "Show minnal subscription status"),
     RegisteredCommand::public("/config", "Show or edit configuration"),
     RegisteredCommand::public("/reload", "Reload into newest available binary"),
     RegisteredCommand::public("/restart", "Restart with current binary"),
     RegisteredCommand::public("/rebuild", "Background rebuild and auto reload"),
-    RegisteredCommand::public("/selfdev", "Open a new self-dev jcode session"),
+    RegisteredCommand::public("/selfdev", "Open a new self-dev minnal session"),
     RegisteredCommand::public("/update", "Background update and auto reload"),
     RegisteredCommand::public("/resume", "Open session picker"),
     RegisteredCommand::public("/sessions", "Alias for /resume"),
@@ -102,7 +102,7 @@ const REGISTERED_COMMANDS: &[RegisteredCommand] = &[
     RegisteredCommand::public("/split", "Split session into a new window"),
     RegisteredCommand::public("/transfer", "Compact context into a fresh handoff session"),
     RegisteredCommand::public("/workspace", "Niri-style session workspace"),
-    RegisteredCommand::public("/quit", "Exit jcode"),
+    RegisteredCommand::public("/quit", "Exit minnal"),
     RegisteredCommand::public("/auth", "Show authentication status"),
     RegisteredCommand::public("/login", "Login to a provider"),
     RegisteredCommand::public("/account", "Open the combined account picker"),
@@ -1018,7 +1018,7 @@ impl App {
             return Vec::new();
         }
 
-        let is_new_user = crate::storage::jcode_dir()
+        let is_new_user = crate::storage::minnal_dir()
             .ok()
             .and_then(|dir| {
                 let path = dir.join("setup_hints.json");

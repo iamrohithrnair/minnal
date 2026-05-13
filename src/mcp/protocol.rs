@@ -210,18 +210,18 @@ impl McpConfig {
     }
 
     /// Import MCP servers from Claude Code and Codex CLI on first run.
-    /// Only runs if ~/.jcode/mcp.json doesn't exist yet.
+    /// Only runs if ~/.minnal/mcp.json doesn't exist yet.
     #[expect(
         clippy::collapsible_if,
         reason = "Import logic keeps source-specific MCP config handling explicit"
     )]
     fn import_from_external() {
-        let jcode_mcp = match crate::storage::jcode_dir() {
+        let minnal_mcp = match crate::storage::minnal_dir() {
             Ok(dir) => dir.join("mcp.json"),
             Err(_) => return,
         };
 
-        if jcode_mcp.exists() {
+        if minnal_mcp.exists() {
             return; // Not first run
         }
 
@@ -256,7 +256,7 @@ impl McpConfig {
         }
 
         if !imported.servers.is_empty() {
-            if let Err(e) = imported.save_to_file(&jcode_mcp) {
+            if let Err(e) = imported.save_to_file(&minnal_mcp) {
                 crate::logging::error(&format!("Failed to save imported MCP config: {}", e));
                 return;
             }
@@ -324,7 +324,7 @@ impl McpConfig {
         Ok(config)
     }
 
-    /// Load from default locations (merges jcode global + local, local overrides)
+    /// Load from default locations (merges minnal global + local, local overrides)
     #[expect(
         clippy::collapsible_if,
         reason = "Import logic keeps source-specific MCP config merge order explicit"
@@ -335,20 +335,20 @@ impl McpConfig {
 
         let mut merged = Self::default();
 
-        // Load jcode's own global config (~/.jcode/mcp.json)
-        if let Ok(jcode_dir) = crate::storage::jcode_dir() {
-            let jcode_mcp = jcode_dir.join("mcp.json");
-            if jcode_mcp.exists() {
-                if let Ok(config) = Self::load_from_file(&jcode_mcp) {
+        // Load minnal's own global config (~/.minnal/mcp.json)
+        if let Ok(minnal_dir) = crate::storage::minnal_dir() {
+            let minnal_mcp = minnal_dir.join("mcp.json");
+            if minnal_mcp.exists() {
+                if let Ok(config) = Self::load_from_file(&minnal_mcp) {
                     merged.servers.extend(config.servers);
                 }
             }
         }
 
-        // Load project-local jcode config (.jcode/mcp.json)
-        let local_jcode = std::path::Path::new(".jcode/mcp.json");
-        if local_jcode.exists() {
-            if let Ok(config) = Self::load_from_file(local_jcode) {
+        // Load project-local minnal config (.minnal/mcp.json)
+        let local_minnal = std::path::Path::new(".minnal/mcp.json");
+        if local_minnal.exists() {
+            if let Ok(config) = Self::load_from_file(local_minnal) {
                 merged.servers.extend(config.servers);
             }
         }

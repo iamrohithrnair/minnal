@@ -3,10 +3,10 @@ async fn communicate_assign_task_can_spawn_fallback_agent() {
     let _env_lock = crate::storage::lock_test_env();
     let runtime_dir = tempfile::TempDir::new().expect("runtime tempdir");
     let repo_dir = std::env::current_dir().expect("repo cwd");
-    let socket_path = runtime_dir.path().join("jcode.sock");
-    let _runtime = EnvGuard::set("JCODE_RUNTIME_DIR", runtime_dir.path());
-    let _socket = EnvGuard::set("JCODE_SOCKET", &socket_path);
-    let _debug = EnvGuard::set("JCODE_DEBUG_CONTROL", "1");
+    let socket_path = runtime_dir.path().join("minnal.sock");
+    let _runtime = EnvGuard::set("MINNAL_RUNTIME_DIR", runtime_dir.path());
+    let _socket = EnvGuard::set("MINNAL_SOCKET", &socket_path);
+    let _debug = EnvGuard::set("MINNAL_DEBUG_CONTROL", "1");
 
     let provider: Arc<dyn Provider> = Arc::new(DelayedTestProvider {
         delay: Duration::from_millis(100),
@@ -116,10 +116,10 @@ async fn communicate_assign_next_assigns_next_runnable_task() {
     let _env_lock = crate::storage::lock_test_env();
     let runtime_dir = tempfile::TempDir::new().expect("runtime tempdir");
     let repo_dir = std::env::current_dir().expect("repo cwd");
-    let socket_path = runtime_dir.path().join("jcode.sock");
-    let _runtime = EnvGuard::set("JCODE_RUNTIME_DIR", runtime_dir.path());
-    let _socket = EnvGuard::set("JCODE_SOCKET", &socket_path);
-    let _debug = EnvGuard::set("JCODE_DEBUG_CONTROL", "1");
+    let socket_path = runtime_dir.path().join("minnal.sock");
+    let _runtime = EnvGuard::set("MINNAL_RUNTIME_DIR", runtime_dir.path());
+    let _socket = EnvGuard::set("MINNAL_SOCKET", &socket_path);
+    let _debug = EnvGuard::set("MINNAL_DEBUG_CONTROL", "1");
 
     let provider: Arc<dyn Provider> = Arc::new(DelayedTestProvider {
         delay: Duration::from_millis(100),
@@ -223,10 +223,10 @@ async fn communicate_assign_next_can_prefer_fresh_spawn_server_side() {
     let _env_lock = crate::storage::lock_test_env();
     let runtime_dir = tempfile::TempDir::new().expect("runtime tempdir");
     let repo_dir = std::env::current_dir().expect("repo cwd");
-    let socket_path = runtime_dir.path().join("jcode.sock");
-    let _runtime = EnvGuard::set("JCODE_RUNTIME_DIR", runtime_dir.path());
-    let _socket = EnvGuard::set("JCODE_SOCKET", &socket_path);
-    let _debug = EnvGuard::set("JCODE_DEBUG_CONTROL", "1");
+    let socket_path = runtime_dir.path().join("minnal.sock");
+    let _runtime = EnvGuard::set("MINNAL_RUNTIME_DIR", runtime_dir.path());
+    let _socket = EnvGuard::set("MINNAL_SOCKET", &socket_path);
+    let _debug = EnvGuard::set("MINNAL_DEBUG_CONTROL", "1");
 
     let provider: Arc<dyn Provider> = Arc::new(DelayedTestProvider {
         delay: Duration::from_millis(100),
@@ -328,10 +328,10 @@ async fn communicate_assign_next_can_spawn_if_needed_server_side() {
     let _env_lock = crate::storage::lock_test_env();
     let runtime_dir = tempfile::TempDir::new().expect("runtime tempdir");
     let repo_dir = std::env::current_dir().expect("repo cwd");
-    let socket_path = runtime_dir.path().join("jcode.sock");
-    let _runtime = EnvGuard::set("JCODE_RUNTIME_DIR", runtime_dir.path());
-    let _socket = EnvGuard::set("JCODE_SOCKET", &socket_path);
-    let _debug = EnvGuard::set("JCODE_DEBUG_CONTROL", "1");
+    let socket_path = runtime_dir.path().join("minnal.sock");
+    let _runtime = EnvGuard::set("MINNAL_RUNTIME_DIR", runtime_dir.path());
+    let _socket = EnvGuard::set("MINNAL_SOCKET", &socket_path);
+    let _debug = EnvGuard::set("MINNAL_DEBUG_CONTROL", "1");
 
     let provider: Arc<dyn Provider> = Arc::new(DelayedTestProvider {
         delay: Duration::from_millis(100),
@@ -418,10 +418,10 @@ async fn communicate_fill_slots_tops_up_to_concurrency_limit() {
     let _env_lock = crate::storage::lock_test_env();
     let runtime_dir = tempfile::TempDir::new().expect("runtime tempdir");
     let repo_dir = std::env::current_dir().expect("repo cwd");
-    let socket_path = runtime_dir.path().join("jcode.sock");
-    let _runtime = EnvGuard::set("JCODE_RUNTIME_DIR", runtime_dir.path());
-    let _socket = EnvGuard::set("JCODE_SOCKET", &socket_path);
-    let _debug = EnvGuard::set("JCODE_DEBUG_CONTROL", "1");
+    let socket_path = runtime_dir.path().join("minnal.sock");
+    let _runtime = EnvGuard::set("MINNAL_RUNTIME_DIR", runtime_dir.path());
+    let _socket = EnvGuard::set("MINNAL_SOCKET", &socket_path);
+    let _debug = EnvGuard::set("MINNAL_DEBUG_CONTROL", "1");
 
     let provider: Arc<dyn Provider> = Arc::new(DelayedTestProvider {
         delay: Duration::from_millis(300),
@@ -510,10 +510,10 @@ async fn communicate_assign_task_can_prefer_fresh_spawn_over_reuse() {
     let _env_lock = crate::storage::lock_test_env();
     let runtime_dir = tempfile::TempDir::new().expect("runtime tempdir");
     let repo_dir = std::env::current_dir().expect("repo cwd");
-    let socket_path = runtime_dir.path().join("jcode.sock");
-    let _runtime = EnvGuard::set("JCODE_RUNTIME_DIR", runtime_dir.path());
-    let _socket = EnvGuard::set("JCODE_SOCKET", &socket_path);
-    let _debug = EnvGuard::set("JCODE_DEBUG_CONTROL", "1");
+    let socket_path = runtime_dir.path().join("minnal.sock");
+    let _runtime = EnvGuard::set("MINNAL_RUNTIME_DIR", runtime_dir.path());
+    let _socket = EnvGuard::set("MINNAL_SOCKET", &socket_path);
+    let _debug = EnvGuard::set("MINNAL_DEBUG_CONTROL", "1");
 
     let provider: Arc<dyn Provider> = Arc::new(DelayedTestProvider {
         delay: Duration::from_millis(100),

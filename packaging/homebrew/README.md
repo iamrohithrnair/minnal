@@ -11,7 +11,7 @@ brew install minnal
 
 ## Cutting a release
 
-1. Bump `version` in `Cargo.toml` (and the matching `jcode` entry in
+1. Bump `version` in `Cargo.toml` (and the matching `minnal` entry in
    `Cargo.lock`) and publish a GitHub release tagged `vX.Y.Z` on
    `codeslord/minnal`.
 2. Build release binaries for each supported target:

@@ -94,8 +94,8 @@ fn available_models_display_includes_dynamic_cache_and_current_override() {
 fn available_models_display_seeds_from_persisted_catalog() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().expect("temp dir");
-    let previous = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let previous = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let path = AntigravityProvider::persisted_catalog_path().expect("catalog path");
     crate::storage::write_json(
@@ -126,9 +126,9 @@ fn available_models_display_seeds_from_persisted_catalog() {
     );
 
     if let Some(previous) = previous {
-        crate::env::set_var("JCODE_HOME", previous);
+        crate::env::set_var("MINNAL_HOME", previous);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 

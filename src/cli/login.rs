@@ -271,7 +271,7 @@ pub async fn run_login_provider(
                 eprintln!("Imported {} existing auth source(s).", imported);
                 Ok(LoginFlowOutcome::Completed)
             }
-            LoginProviderTarget::Jcode => login_jcode_flow().map(|_| LoginFlowOutcome::Completed),
+            LoginProviderTarget::Minnal => login_minnal_flow().map(|_| LoginFlowOutcome::Completed),
             LoginProviderTarget::Claude => login_claude_flow(account_label, options.no_browser)
                 .await
                 .map(|_| LoginFlowOutcome::Completed),
@@ -451,12 +451,12 @@ async fn notify_running_server_auth_changed_best_effort(provider: Option<&str>) 
     }
 }
 
-fn login_jcode_flow() -> Result<()> {
-    eprintln!("Setting up Jcode subscription access...");
+fn login_minnal_flow() -> Result<()> {
+    eprintln!("Setting up Minnal subscription access...");
     eprintln!(
-        "Paste the jcode subscription API key from your account portal. This key is used for your curated jcode router access.\n"
+        "Paste the minnal subscription API key from your account portal. This key is used for your curated minnal router access.\n"
     );
-    eprint!("Paste your Jcode API key: ");
+    eprint!("Paste your Minnal API key: ");
     io::stdout().flush()?;
 
     let key = read_secret_line()?;
@@ -470,30 +470,30 @@ fn login_jcode_flow() -> Result<()> {
 
     let mut content = format!(
         "{}={}\n",
-        crate::subscription_catalog::JCODE_API_KEY_ENV,
+        crate::subscription_catalog::MINNAL_API_KEY_ENV,
         key
     );
     if !api_base.trim().is_empty() {
         content.push_str(&format!(
             "{}={}\n",
-            crate::subscription_catalog::JCODE_API_BASE_ENV,
+            crate::subscription_catalog::MINNAL_API_BASE_ENV,
             api_base.trim()
         ));
     }
 
     let config_dir = crate::storage::app_config_dir()?;
-    let file_path = config_dir.join(crate::subscription_catalog::JCODE_ENV_FILE);
+    let file_path = config_dir.join(crate::subscription_catalog::MINNAL_ENV_FILE);
     crate::storage::write_text_secret(&file_path, &content)?;
 
-    crate::env::set_var(crate::subscription_catalog::JCODE_API_KEY_ENV, key);
+    crate::env::set_var(crate::subscription_catalog::MINNAL_API_KEY_ENV, key);
     if !api_base.trim().is_empty() {
         crate::env::set_var(
-            crate::subscription_catalog::JCODE_API_BASE_ENV,
+            crate::subscription_catalog::MINNAL_API_BASE_ENV,
             api_base.trim(),
         );
     }
 
-    eprintln!("\nSuccessfully saved Jcode subscription credentials!");
+    eprintln!("\nSuccessfully saved Minnal subscription credentials!");
     eprintln!("Stored at {}", file_path.display());
     eprintln!(
         "Curated models available now: {}",
@@ -503,7 +503,7 @@ fn login_jcode_flow() -> Result<()> {
             .collect::<Vec<_>>()
             .join(", ")
     );
-    crate::telemetry::record_auth_success("jcode", "api_key");
+    crate::telemetry::record_auth_success("minnal", "api_key");
     Ok(())
 }
 
@@ -554,7 +554,7 @@ async fn login_claude_flow(requested_label: Option<&str>, no_browser: bool) -> R
     eprintln!(
         "Account '{}' stored at {}",
         label,
-        auth::claude::jcode_path()?.display()
+        auth::claude::minnal_path()?.display()
     );
     if let Some(email) = profile_email {
         eprintln!("Profile email: {}", email);
@@ -571,7 +571,7 @@ async fn login_openai_flow(requested_label: Option<&str>, no_browser: bool) -> R
     eprintln!(
         "Successfully logged in to OpenAI! Account '{}' saved to {}",
         label,
-        crate::storage::jcode_dir()?
+        crate::storage::minnal_dir()?
             .join("openai-auth.json")
             .display()
     );
@@ -657,7 +657,7 @@ fn login_azure_flow() -> Result<()> {
 
     eprintln!("Setting up Azure OpenAI...");
     eprintln!(
-        "Reference: OpenCode supports Azure OpenAI with Entra credentials. jcode uses Azure OpenAI's newer `/openai/v1` API with either Microsoft Entra ID or an API key.\n"
+        "Reference: OpenCode supports Azure OpenAI with Entra credentials. minnal uses Azure OpenAI's newer `/openai/v1` API with either Microsoft Entra ID or an API key.\n"
     );
 
     let endpoint_raw = read_line_trimmed(
@@ -702,7 +702,7 @@ fn login_azure_flow() -> Result<()> {
         eprintln!();
         eprintln!("Using Microsoft Entra ID via Azure's DefaultAzureCredential chain.");
         eprintln!(
-            "That means jcode can authenticate via `az login`, managed identity, or Azure environment credentials."
+            "That means minnal can authenticate via `az login`, managed identity, or Azure environment credentials."
         );
     } else {
         eprint!("Paste your Azure OpenAI API key: ");
@@ -772,7 +772,7 @@ fn login_openai_compatible_flow(
                     )
                 })?;
             crate::provider_catalog::save_env_value_to_env_file(
-                "JCODE_OPENAI_COMPAT_API_BASE",
+                "MINNAL_OPENAI_COMPAT_API_BASE",
                 crate::provider_catalog::OPENAI_COMPAT_PROFILE.env_file,
                 Some(&normalized),
             )?;
@@ -789,7 +789,7 @@ fn login_openai_compatible_flow(
                 anyhow::bail!("Invalid API key environment variable name: {}", api_key_env);
             }
             crate::provider_catalog::save_env_value_to_env_file(
-                "JCODE_OPENAI_COMPAT_API_KEY_NAME",
+                "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
                 crate::provider_catalog::OPENAI_COMPAT_PROFILE.env_file,
                 Some(api_key_env),
             )?;
@@ -803,7 +803,7 @@ fn login_openai_compatible_flow(
         };
         if !default_model_input.is_empty() {
             crate::provider_catalog::save_env_value_to_env_file(
-                "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
+                "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
                 crate::provider_catalog::OPENAI_COMPAT_PROFILE.env_file,
                 Some(&default_model_input),
             )?;
@@ -1014,7 +1014,7 @@ fn login_cursor_flow() -> Result<()> {
             .join("cursor.env")
             .display()
     );
-    eprintln!("jcode will use the native Cursor HTTPS transport.");
+    eprintln!("minnal will use the native Cursor HTTPS transport.");
     crate::telemetry::record_auth_success("cursor", "api_key");
     Ok(())
 }
@@ -1071,10 +1071,10 @@ async fn login_copilot_device_flow(no_browser: bool) -> Result<()> {
 async fn login_antigravity_flow(no_browser: bool) -> Result<()> {
     eprintln!("Starting native Antigravity login...");
     eprintln!(
-        "jcode will authenticate directly with Google Antigravity; the Antigravity desktop app is not required."
+        "minnal will authenticate directly with Google Antigravity; the Antigravity desktop app is not required."
     );
     eprintln!(
-        "If browser launch fails, or you pass `--no-browser`, jcode will prompt for the callback URL instead."
+        "If browser launch fails, or you pass `--no-browser`, minnal will prompt for the callback URL instead."
     );
     eprintln!(
         "If the browser later shows a loopback/callback error page, copy the full URL from the address bar and re-run with `--no-browser`."
@@ -1104,7 +1104,7 @@ async fn login_gemini_flow(no_browser: bool) -> Result<()> {
         "If your student/education plan is attached to your Google account, use that account in the browser flow."
     );
     eprintln!(
-        "If browser launch fails, or you pass `--no-browser`, jcode will prompt for the manual authorization code."
+        "If browser launch fails, or you pass `--no-browser`, minnal will prompt for the manual authorization code."
     );
     eprintln!(
         "Note: school / Workspace Google accounts may also require GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION for Code Assist entitlement checks."
@@ -1257,7 +1257,7 @@ async fn login_google_flow(no_browser: bool) -> Result<()> {
                         no_browser,
                     );
                     eprintln!("   - Choose 'External' user type");
-                    eprintln!("   - Fill in app name (e.g. 'jcode') and your email");
+                    eprintln!("   - Fill in app name (e.g. 'minnal') and your email");
                     eprintln!("   - Skip scopes (we'll request them during login)");
                     eprintln!("   - Add your email as a test user");
                     eprintln!("   - Save and continue through all steps");
@@ -1273,7 +1273,7 @@ async fn login_google_flow(no_browser: bool) -> Result<()> {
                     );
                     eprintln!("   - Click '+ Create Credentials' > 'OAuth client ID'");
                     eprintln!("   - Application type: 'Desktop app'");
-                    eprintln!("   - Name: 'jcode'");
+                    eprintln!("   - Name: 'minnal'");
                     eprintln!("   - Click 'Create'\n");
                     eprintln!("   A dialog will show your Client ID and Client Secret.\n");
 

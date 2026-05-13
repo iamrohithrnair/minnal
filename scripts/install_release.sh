@@ -3,15 +3,15 @@
 # update the stable + current channel symlinks, and point the launcher at current.
 #
 # Paths after install:
-# - ~/.jcode/builds/versions/<hash>/minnal (immutable)
-# - ~/.jcode/builds/stable/minnal -> .../versions/<hash>/minnal
-# - ~/.jcode/builds/current/minnal -> .../versions/<hash>/minnal
-# - ~/.local/bin/minnal -> ~/.jcode/builds/current/minnal (launcher)
+# - ~/.minnal/builds/versions/<hash>/minnal (immutable)
+# - ~/.minnal/builds/stable/minnal -> .../versions/<hash>/minnal
+# - ~/.minnal/builds/current/minnal -> .../versions/<hash>/minnal
+# - ~/.local/bin/minnal -> ~/.minnal/builds/current/minnal (launcher)
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-profile="${JCODE_RELEASE_PROFILE:-release-lto}"
+profile="${MINNAL_RELEASE_PROFILE:-release-lto}"
 if [[ "${1:-}" == "--fast" ]]; then
   profile="release"
   shift
@@ -57,8 +57,8 @@ if [[ -z "$hash" ]]; then
   hash="$(date +%Y%m%d%H%M%S)"
 fi
 
-# Install versioned binary into ~/.jcode/builds/versions/<hash>/
-builds_dir="$HOME/.jcode/builds"
+# Install versioned binary into ~/.minnal/builds/versions/<hash>/
+builds_dir="$HOME/.minnal/builds"
 version_dir="$builds_dir/versions/$hash"
 mkdir -p "$version_dir"
 install -m 755 "$bin" "$version_dir/minnal"
@@ -78,7 +78,7 @@ ln -sfn "$version_dir/minnal" "$current_dir/minnal"
 printf '%s\n' "$hash" > "$builds_dir/current-version"
 
 # Update launcher path to current channel
-install_dir="${JCODE_INSTALL_DIR:-$HOME/.local/bin}"
+install_dir="${MINNAL_INSTALL_DIR:-$HOME/.local/bin}"
 mkdir -p "$install_dir"
 ln -sfn "$current_dir/minnal" "$install_dir/minnal"
 

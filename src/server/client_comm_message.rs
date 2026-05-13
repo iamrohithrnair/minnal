@@ -5,8 +5,8 @@ use super::{
 };
 use crate::agent::Agent;
 use crate::protocol::{CommDeliveryMode, NotificationType, ServerEvent};
-use jcode_agent_runtime::SoftInterruptSource;
-use jcode_swarm_core::ChannelIndex;
+use minnal_agent_runtime::SoftInterruptSource;
+use minnal_swarm_core::ChannelIndex;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock, broadcast, mpsc};

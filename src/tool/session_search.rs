@@ -13,12 +13,12 @@ use crate::storage;
 use anyhow::Result;
 use async_trait::async_trait;
 use chrono::{DateTime, NaiveDate, Utc};
-use jcode_import_core::{
+use minnal_import_core::{
     ExternalMessageRecord, ExternalSessionRecord, ImportCoreResult, collect_recent_files_recursive,
     load_claude_external_messages, load_codex_external_session, load_opencode_external_session,
     load_pi_external_session,
 };
-use jcode_session_types::{
+use minnal_session_types::{
     SessionSearchContextLine as ResultContextLine, SessionSearchQueryProfile as QueryProfile,
     SessionSearchRenderOptions, SessionSearchReport as SearchReport,
     SessionSearchResult as SearchResult, SessionSearchResultKind as SearchResultKind,
@@ -88,16 +88,16 @@ struct SearchInput {
     /// Restrict to sessions updated/messages at or before this RFC3339 timestamp or YYYY-MM-DD date.
     #[serde(default)]
     before: Option<String>,
-    /// Restrict Jcode sessions by saved/bookmarked flag.
+    /// Restrict Minnal sessions by saved/bookmarked flag.
     #[serde(default)]
     saved: Option<bool>,
-    /// Restrict Jcode sessions by debug flag.
+    /// Restrict Minnal sessions by debug flag.
     #[serde(default)]
     debug: Option<bool>,
-    /// Restrict Jcode sessions by canary flag.
+    /// Restrict Minnal sessions by canary flag.
     #[serde(default)]
     canary: Option<bool>,
-    /// Restrict source: jcode, claude, codex, pi, opencode, or all.
+    /// Restrict source: minnal, claude, codex, pi, opencode, or all.
     #[serde(default)]
     source: Option<String>,
     /// Include external session sources discovered by the session picker. Defaults to true.
@@ -288,19 +288,19 @@ impl Tool for SessionSearchTool {
                 },
                 "saved": {
                     "type": "boolean",
-                    "description": "Restrict Jcode sessions by saved/bookmarked flag."
+                    "description": "Restrict Minnal sessions by saved/bookmarked flag."
                 },
                 "debug": {
                     "type": "boolean",
-                    "description": "Restrict Jcode sessions by debug/test flag."
+                    "description": "Restrict Minnal sessions by debug/test flag."
                 },
                 "canary": {
                     "type": "boolean",
-                    "description": "Restrict Jcode sessions by canary flag."
+                    "description": "Restrict Minnal sessions by canary flag."
                 },
                 "source": {
                     "type": "string",
-                    "enum": ["all", "jcode", "claude", "codex", "pi", "opencode"],
+                    "enum": ["all", "minnal", "claude", "codex", "pi", "opencode"],
                     "description": "Restrict session source. Defaults to all available sources."
                 },
                 "include_external": {
@@ -406,7 +406,7 @@ impl Tool for SessionSearchTool {
             .with_title("session_search"));
         }
 
-        let sessions_dir = storage::jcode_dir()?.join("sessions");
+        let sessions_dir = storage::minnal_dir()?.join("sessions");
 
         let options = SearchOptions {
             current_session_id: ctx.session_id.clone(),
@@ -490,11 +490,11 @@ fn normalize_source_filter(raw: Option<&str>) -> std::result::Result<Option<Stri
     let normalized = source.to_ascii_lowercase();
     match normalized.as_str() {
         "all" => Ok(None),
-        "jcode" | "claude" | "claude-code" | "codex" | "pi" | "opencode" => {
+        "minnal" | "claude" | "claude-code" | "codex" | "pi" | "opencode" => {
             Ok(Some(normalized.replace("claude-code", "claude")))
         }
         _ => Err(format!(
-            "source must be one of all, jcode, claude, codex, pi, or opencode; received {source}."
+            "source must be one of all, minnal, claude, codex, pi, or opencode; received {source}."
         )),
     }
 }
@@ -533,7 +533,7 @@ fn search_sessions_blocking(
         return Ok(report);
     }
 
-    if source_matches_filter("jcode", options) {
+    if source_matches_filter("minnal", options) {
         let mut files = collect_session_files(sessions_dir)?;
         if !files.is_empty() {
             files.sort_unstable_by(|a, b| b.mtime.cmp(&a.mtime));
@@ -541,7 +541,7 @@ fn search_sessions_blocking(
                 files.truncate(options.max_scan_sessions);
                 report.truncated = true;
             }
-            report.scanned_jcode_sessions = files.len();
+            report.scanned_minnal_sessions = files.len();
 
             if !options.include_current {
                 files.retain(|candidate| candidate.session_id_hint != options.current_session_id);
@@ -558,7 +558,7 @@ fn search_sessions_blocking(
                     .flat_map(|outcome| outcome.candidates)
                     .collect();
                 candidates.sort_unstable_by(|a, b| b.mtime.cmp(&a.mtime));
-                report.candidate_jcode_sessions = candidates.len();
+                report.candidate_minnal_sessions = candidates.len();
                 if candidates.len() > MAX_DESERIALIZE {
                     candidates.truncate(MAX_DESERIALIZE);
                     report.truncated = true;
@@ -1016,7 +1016,7 @@ fn append_session_results(
     if !options.include_current && session.id == options.current_session_id {
         return;
     }
-    if !jcode_session_matches_filters(session, options) {
+    if !minnal_session_matches_filters(session, options) {
         return;
     }
 
@@ -1034,7 +1034,7 @@ fn append_session_results(
         && let Some(match_score) = score_message_match(&metadata_text(session), query)
     {
         results.push(SearchResult {
-            source: "jcode".to_string(),
+            source: "minnal".to_string(),
             session_id: session.id.clone(),
             short_name: session.short_name.clone(),
             title: session.display_title().map(ToOwned::to_owned),
@@ -1088,7 +1088,7 @@ fn append_session_results(
         }
 
         results.push(SearchResult {
-            source: "jcode".to_string(),
+            source: "minnal".to_string(),
             session_id: session.id.clone(),
             short_name: session.short_name.clone(),
             title: session.display_title().map(ToOwned::to_owned),
@@ -1105,7 +1105,7 @@ fn append_session_results(
             score,
             matched_terms: match_score.matched_terms,
             exact_match: match_score.exact_match,
-            context: build_jcode_context(&session.messages, message_index, options),
+            context: build_minnal_context(&session.messages, message_index, options),
         });
     }
 }
@@ -1153,11 +1153,11 @@ fn source_matches_filter(source: &str, options: &SearchOptions) -> bool {
         .unwrap_or(true)
 }
 
-fn jcode_session_matches_filters(session: &Session, options: &SearchOptions) -> bool {
-    if !source_matches_filter("jcode", options) {
+fn minnal_session_matches_filters(session: &Session, options: &SearchOptions) -> bool {
+    if !source_matches_filter("minnal", options) {
         return false;
     }
-    if !provider_matches(session.provider_key.as_deref(), "jcode", options) {
+    if !provider_matches(session.provider_key.as_deref(), "minnal", options) {
         return false;
     }
     if !field_filter_matches(session.model.as_deref(), options.model_filter.as_deref()) {
@@ -1242,7 +1242,7 @@ fn role_filter_allows_external_message(role: &str, options: &SearchOptions) -> b
     }
 }
 
-fn build_jcode_context(
+fn build_minnal_context(
     messages: &[StoredMessage],
     hit_index: usize,
     options: &SearchOptions,

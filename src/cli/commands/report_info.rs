@@ -414,16 +414,16 @@ pub(super) async fn run_provider_current_command(
 
 pub(super) fn run_version_command(emit_json: bool) -> Result<()> {
     let report = VersionReport {
-        version: env!("JCODE_VERSION").to_string(),
-        semver: env!("JCODE_SEMVER").to_string(),
-        base_semver: env!("JCODE_BASE_SEMVER").to_string(),
-        update_semver: env!("JCODE_UPDATE_SEMVER").to_string(),
-        git_hash: env!("JCODE_GIT_HASH").to_string(),
-        git_tag: env!("JCODE_GIT_TAG").to_string(),
+        version: env!("MINNAL_VERSION").to_string(),
+        semver: env!("MINNAL_SEMVER").to_string(),
+        base_semver: env!("MINNAL_BASE_SEMVER").to_string(),
+        update_semver: env!("MINNAL_UPDATE_SEMVER").to_string(),
+        git_hash: env!("MINNAL_GIT_HASH").to_string(),
+        git_tag: env!("MINNAL_GIT_TAG").to_string(),
         build_time: crate::build::current_binary_build_time_string()
             .unwrap_or_else(|| "unknown".to_string()),
-        git_date: env!("JCODE_GIT_DATE").to_string(),
-        release_build: option_env!("JCODE_RELEASE_BUILD").is_some(),
+        git_date: env!("MINNAL_GIT_DATE").to_string(),
+        release_build: option_env!("MINNAL_RELEASE_BUILD").is_some(),
     };
 
     if emit_json {
@@ -560,7 +560,7 @@ fn usage_provider_report(provider: &crate::usage::ProviderUsage) -> UsageProvide
 
 pub(super) fn list_cli_providers() -> Vec<ProviderListEntry> {
     let choices = [
-        ProviderChoice::Jcode,
+        ProviderChoice::Minnal,
         ProviderChoice::Claude,
         ProviderChoice::Openai,
         ProviderChoice::Openrouter,
@@ -682,7 +682,10 @@ mod tests {
         assert_eq!(before_doctor_provider.status, "not_configured");
         assert!(before_doctor_provider.needs_attention);
         assert!(before_doctor_provider.diagnostics.iter().any(|line| {
-            line == &format!("{} is not configured for jcode yet.", provider.display_name)
+            line == &format!(
+                "{} is not configured for minnal yet.",
+                provider.display_name
+            )
         }));
         assert!(
             before_doctor_provider
@@ -762,7 +765,7 @@ mod tests {
             after_doctor_provider
                 .recommended_actions
                 .iter()
-                .any(|line| { line == "Review current state: `jcode auth status --json`" })
+                .any(|line| { line == "Review current state: `minnal auth status --json`" })
         );
     }
 }

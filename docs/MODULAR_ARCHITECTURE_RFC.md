@@ -2,7 +2,7 @@
 
 Status: Draft
 
-This RFC describes a modular target architecture for jcode that matches the current codebase, preserves the existing product model, and gives us a safe migration path from today's mostly-monolithic root crate to a layered workspace.
+This RFC describes a modular target architecture for minnal that matches the current codebase, preserves the existing product model, and gives us a safe migration path from today's mostly-monolithic root crate to a layered workspace.
 
 It is intentionally aligned with:
 
@@ -28,9 +28,9 @@ It is intentionally aligned with:
 
 ## Executive Summary
 
-Today, jcode is best described as a **modular monolith with a growing workspace shell**:
+Today, minnal is best described as a **modular monolith with a growing workspace shell**:
 
-- The root `jcode` crate still owns most runtime orchestration and product behavior.
+- The root `minnal` crate still owns most runtime orchestration and product behavior.
 - Several heavy or relatively self-contained subsystems have already moved into workspace crates.
 - The codebase has strong module-level separation in some areas, but several broad root modules still act as architectural chokepoints.
 
@@ -39,7 +39,7 @@ The target architecture is a **layered workspace**:
 1. **Foundation layer** for stable shared types and runtime primitives.
 2. **Domain/runtime layer** for session, agent, provider, and server logic.
 3. **Interface layer** for CLI, TUI, self-dev, and optional heavy integrations.
-4. **Composition layer** where the top-level `jcode` package wires the product together.
+4. **Composition layer** where the top-level `minnal` package wires the product together.
 
 The most important design rule is this:
 
@@ -53,7 +53,7 @@ That rule serves both architecture quality and compile-speed goals.
 
 At the product level, the runtime architecture is already clear:
 
-- `jcode` is a **single-server, multi-client** application.
+- `minnal` is a **single-server, multi-client** application.
 - The server owns sessions, swarm state, background tasks, provider state, and shared services.
 - Clients are primarily TUI frontends that attach to server-owned sessions.
 - Self-dev is session-local capability on the shared server, not a separate architecture.
@@ -64,20 +64,20 @@ That model should stay intact.
 
 The current code organization is mixed:
 
-- **Root crate `jcode`** still contains most product logic.
+- **Root crate `minnal`** still contains most product logic.
 - **Workspace crates** already isolate several heavy or stable seams.
 - **Subdirectories under `src/`** increasingly reflect domain boundaries, especially for `agent`, `cli`, `server`, `tool`, and `tui`.
 
 Current workspace members from `Cargo.toml` are grouped roughly as follows:
 
-- root package: `jcode`
-- foundation/runtime support: `jcode-agent-runtime`, `jcode-core`, `jcode-storage`, `jcode-terminal-launch`, `jcode-tool-core`
-- data-contract crates: `jcode-ambient-types`, `jcode-auth-types`, `jcode-background-types`, `jcode-batch-types`, `jcode-config-types`, `jcode-gateway-types`, `jcode-memory-types`, `jcode-message-types`, `jcode-selfdev-types`, `jcode-session-types`, `jcode-side-panel-types`, `jcode-task-types`, `jcode-tool-types`, `jcode-usage-types`
-- protocol and planning: `jcode-protocol`, `jcode-plan`
-- heavy or optional integrations: `jcode-embedding`, `jcode-pdf`, `jcode-notify-email`
-- auth and providers: `jcode-azure-auth`, `jcode-provider-core`, `jcode-provider-metadata`, `jcode-provider-openrouter`, `jcode-provider-gemini`
-- TUI extraction seams: `jcode-tui-core`, `jcode-tui-markdown`, `jcode-tui-mermaid`, `jcode-tui-render`, `jcode-tui-workspace`
-- product surfaces outside the main TUI binary: `jcode-desktop`, `jcode-mobile-core`, `jcode-mobile-sim`
+- root package: `minnal`
+- foundation/runtime support: `minnal-agent-runtime`, `minnal-core`, `minnal-storage`, `minnal-terminal-launch`, `minnal-tool-core`
+- data-contract crates: `minnal-ambient-types`, `minnal-auth-types`, `minnal-background-types`, `minnal-batch-types`, `minnal-config-types`, `minnal-gateway-types`, `minnal-memory-types`, `minnal-message-types`, `minnal-selfdev-types`, `minnal-session-types`, `minnal-side-panel-types`, `minnal-task-types`, `minnal-tool-types`, `minnal-usage-types`
+- protocol and planning: `minnal-protocol`, `minnal-plan`
+- heavy or optional integrations: `minnal-embedding`, `minnal-pdf`, `minnal-notify-email`
+- auth and providers: `minnal-azure-auth`, `minnal-provider-core`, `minnal-provider-metadata`, `minnal-provider-openrouter`, `minnal-provider-gemini`
+- TUI extraction seams: `minnal-tui-core`, `minnal-tui-markdown`, `minnal-tui-mermaid`, `minnal-tui-render`, `minnal-tui-workspace`
+- product surfaces outside the main TUI binary: `minnal-desktop`, `minnal-mobile-core`, `minnal-mobile-sim`
 
 ### What the root crate still owns
 
@@ -87,7 +87,7 @@ The root crate still directly owns most of the following concerns:
 - server orchestration and socket lifecycle
 - session state and persistence
 - agent turn execution and tool orchestration
-- provider implementation composition and runtime provider wiring; the shared `Provider` trait now lives in `jcode-provider-core`
+- provider implementation composition and runtime provider wiring; the shared `Provider` trait now lives in `minnal-provider-core`
 - protocol/message/config types
 - tool registry and many tool implementations
 - TUI application state and rendering
@@ -101,43 +101,43 @@ These splits already exist and should be treated as real architectural footholds
 
 | Crate | Current role |
 |---|---|
-| `jcode-agent-runtime` | shared interrupt and lightweight runtime primitives for agent execution |
-| `jcode-ambient-types` | usage and rate-limit records shared by ambient/background flows |
-| `jcode-auth-types` | provider-neutral auth state and credential metadata |
-| `jcode-background-types` | background-task status and progress DTOs |
-| `jcode-batch-types` | batch tool progress DTOs, currently depending only on message types internally |
-| `jcode-config-types` | stable configuration data contracts |
-| `jcode-core` | low-level utilities such as IDs, env helpers, fs helpers, stdin detection, and formatting |
-| `jcode-gateway-types` | gateway-facing data contracts |
-| `jcode-memory-types` | memory subsystem data contracts |
-| `jcode-message-types` | message content and transport-adjacent data contracts |
-| `jcode-protocol` | client/server protocol surface built from stable type crates and provider-core values |
-| `jcode-plan` | plan/task graph data model shared across coordination flows |
-| `jcode-selfdev-types` | self-development request/status data contracts |
-| `jcode-session-types` | session DTOs, currently depending only on message types internally |
-| `jcode-side-panel-types` | side-panel page and update data contracts |
-| `jcode-task-types` | task/tool scheduling data contracts |
-| `jcode-tool-core` | runtime tool contracts such as the `Tool` trait and execution context |
-| `jcode-tool-types` | stable tool output/image DTOs |
-| `jcode-usage-types` | usage accounting data contracts |
-| `jcode-storage` | storage helpers layered on `jcode-core` |
-| `jcode-embedding` | ONNX/tokenizer-based embedding implementation and heavy inference deps |
-| `jcode-pdf` | PDF text extraction |
-| `jcode-azure-auth` | Azure bearer token retrieval |
-| `jcode-notify-email` | SMTP/IMAP/mail transport |
-| `jcode-provider-metadata` | provider/login catalog and profile metadata |
-| `jcode-provider-core` | shared provider contract (`Provider`/`EventStream`), value types, route/cost/model helpers, shared HTTP client, schema helpers |
-| `jcode-provider-openrouter` | OpenRouter-specific catalog/cache/support helpers |
-| `jcode-provider-gemini` | Gemini schema/model/support helpers |
-| `jcode-tui-core` | low-level terminal UI primitives that do not need full app state |
-| `jcode-tui-markdown` | markdown wrapping/rendering, layered on mermaid/workspace support |
-| `jcode-tui-mermaid` | mermaid parsing, rendering, caching, viewport, and widget support |
-| `jcode-tui-render` | reusable TUI layout/render helpers |
-| `jcode-tui-workspace` | workspace-map data/model/widget rendering |
-| `jcode-terminal-launch` | terminal process launch helpers |
-| `jcode-mobile-core` | shared headless mobile simulator state/protocol/visual model |
-| `jcode-mobile-sim` | mobile simulator CLI/app surface layered on `jcode-mobile-core` |
-| `jcode-desktop` | desktop app surface and session/workspace rendering experiments |
+| `minnal-agent-runtime` | shared interrupt and lightweight runtime primitives for agent execution |
+| `minnal-ambient-types` | usage and rate-limit records shared by ambient/background flows |
+| `minnal-auth-types` | provider-neutral auth state and credential metadata |
+| `minnal-background-types` | background-task status and progress DTOs |
+| `minnal-batch-types` | batch tool progress DTOs, currently depending only on message types internally |
+| `minnal-config-types` | stable configuration data contracts |
+| `minnal-core` | low-level utilities such as IDs, env helpers, fs helpers, stdin detection, and formatting |
+| `minnal-gateway-types` | gateway-facing data contracts |
+| `minnal-memory-types` | memory subsystem data contracts |
+| `minnal-message-types` | message content and transport-adjacent data contracts |
+| `minnal-protocol` | client/server protocol surface built from stable type crates and provider-core values |
+| `minnal-plan` | plan/task graph data model shared across coordination flows |
+| `minnal-selfdev-types` | self-development request/status data contracts |
+| `minnal-session-types` | session DTOs, currently depending only on message types internally |
+| `minnal-side-panel-types` | side-panel page and update data contracts |
+| `minnal-task-types` | task/tool scheduling data contracts |
+| `minnal-tool-core` | runtime tool contracts such as the `Tool` trait and execution context |
+| `minnal-tool-types` | stable tool output/image DTOs |
+| `minnal-usage-types` | usage accounting data contracts |
+| `minnal-storage` | storage helpers layered on `minnal-core` |
+| `minnal-embedding` | ONNX/tokenizer-based embedding implementation and heavy inference deps |
+| `minnal-pdf` | PDF text extraction |
+| `minnal-azure-auth` | Azure bearer token retrieval |
+| `minnal-notify-email` | SMTP/IMAP/mail transport |
+| `minnal-provider-metadata` | provider/login catalog and profile metadata |
+| `minnal-provider-core` | shared provider contract (`Provider`/`EventStream`), value types, route/cost/model helpers, shared HTTP client, schema helpers |
+| `minnal-provider-openrouter` | OpenRouter-specific catalog/cache/support helpers |
+| `minnal-provider-gemini` | Gemini schema/model/support helpers |
+| `minnal-tui-core` | low-level terminal UI primitives that do not need full app state |
+| `minnal-tui-markdown` | markdown wrapping/rendering, layered on mermaid/workspace support |
+| `minnal-tui-mermaid` | mermaid parsing, rendering, caching, viewport, and widget support |
+| `minnal-tui-render` | reusable TUI layout/render helpers |
+| `minnal-tui-workspace` | workspace-map data/model/widget rendering |
+| `minnal-terminal-launch` | terminal process launch helpers |
+| `minnal-mobile-core` | shared headless mobile simulator state/protocol/visual model |
+| `minnal-mobile-sim` | mobile simulator CLI/app surface layered on `minnal-mobile-core` |
+| `minnal-desktop` | desktop app surface and session/workspace rendering experiments |
 
 These are already aligned with the compile-performance plan's strategy: isolate heavy dependencies and stable helper surfaces first.
 
@@ -161,7 +161,7 @@ This supports the current plan direction:
 
 ```mermaid
 flowchart TD
-  J[jcode root crate]
+  J[minnal root crate]
 
   J --> CLI[CLI and startup]
   J --> Server[Server orchestration]
@@ -172,16 +172,16 @@ flowchart TD
   J --> Coreish[Protocol, message, config, ids]
   J --> Product[Auth, memory, safety, ambient, notifications]
 
-  J --> AR[jcode-agent-runtime]
-  J --> Emb[jcode-embedding]
-  J --> PDF[jcode-pdf]
-  J --> Azure[jcode-azure-auth]
-  J --> Mail[jcode-notify-email]
-  J --> PMeta[jcode-provider-metadata]
-  J --> PCore[jcode-provider-core]
-  J --> POR[jcode-provider-openrouter]
-  J --> PGem[jcode-provider-gemini]
-  J --> TW[jcode-tui-workspace]
+  J --> AR[minnal-agent-runtime]
+  J --> Emb[minnal-embedding]
+  J --> PDF[minnal-pdf]
+  J --> Azure[minnal-azure-auth]
+  J --> Mail[minnal-notify-email]
+  J --> PMeta[minnal-provider-metadata]
+  J --> PCore[minnal-provider-core]
+  J --> POR[minnal-provider-openrouter]
+  J --> PGem[minnal-provider-gemini]
+  J --> TW[minnal-tui-workspace]
 ```
 
 ## Architectural Problems To Solve
@@ -226,33 +226,33 @@ The target is a layered workspace with a thin composition root. Arrows below mea
 
 ```mermaid
 flowchart TD
-  App[jcode top-level package]
+  App[minnal top-level package]
 
   subgraph L2[Layer 2: interfaces and product surfaces]
-    TUI[jcode-tui]
-    SelfDev[jcode-selfdev]
-    CLI[jcode-cli or root CLI modules]
+    TUI[minnal-tui]
+    SelfDev[minnal-selfdev]
+    CLI[minnal-cli or root CLI modules]
   end
 
   subgraph L1[Layer 1: domain/runtime]
-    Server[jcode-server]
-    Agent[jcode-agent]
-    Provider[jcode-provider]
-    Session[jcode-session]
+    Server[minnal-server]
+    Agent[minnal-agent]
+    Provider[minnal-provider]
+    Session[minnal-session]
   end
 
   subgraph L0[Layer 0: foundation and support]
-    Core[jcode-core]
-    AR[jcode-agent-runtime]
-    Emb[jcode-embedding]
-    PDF[jcode-pdf]
-    Azure[jcode-azure-auth]
-    Mail[jcode-notify-email]
-    PMeta[jcode-provider-metadata]
-    PCore[jcode-provider-core]
-    POR[jcode-provider-openrouter]
-    PGem[jcode-provider-gemini]
-    TW[jcode-tui-workspace]
+    Core[minnal-core]
+    AR[minnal-agent-runtime]
+    Emb[minnal-embedding]
+    PDF[minnal-pdf]
+    Azure[minnal-azure-auth]
+    Mail[minnal-notify-email]
+    PMeta[minnal-provider-metadata]
+    PCore[minnal-provider-core]
+    POR[minnal-provider-openrouter]
+    PGem[minnal-provider-gemini]
+    TW[minnal-tui-workspace]
   end
 
   App --> Server
@@ -313,14 +313,14 @@ These crates should be small, low-dependency, and slow-changing. They are allowe
 
 Existing examples:
 
-- `jcode-message-types`
-- `jcode-tool-types`
-- `jcode-session-types`
-- `jcode-config-types`
-- `jcode-protocol`
-- `jcode-provider-core`
-- `jcode-plan`
-- `jcode-*-types`
+- `minnal-message-types`
+- `minnal-tool-types`
+- `minnal-session-types`
+- `minnal-config-types`
+- `minnal-protocol`
+- `minnal-provider-core`
+- `minnal-plan`
+- `minnal-*-types`
 
 Target direction:
 
@@ -340,13 +340,13 @@ These own product behavior but should depend only downward on contracts/support 
 
 Target crates:
 
-- `jcode-provider`: provider composition, provider routing, streaming contract adapters, and concrete runtime implementations layered on the `jcode-provider-core` trait.
-- `jcode-agent`: turn loop, compaction orchestration, provider/tool interaction, recovery logic.
-- `jcode-session`: session model, state transitions, persistence-facing session operations.
-- `jcode-server`: daemon lifecycle, client attachment, swarm/background coordination, service registries.
-- `jcode-tools` or narrower `jcode-tool-core` plus `jcode-tool-impl`: tool registry contracts and tool implementations.
-- `jcode-auth`: root auth orchestration after provider-neutral data lives in `jcode-auth-types` and heavy leaf SDKs stay separate.
-- `jcode-memory`: memory graph/log/search orchestration once its contracts are stable enough.
+- `minnal-provider`: provider composition, provider routing, streaming contract adapters, and concrete runtime implementations layered on the `minnal-provider-core` trait.
+- `minnal-agent`: turn loop, compaction orchestration, provider/tool interaction, recovery logic.
+- `minnal-session`: session model, state transitions, persistence-facing session operations.
+- `minnal-server`: daemon lifecycle, client attachment, swarm/background coordination, service registries.
+- `minnal-tools` or narrower `minnal-tool-core` plus `minnal-tool-impl`: tool registry contracts and tool implementations.
+- `minnal-auth`: root auth orchestration after provider-neutral data lives in `minnal-auth-types` and heavy leaf SDKs stay separate.
+- `minnal-memory`: memory graph/log/search orchestration once its contracts are stable enough.
 
 Compile-time reason:
 
@@ -359,11 +359,11 @@ These are high-churn application surfaces and should sit above runtime/domain cr
 
 Target crates:
 
-- `jcode-cli`: parsing and command dispatch if CLI keeps growing.
-- `jcode-tui`: app state, reducers, key handling, command/input handling, UI orchestration.
-- `jcode-desktop`: already a separate surface.
-- `jcode-mobile-*`: already split.
-- `jcode-selfdev`: self-dev build/reload/customization workflows if they remain a substantial product surface.
+- `minnal-cli`: parsing and command dispatch if CLI keeps growing.
+- `minnal-tui`: app state, reducers, key handling, command/input handling, UI orchestration.
+- `minnal-desktop`: already a separate surface.
+- `minnal-mobile-*`: already split.
+- `minnal-selfdev`: self-dev build/reload/customization workflows if they remain a substantial product surface.
 
 Compile-time reason:
 
@@ -376,12 +376,12 @@ These should remain isolated and often feature-gated.
 
 Existing examples:
 
-- `jcode-embedding`
-- `jcode-pdf`
-- `jcode-azure-auth`
-- `jcode-notify-email`
-- `jcode-tui-mermaid`
-- provider support crates such as `jcode-provider-openrouter` and `jcode-provider-gemini`
+- `minnal-embedding`
+- `minnal-pdf`
+- `minnal-azure-auth`
+- `minnal-notify-email`
+- `minnal-tui-mermaid`
+- provider support crates such as `minnal-provider-openrouter` and `minnal-provider-gemini`
 
 Target direction:
 
@@ -396,7 +396,7 @@ Compile-time reason:
 
 #### 5. Composition package
 
-The top-level `jcode` package should eventually become mostly:
+The top-level `minnal` package should eventually become mostly:
 
 - binary entrypoints
 - feature defaults
@@ -411,23 +411,23 @@ It should not be the long-term home of large implementation modules.
 A healthy final graph should look like this:
 
 ```text
-jcode binary/composition
-  -> jcode-cli, jcode-tui, jcode-server, jcode-selfdev
+minnal binary/composition
+  -> minnal-cli, minnal-tui, minnal-server, minnal-selfdev
 
-jcode-cli / jcode-tui
-  -> jcode-protocol, jcode-*-types, jcode-server-client contracts
+minnal-cli / minnal-tui
+  -> minnal-protocol, minnal-*-types, minnal-server-client contracts
 
-jcode-server
-  -> jcode-agent, jcode-session, jcode-provider, jcode-tools, jcode-storage
+minnal-server
+  -> minnal-agent, minnal-session, minnal-provider, minnal-tools, minnal-storage
 
-jcode-agent
-  -> jcode-provider, jcode-tools, jcode-session, jcode-agent-runtime
+minnal-agent
+  -> minnal-provider, minnal-tools, minnal-session, minnal-agent-runtime
 
-jcode-provider
-  -> jcode-provider-core, jcode-provider-* leaves, jcode-auth-types
+minnal-provider
+  -> minnal-provider-core, minnal-provider-* leaves, minnal-auth-types
 
-jcode-session
-  -> jcode-session-types, jcode-message-types, jcode-storage, optional leaf adapters
+minnal-session
+  -> minnal-session-types, minnal-message-types, minnal-storage, optional leaf adapters
 
 contract/type crates
   -> serde and small support crates only
@@ -458,7 +458,7 @@ If these are not true yet, keep decomposing internally first.
 
 Avoid these tempting but harmful structures:
 
-- **One mega `jcode-common` crate.** It becomes the new root crate and invalidates everything.
+- **One mega `minnal-common` crate.** It becomes the new root crate and invalidates everything.
 - **One crate per source directory.** This creates noisy APIs and dependency cycles without compile wins.
 - **Moving high-churn traits too early.** A poorly stabilized trait crate can become worse than the monolith.
 - **Moving UI-adjacent state into core.** This contaminates lower layers with `ratatui`/terminal concepts.
@@ -469,12 +469,12 @@ Avoid these tempting but harmful structures:
 
 Based on the current root size and existing footholds, the best next work is probably:
 
-1. **Provider contracts:** keep shrinking `src/provider/mod.rs` until a `jcode-provider` trait/runtime crate can depend only on `jcode-message-types`, `jcode-provider-core`, and small runtime primitives.
+1. **Provider contracts:** keep shrinking `src/provider/mod.rs` until a `minnal-provider` trait/runtime crate can depend only on `minnal-message-types`, `minnal-provider-core`, and small runtime primitives.
 2. **Server core:** extract protocol-independent pieces of `src/server/` such as client lifecycle state machines, swarm/background coordination DTOs, and reload/update policies behind server-local contracts.
 3. **TUI reducer/state core:** extract non-rendering app state transitions from `src/tui/app/*` before moving the whole TUI crate.
 4. **Tool contracts and registry shape:** separate tool definitions, schemas, execution context, and registry metadata from individual tool implementations.
 5. **Session domain:** isolate session state transitions and persistence-facing operations from server/TUI/provider orchestration.
-6. **Auth facade:** keep provider-neutral auth data in `jcode-auth-types`, heavy SDKs in leaf crates, and move root auth orchestration only after provider contracts stabilize.
+6. **Auth facade:** keep provider-neutral auth data in `minnal-auth-types`, heavy SDKs in leaf crates, and move root auth orchestration only after provider contracts stabilize.
 
 A useful near-term policy: every time a large root file is touched, ask whether some pure table, DTO, parser, reducer, classifier, or state transition can move downward into an existing support crate without pulling runtime dependencies with it.
 
@@ -484,7 +484,7 @@ Each structural phase should record at least:
 
 - touched-file `cargo check` for the edited hotspot
 - touched-file selfdev build for the edited hotspot
-- `cargo tree -p jcode --edges normal --depth 1` before/after for dependency surprises
+- `cargo tree -p minnal --edges normal --depth 1` before/after for dependency surprises
 - crate-level test coverage for newly extracted crates
 
 A split is successful if it either:
@@ -497,7 +497,7 @@ A split should be reconsidered if it adds public API churn, creates cycles, or r
 
 ## Target crate responsibilities
 
-### `jcode-core`
+### `minnal-core`
 
 Purpose: stable shared types and utilities with minimal dependencies.
 
@@ -522,7 +522,7 @@ Notes:
 - This is the most important future extraction because it enables the rest.
 - `src/protocol.rs`, `src/id.rs`, and carefully selected parts of `config.rs` and `message.rs` are the likely first feeders.
 
-### `jcode-session`
+### `minnal-session`
 
 Purpose: session domain model, persistence, and state transitions.
 
@@ -543,9 +543,9 @@ Should not contain:
 Notes:
 
 - This crate is not explicitly named in the current compile-performance plan, but the current size and fanout of `src/session.rs` make session extraction a natural stabilizing move.
-- If introducing `jcode-session` feels too early, the same boundary should still be established internally first and extracted later.
+- If introducing `minnal-session` feels too early, the same boundary should still be established internally first and extracted later.
 
-### `jcode-provider`
+### `minnal-provider`
 
 Purpose: provider contracts and runtime-facing provider orchestration.
 
@@ -563,10 +563,10 @@ Should not contain:
 
 Notes:
 
-- Existing crates `jcode-provider-core`, `jcode-provider-metadata`, `jcode-provider-openrouter`, and `jcode-provider-gemini` remain useful under this layer.
+- Existing crates `minnal-provider-core`, `minnal-provider-metadata`, `minnal-provider-openrouter`, and `minnal-provider-gemini` remain useful under this layer.
 - The key migration step is shrinking the `Provider` trait's dependency surface so it no longer depends on root-crate-only message/runtime types.
 
-### `jcode-agent`
+### `minnal-agent`
 
 Purpose: agent turn engine and tool orchestration.
 
@@ -587,9 +587,9 @@ Should not contain:
 Notes:
 
 - This aligns directly with the refactoring roadmap's "Agent Turn-Loop Unification" phase.
-- `jcode-agent-runtime` remains the low-level runtime primitive crate below it.
+- `minnal-agent-runtime` remains the low-level runtime primitive crate below it.
 
-### `jcode-server`
+### `minnal-server`
 
 Purpose: daemon lifecycle and multi-client coordination.
 
@@ -605,14 +605,14 @@ Should not contain:
 
 - TUI rendering
 - provider implementation details beyond service interfaces
-- session persistence internals that belong in `jcode-session`
+- session persistence internals that belong in `minnal-session`
 
 Notes:
 
 - The current `src/server/` submodule tree is already the right shape for this extraction.
 - `src/server.rs` should continue shrinking into a facade/composition module.
 
-### `jcode-tui`
+### `minnal-tui`
 
 Purpose: client UI state, reducers, and rendering.
 
@@ -632,9 +632,9 @@ Should not contain:
 Notes:
 
 - This aligns directly with the refactoring roadmap's "TUI State/Reducer Split" phase.
-- `jcode-tui-workspace` can remain a leaf crate or become a child dependency of `jcode-tui`.
+- `minnal-tui-workspace` can remain a leaf crate or become a child dependency of `minnal-tui`.
 
-### `jcode-selfdev`
+### `minnal-selfdev`
 
 Purpose: self-dev workflows, customization records, reload/build productization.
 
@@ -653,7 +653,7 @@ Notes:
 
 - This aligns with the compile-performance plan's issue-#32 direction and with the already-unified shared-server model.
 
-### `jcode` top-level package
+### `minnal` top-level package
 
 Purpose: composition root and shipping product package.
 
@@ -685,16 +685,16 @@ A higher layer may depend on a lower layer. A lower layer may not depend on a hi
 
 ### Rule 3: No server daemon types in core or provider-support crates
 
-- socket/session attachment state, fanout senders, debug socket helpers, and daemon lifecycle code must not appear in `jcode-core`, `jcode-provider-core`, or provider leaf crates
+- socket/session attachment state, fanout senders, debug socket helpers, and daemon lifecycle code must not appear in `minnal-core`, `minnal-provider-core`, or provider leaf crates
 
 ### Rule 4: Provider implementation crates depend on contracts, not on the server or TUI
 
-- provider leaf crates may depend on `jcode-core`, `jcode-provider`, and `jcode-provider-core`
-- they must not depend on `jcode-server` or `jcode-tui`
+- provider leaf crates may depend on `minnal-core`, `minnal-provider`, and `minnal-provider-core`
+- they must not depend on `minnal-server` or `minnal-tui`
 
-### Rule 5: Async/network-heavy dependencies do not belong in `jcode-core`
+### Rule 5: Async/network-heavy dependencies do not belong in `minnal-core`
 
-`jcode-core` should stay cheap to compile and highly reusable.
+`minnal-core` should stay cheap to compile and highly reusable.
 
 Avoid putting these there unless absolutely necessary:
 
@@ -720,14 +720,14 @@ Do not create a dumping-ground crate.
 
 If code has a clear owner, it belongs with that owner:
 
-- protocol/data types -> `jcode-core`
-- session persistence -> `jcode-session`
+- protocol/data types -> `minnal-core`
+- session persistence -> `minnal-session`
 - provider route/schema helpers -> provider crates
-- rendering helpers -> `jcode-tui`
+- rendering helpers -> `minnal-tui`
 
 ### Rule 8: The root package may compose many crates, but peer crates should stay narrow
 
-The top-level `jcode` package can wire multiple domains together. Peer crates should not casually depend on each other sideways when a lower-level contract would do.
+The top-level `minnal` package can wire multiple domains together. Peer crates should not casually depend on each other sideways when a lower-level contract would do.
 
 ### Rule 9: New crate boundaries should follow both ownership and invalidation logic
 
@@ -746,15 +746,15 @@ This is the recommended direction from the current tree, not a one-shot move lis
 
 | Current area | Likely target |
 |---|---|
-| `src/id.rs`, protocol/message/config primitives | `jcode-core` |
-| `src/session.rs`, parts of `storage`, restart snapshot concerns | `jcode-session` |
-| `src/agent/*`, parts of `compaction`, tool orchestration seams | `jcode-agent` |
-| `src/server/` + shrinking `src/server.rs` facade | `jcode-server` |
-| `src/provider/mod.rs` trait/contracts plus provider composition seams | `jcode-provider` |
+| `src/id.rs`, protocol/message/config primitives | `minnal-core` |
+| `src/session.rs`, parts of `storage`, restart snapshot concerns | `minnal-session` |
+| `src/agent/*`, parts of `compaction`, tool orchestration seams | `minnal-agent` |
+| `src/server/` + shrinking `src/server.rs` facade | `minnal-server` |
+| `src/provider/mod.rs` trait/contracts plus provider composition seams | `minnal-provider` |
 | existing provider helper crates | remain leaf/provider support crates |
-| `src/tui/*` + `jcode-tui-workspace` | `jcode-tui` + leaf workspace widget crate |
-| `src/cli/*` | stay in root initially or become `jcode-cli` later if justified |
-| `src/tool/selfdev/*`, self-dev workflow/productization | `jcode-selfdev` |
+| `src/tui/*` + `minnal-tui-workspace` | `minnal-tui` + leaf workspace widget crate |
+| `src/cli/*` | stay in root initially or become `minnal-cli` later if justified |
+| `src/tool/selfdev/*`, self-dev workflow/productization | `minnal-selfdev` |
 
 ## Phased Migration Plan
 
@@ -789,7 +789,7 @@ Exit criteria:
 - root modules are organized by ownership, not by convenience
 - candidate extraction seams are obvious and lower-risk
 
-### Phase 2: Extract `jcode-core`
+### Phase 2: Extract `minnal-core`
 
 This is the highest-leverage shared boundary.
 
@@ -810,10 +810,10 @@ Exit criteria:
 
 Primary targets:
 
-1. `jcode-provider`
-2. `jcode-agent`
-3. `jcode-server`
-4. `jcode-session`
+1. `minnal-provider`
+2. `minnal-agent`
+3. `minnal-server`
+4. `minnal-session`
 
 Recommended order:
 
@@ -825,7 +825,7 @@ Exit criteria:
 
 - the root crate no longer defines the main provider, server, and agent contracts directly
 
-### Phase 4: Extract `jcode-tui`
+### Phase 4: Extract `minnal-tui`
 
 Focus:
 
@@ -838,7 +838,7 @@ Exit criteria:
 
 - TUI can evolve rapidly without dragging broad server/provider recompilation
 
-### Phase 5: Extract `jcode-selfdev`
+### Phase 5: Extract `minnal-selfdev`
 
 Focus:
 
@@ -855,7 +855,7 @@ Exit criteria:
 Desired end state:
 
 - `src/main.rs` remains thin
-- `jcode::run()` is mostly wiring
+- `minnal::run()` is mostly wiring
 - the top-level package primarily assembles runtime services and default product configuration
 
 ### Continuous work across all phases
@@ -911,10 +911,10 @@ Short version:
 
 These do not block the RFC, but they should be revisited as migration proceeds:
 
-- Should `jcode-session` become an explicit crate, or remain an internal boundary until later?
-- Should CLI remain in the top-level package permanently, or eventually become `jcode-cli`?
-- Should `message` and `protocol` remain together in `jcode-core`, or split into separate contract crates if they evolve at different rates?
-- Should `jcode-tui-workspace` remain a separate leaf crate long-term, or fold into `jcode-tui` once the larger TUI extraction lands?
+- Should `minnal-session` become an explicit crate, or remain an internal boundary until later?
+- Should CLI remain in the top-level package permanently, or eventually become `minnal-cli`?
+- Should `message` and `protocol` remain together in `minnal-core`, or split into separate contract crates if they evolve at different rates?
+- Should `minnal-tui-workspace` remain a separate leaf crate long-term, or fold into `minnal-tui` once the larger TUI extraction lands?
 
 ## Recommendation
 

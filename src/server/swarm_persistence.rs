@@ -1,12 +1,12 @@
 use super::{SwarmMember, SwarmTaskProgress, VersionedPlan};
 use crate::protocol::ServerEvent;
 use crate::storage;
-use jcode_swarm_core::{SwarmLifecycleStatus, SwarmMemberRecord};
+use minnal_swarm_core::{SwarmLifecycleStatus, SwarmMemberRecord};
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use tokio::sync::mpsc;
 
-const SWARM_STATE_DIR: &str = "jcode-swarm-state";
+const SWARM_STATE_DIR: &str = "minnal-swarm-state";
 
 pub(super) struct LoadedSwarmRuntimeState {
     pub plans: HashMap<String, VersionedPlan>,

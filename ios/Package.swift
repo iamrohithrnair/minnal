@@ -3,26 +3,26 @@
 import PackageDescription
 
 let package = Package(
-    name: "JCodeKit",
+    name: "MinnalKit",
     platforms: [
         .iOS(.v17),
         .macOS(.v14),
     ],
     products: [
         .library(
-            name: "JCodeKit",
-            targets: ["JCodeKit"]
+            name: "MinnalKit",
+            targets: ["MinnalKit"]
         ),
     ],
     targets: [
         .target(
-            name: "JCodeKit",
-            path: "Sources/JCodeKit"
+            name: "MinnalKit",
+            path: "Sources/MinnalKit"
         ),
         .executableTarget(
-            name: "JCodeKitTests",
-            dependencies: ["JCodeKit"],
-            path: "Tests/JCodeKitTests"
+            name: "MinnalKitTests",
+            dependencies: ["MinnalKit"],
+            path: "Tests/MinnalKitTests"
         ),
     ]
 )

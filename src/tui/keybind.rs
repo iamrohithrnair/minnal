@@ -1,11 +1,11 @@
 use crate::config::config;
 use crossterm::event::{KeyCode, KeyModifiers};
 
-pub use jcode_tui_core::keybind::{
+pub use minnal_tui_core::keybind::{
     CenteredToggleKeys, EffortSwitchKeys, KeyBinding, ModelSwitchKeys, OptionalBinding, ScrollKeys,
     WorkspaceNavigationDirection, WorkspaceNavigationKeys,
 };
-use jcode_tui_core::keybind::{
+use minnal_tui_core::keybind::{
     format_binding, is_disabled, parse_bindings_or_default, parse_keybinding, parse_optional,
     parse_or_default,
 };

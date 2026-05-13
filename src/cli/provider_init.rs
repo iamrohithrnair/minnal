@@ -25,7 +25,7 @@ pub(crate) use external_auth::{
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
 pub enum ProviderChoice {
-    Jcode,
+    Minnal,
     Claude,
     #[deprecated(
         note = "Claude Code CLI subprocess transport is deprecated; use ProviderChoice::Claude for native Anthropic OAuth/API transport"
@@ -117,7 +117,7 @@ impl ProviderChoice {
     #[allow(deprecated)]
     pub fn as_arg_value(&self) -> &'static str {
         match self {
-            Self::Jcode => "jcode",
+            Self::Minnal => "minnal",
             Self::Claude => "claude",
             Self::ClaudeSubprocess => "claude-subprocess",
             Self::Openai => "openai",
@@ -168,8 +168,8 @@ impl ProviderChoice {
 #[allow(deprecated)]
 const PROVIDER_CHOICE_LOGIN_PROVIDERS: &[(ProviderChoice, LoginProviderDescriptor)] = &[
     (
-        ProviderChoice::Jcode,
-        crate::provider_catalog::JCODE_LOGIN_PROVIDER,
+        ProviderChoice::Minnal,
+        crate::provider_catalog::MINNAL_LOGIN_PROVIDER,
     ),
     (
         ProviderChoice::Claude,
@@ -615,7 +615,7 @@ fn ensure_external_api_key_auth_allowed_for_explicit_choice(env_key: &str) -> Re
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting external {} credentials. Run `{}` to authenticate jcode directly.",
+        "Skipped trusting external {} credentials. Run `{}` to authenticate minnal directly.",
         provider_name,
         login_hint
     )
@@ -727,7 +727,7 @@ fn ensure_openai_auth_allowed_for_explicit_choice() -> Result<()> {
     }
 
     anyhow::bail!(
-        "Skipped trusting existing ~/.codex/auth.json credentials. Run `minnal login --provider openai` to authenticate jcode directly."
+        "Skipped trusting existing ~/.codex/auth.json credentials. Run `minnal login --provider openai` to authenticate minnal directly."
     )
 }
 
@@ -809,7 +809,7 @@ fn ensure_claude_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting external Claude credentials. Run `minnal login --provider claude` to authenticate jcode directly."
+        "Skipped trusting external Claude credentials. Run `minnal login --provider claude` to authenticate minnal directly."
     )
 }
 
@@ -886,7 +886,7 @@ fn ensure_gemini_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting Gemini CLI credentials. Run `minnal login --provider gemini` to authenticate jcode directly."
+        "Skipped trusting Gemini CLI credentials. Run `minnal login --provider gemini` to authenticate minnal directly."
     )
 }
 
@@ -970,7 +970,7 @@ fn ensure_copilot_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting external Copilot credentials. Run `minnal login --provider copilot` to authenticate jcode directly."
+        "Skipped trusting external Copilot credentials. Run `minnal login --provider copilot` to authenticate minnal directly."
     )
 }
 
@@ -1022,7 +1022,7 @@ fn ensure_cursor_auth_allowed_for_explicit_choice() -> Result<()> {
         return Ok(());
     }
     anyhow::bail!(
-        "Skipped trusting external Cursor credentials. Run `minnal login --provider cursor` to authenticate jcode directly."
+        "Skipped trusting external Cursor credentials. Run `minnal login --provider cursor` to authenticate minnal directly."
     )
 }
 
@@ -1092,7 +1092,7 @@ pub async fn login_and_bootstrap_provider(
             disable_subscription_runtime_mode();
             Arc::new(provider::MultiProvider::new())
         }
-        LoginProviderTarget::Jcode => Arc::new(provider::jcode::JcodeProvider::new()),
+        LoginProviderTarget::Minnal => Arc::new(provider::minnal::MinnalProvider::new()),
         LoginProviderTarget::Claude => {
             disable_subscription_runtime_mode();
             Arc::new(provider::MultiProvider::new())
@@ -1140,7 +1140,7 @@ pub async fn login_and_bootstrap_provider(
         LoginProviderTarget::Cursor => {
             disable_subscription_runtime_mode();
             unlock_model_provider();
-            crate::env::set_var("JCODE_ACTIVE_PROVIDER", "cursor");
+            crate::env::set_var("MINNAL_ACTIVE_PROVIDER", "cursor");
             Arc::new(provider::cursor::CursorCliProvider::new())
         }
         LoginProviderTarget::Copilot => {
@@ -1150,13 +1150,13 @@ pub async fn login_and_bootstrap_provider(
         LoginProviderTarget::Gemini => {
             disable_subscription_runtime_mode();
             unlock_model_provider();
-            crate::env::set_var("JCODE_ACTIVE_PROVIDER", "gemini");
+            crate::env::set_var("MINNAL_ACTIVE_PROVIDER", "gemini");
             Arc::new(provider::gemini::GeminiProvider::new())
         }
         LoginProviderTarget::Antigravity => {
             disable_subscription_runtime_mode();
             unlock_model_provider();
-            crate::env::set_var("JCODE_ACTIVE_PROVIDER", "antigravity");
+            crate::env::set_var("MINNAL_ACTIVE_PROVIDER", "antigravity");
             Arc::new(provider::antigravity::AntigravityProvider::new())
         }
         LoginProviderTarget::Google => {
@@ -1211,15 +1211,15 @@ async fn init_provider_with_options(
     show_init_messages: bool,
     allow_login_bootstrap: bool,
 ) -> Result<Arc<dyn provider::Provider>> {
-    if let Ok(profile_name) = std::env::var("JCODE_PROVIDER_PROFILE_NAME")
+    if let Ok(profile_name) = std::env::var("MINNAL_PROVIDER_PROFILE_NAME")
         && !profile_name.trim().is_empty()
     {
         crate::provider_catalog::apply_named_provider_profile_env(profile_name.trim())?;
-        crate::env::set_var("JCODE_PROVIDER_PROFILE_ACTIVE", "1");
+        crate::env::set_var("MINNAL_PROVIDER_PROFILE_ACTIVE", "1");
     }
 
-    if std::env::var_os("JCODE_PROVIDER_PROFILE_ACTIVE").is_none()
-        && std::env::var_os("JCODE_NAMED_PROVIDER_PROFILE").is_none()
+    if std::env::var_os("MINNAL_PROVIDER_PROFILE_ACTIVE").is_none()
+        && std::env::var_os("MINNAL_NAMED_PROVIDER_PROFILE").is_none()
     {
         if let Some(profile) = profile_for_choice(choice) {
             apply_openai_compatible_profile_env(Some(profile));
@@ -1235,9 +1235,9 @@ async fn init_provider_with_options(
     };
 
     let provider: Arc<dyn provider::Provider> = match choice {
-        ProviderChoice::Jcode => {
-            init_notice("Using Jcode subscription provider (provider locked)");
-            Arc::new(provider::jcode::JcodeProvider::new())
+        ProviderChoice::Minnal => {
+            init_notice("Using Minnal subscription provider (provider locked)");
+            Arc::new(provider::minnal::MinnalProvider::new())
         }
         ProviderChoice::Claude => {
             disable_subscription_runtime_mode();
@@ -1252,7 +1252,7 @@ async fn init_provider_with_options(
             crate::logging::warn(
                 "Using --provider claude-subprocess is deprecated and will be removed. Prefer `--provider claude`.",
             );
-            crate::env::set_var("JCODE_USE_CLAUDE_CLI", "1");
+            crate::env::set_var("MINNAL_USE_CLAUDE_CLI", "1");
             init_notice(
                 "Using deprecated Claude subprocess transport (legacy compatibility mode; provider locked)",
             );
@@ -1278,7 +1278,7 @@ async fn init_provider_with_options(
             ensure_cursor_auth_allowed_for_explicit_choice()?;
             init_notice("Using Cursor native HTTPS provider (experimental)");
             unlock_model_provider();
-            crate::env::set_var("JCODE_ACTIVE_PROVIDER", "cursor");
+            crate::env::set_var("MINNAL_ACTIVE_PROVIDER", "cursor");
             Arc::new(provider::cursor::CursorCliProvider::new())
         }
         ProviderChoice::Copilot => {
@@ -1293,7 +1293,7 @@ async fn init_provider_with_options(
             ensure_gemini_auth_allowed_for_explicit_choice()?;
             init_notice("Using Gemini provider (native Google Code Assist OAuth)");
             unlock_model_provider();
-            crate::env::set_var("JCODE_ACTIVE_PROVIDER", "gemini");
+            crate::env::set_var("MINNAL_ACTIVE_PROVIDER", "gemini");
             Arc::new(provider::gemini::GeminiProvider::new())
         }
         ProviderChoice::Openrouter => {
@@ -1352,13 +1352,13 @@ async fn init_provider_with_options(
             disable_subscription_runtime_mode();
             let profile = profile_for_choice(choice)
                 .ok_or_else(|| anyhow::anyhow!("missing provider profile for choice"))?;
-            if std::env::var_os("JCODE_PROVIDER_PROFILE_ACTIVE").is_none()
-                && std::env::var_os("JCODE_NAMED_PROVIDER_PROFILE").is_none()
+            if std::env::var_os("MINNAL_PROVIDER_PROFILE_ACTIVE").is_none()
+                && std::env::var_os("MINNAL_NAMED_PROVIDER_PROFILE").is_none()
             {
                 apply_openai_compatible_profile_env(Some(profile));
             }
             let mut runtime_model_hint = None;
-            let display_name = if let Ok(named) = std::env::var("JCODE_NAMED_PROVIDER_PROFILE") {
+            let display_name = if let Ok(named) = std::env::var("MINNAL_NAMED_PROVIDER_PROFILE") {
                 if let Some(profile) = crate::config::config().providers.get(&named) {
                     runtime_model_hint = profile.default_model.clone();
                 }
@@ -1378,10 +1378,10 @@ async fn init_provider_with_options(
                 display_name
             ));
             crate::provider::activation::apply_openai_compatible_runtime(runtime_model_hint)?;
-            if std::env::var_os("JCODE_PROVIDER_PROFILE_ACTIVE").is_some()
-                || std::env::var_os("JCODE_NAMED_PROVIDER_PROFILE").is_some()
+            if std::env::var_os("MINNAL_PROVIDER_PROFILE_ACTIVE").is_some()
+                || std::env::var_os("MINNAL_NAMED_PROVIDER_PROFILE").is_some()
             {
-                let profile_name = std::env::var("JCODE_NAMED_PROVIDER_PROFILE")?;
+                let profile_name = std::env::var("MINNAL_NAMED_PROVIDER_PROFILE")?;
                 let cfg = crate::config::config();
                 let profile = cfg.providers.get(&profile_name).ok_or_else(|| {
                     anyhow::anyhow!("Unknown provider profile '{}'", profile_name)
@@ -1401,7 +1401,7 @@ async fn init_provider_with_options(
             ensure_antigravity_auth_allowed_for_explicit_choice()?;
             init_notice("Using Antigravity provider (experimental)");
             unlock_model_provider();
-            crate::env::set_var("JCODE_ACTIVE_PROVIDER", "antigravity");
+            crate::env::set_var("MINNAL_ACTIVE_PROVIDER", "antigravity");
             Arc::new(provider::antigravity::AntigravityProvider::new())
         }
         ProviderChoice::Google => {
@@ -1543,10 +1543,10 @@ async fn init_provider_with_options(
                     "Using {} (use /model to switch models)",
                     multi.name()
                 ));
-                crate::env::set_var("JCODE_ACTIVE_PROVIDER", multi.name().to_lowercase());
+                crate::env::set_var("MINNAL_ACTIVE_PROVIDER", multi.name().to_lowercase());
                 Arc::new(multi)
             } else {
-                let non_interactive = std::env::var("JCODE_NON_INTERACTIVE").is_ok();
+                let non_interactive = std::env::var("MINNAL_NON_INTERACTIVE").is_ok();
                 if non_interactive {
                     anyhow::bail!(
                         "No credentials configured. Run 'minnal login' or set ANTHROPIC_API_KEY to authenticate."
@@ -1568,8 +1568,8 @@ async fn init_provider_with_options(
         }
     };
 
-    if std::env::var_os("JCODE_PROVIDER_PROFILE_ACTIVE").is_none()
-        && std::env::var_os("JCODE_NAMED_PROVIDER_PROFILE").is_none()
+    if std::env::var_os("MINNAL_PROVIDER_PROFILE_ACTIVE").is_none()
+        && std::env::var_os("MINNAL_NAMED_PROVIDER_PROFILE").is_none()
         && model.is_none()
         && let Some(profile) = profile_for_choice(choice)
         && let Some(default_model) = resolved_profile_default_model(profile)

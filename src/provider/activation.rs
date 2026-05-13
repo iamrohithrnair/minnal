@@ -1,5 +1,5 @@
 use anyhow::Result;
-use jcode_provider_core::{ActiveProvider, provider_key};
+use minnal_provider_core::{ActiveProvider, provider_key};
 
 /// Stable product/runtime identity selected by login or provider initialization.
 ///
@@ -8,7 +8,7 @@ use jcode_provider_core::{ActiveProvider, provider_key};
 /// transport, but its runtime identity is still Azure OpenAI.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RuntimeProviderId {
-    Jcode,
+    Minnal,
     Claude,
     OpenAi,
     OpenAiApiKey,
@@ -26,7 +26,7 @@ pub enum RuntimeProviderId {
 impl RuntimeProviderId {
     pub const fn key(self) -> &'static str {
         match self {
-            Self::Jcode => "jcode",
+            Self::Minnal => "minnal",
             Self::Claude => "claude",
             Self::OpenAi => "openai",
             Self::OpenAiApiKey => "openai-api",
@@ -44,7 +44,7 @@ impl RuntimeProviderId {
 
     pub const fn label(self) -> &'static str {
         match self {
-            Self::Jcode => "Jcode Subscription",
+            Self::Minnal => "Minnal Subscription",
             Self::Claude => "Anthropic/Claude",
             Self::OpenAi => "OpenAI",
             Self::OpenAiApiKey => "OpenAI API",
@@ -130,7 +130,7 @@ impl ProviderActivation {
     pub fn azure_openai(model: Option<String>) -> Self {
         let activation = Self::locked(RuntimeProviderId::AzureOpenAi, ActiveProvider::OpenRouter);
         if let Some(model) = model.filter(|value| !value.trim().is_empty()) {
-            activation.with_model_hint("JCODE_OPENROUTER_MODEL", model)
+            activation.with_model_hint("MINNAL_OPENROUTER_MODEL", model)
         } else {
             activation
         }
@@ -142,32 +142,32 @@ impl ProviderActivation {
             ActiveProvider::OpenRouter,
         );
         if let Some(model) = model.filter(|value| !value.trim().is_empty()) {
-            activation.with_model_hint("JCODE_OPENROUTER_MODEL", model)
+            activation.with_model_hint("MINNAL_OPENROUTER_MODEL", model)
         } else {
             activation
         }
     }
 
-    pub fn jcode_subscription(model: impl Into<String>) -> Self {
-        Self::locked(RuntimeProviderId::Jcode, ActiveProvider::OpenRouter)
-            .with_model_hint("JCODE_OPENROUTER_MODEL", model)
+    pub fn minnal_subscription(model: impl Into<String>) -> Self {
+        Self::locked(RuntimeProviderId::Minnal, ActiveProvider::OpenRouter)
+            .with_model_hint("MINNAL_OPENROUTER_MODEL", model)
     }
 
     pub fn apply_env(&self) -> Result<()> {
-        crate::env::set_var("JCODE_RUNTIME_PROVIDER", self.runtime_id.key());
+        crate::env::set_var("MINNAL_RUNTIME_PROVIDER", self.runtime_id.key());
 
         let mut active_key_for_log = "";
         match self.selection {
             RuntimeSelection::Locked(active_provider) => {
                 active_key_for_log = provider_key(active_provider);
-                crate::env::set_var("JCODE_ACTIVE_PROVIDER", active_key_for_log);
-                crate::env::set_var("JCODE_FORCE_PROVIDER", "1");
+                crate::env::set_var("MINNAL_ACTIVE_PROVIDER", active_key_for_log);
+                crate::env::set_var("MINNAL_FORCE_PROVIDER", "1");
             }
             RuntimeSelection::Unlocked { active_hint } => {
-                crate::env::remove_var("JCODE_FORCE_PROVIDER");
+                crate::env::remove_var("MINNAL_FORCE_PROVIDER");
                 if let Some(active_provider) = active_hint {
                     active_key_for_log = provider_key(active_provider);
-                    crate::env::set_var("JCODE_ACTIVE_PROVIDER", active_key_for_log);
+                    crate::env::set_var("MINNAL_ACTIVE_PROVIDER", active_key_for_log);
                 }
             }
             RuntimeSelection::Unchanged => {}
@@ -198,8 +198,8 @@ impl ProviderActivation {
 
 /// Backwards-compatible adapter for existing string-based call sites.
 pub fn lock_runtime_provider_key(provider_key_raw: &str) {
-    crate::env::set_var("JCODE_ACTIVE_PROVIDER", provider_key_raw);
-    crate::env::set_var("JCODE_FORCE_PROVIDER", "1");
+    crate::env::set_var("MINNAL_ACTIVE_PROVIDER", provider_key_raw);
+    crate::env::set_var("MINNAL_FORCE_PROVIDER", "1");
     crate::logging::auth_event(
         "runtime_activation_legacy_lock",
         provider_key_raw,
@@ -208,7 +208,7 @@ pub fn lock_runtime_provider_key(provider_key_raw: &str) {
 }
 
 pub fn unlock_runtime_provider() {
-    crate::env::remove_var("JCODE_FORCE_PROVIDER");
+    crate::env::remove_var("MINNAL_FORCE_PROVIDER");
     crate::logging::auth_event(
         "runtime_activation_unlock",
         "runtime",
@@ -263,10 +263,10 @@ mod tests {
     #[test]
     fn azure_activation_preserves_identity_while_using_openrouter_slot() {
         let _guard = EnvGuard::new(&[
-            "JCODE_RUNTIME_PROVIDER",
-            "JCODE_ACTIVE_PROVIDER",
-            "JCODE_FORCE_PROVIDER",
-            "JCODE_OPENROUTER_MODEL",
+            "MINNAL_RUNTIME_PROVIDER",
+            "MINNAL_ACTIVE_PROVIDER",
+            "MINNAL_FORCE_PROVIDER",
+            "MINNAL_OPENROUTER_MODEL",
         ]);
 
         ProviderActivation::azure_openai(Some("gpt-4.1-mini".to_string()))
@@ -274,16 +274,16 @@ mod tests {
             .unwrap();
 
         assert_eq!(
-            std::env::var("JCODE_RUNTIME_PROVIDER").as_deref(),
+            std::env::var("MINNAL_RUNTIME_PROVIDER").as_deref(),
             Ok("azure-openai")
         );
         assert_eq!(
-            std::env::var("JCODE_ACTIVE_PROVIDER").as_deref(),
+            std::env::var("MINNAL_ACTIVE_PROVIDER").as_deref(),
             Ok("openrouter")
         );
-        assert_eq!(std::env::var("JCODE_FORCE_PROVIDER").as_deref(), Ok("1"));
+        assert_eq!(std::env::var("MINNAL_FORCE_PROVIDER").as_deref(), Ok("1"));
         assert_eq!(
-            std::env::var("JCODE_OPENROUTER_MODEL").as_deref(),
+            std::env::var("MINNAL_OPENROUTER_MODEL").as_deref(),
             Ok("gpt-4.1-mini")
         );
     }

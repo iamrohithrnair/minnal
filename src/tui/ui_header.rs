@@ -331,9 +331,9 @@ fn semver_minor() -> String {
 
 #[cfg(test)]
 fn version_display_candidates() -> Vec<String> {
-    let full = format!("jcode {}", semver());
-    let core = format!("jcode {}", semver_core());
-    let minor = format!("jcode {}", semver_minor());
+    let full = format!("minnal {}", semver());
+    let core = format!("minnal {}", semver_core());
+    let minor = format!("minnal {}", semver_minor());
     let shortest = semver_minor();
     vec![full, core, minor, shortest]
 }
@@ -341,7 +341,7 @@ fn version_display_candidates() -> Vec<String> {
 #[cfg(test)]
 fn configured_auth_count(auth: &AuthStatus) -> usize {
     [
-        auth.jcode,
+        auth.minnal,
         auth.anthropic.state,
         auth.openrouter,
         auth.azure,
@@ -430,7 +430,7 @@ pub(super) fn build_persistent_header(app: &dyn TuiState, width: u16) -> Vec<Lin
     } else if server_name.is_none() {
         lines.push(
             Line::from(Span::styled(
-                "JCode".to_string(),
+                "Minnal".to_string(),
                 Style::default().fg(header_name_color()),
             ))
             .alignment(align),
@@ -446,7 +446,7 @@ pub(super) fn build_persistent_header(app: &dyn TuiState, width: u16) -> Vec<Lin
     );
 
     let version_text = if is_running_stable_release() {
-        let tag = env!("JCODE_GIT_TAG");
+        let tag = env!("MINNAL_GIT_TAG");
         if tag.is_empty() || tag.contains('-') {
             let full = format!("{} · release · built {}", semver(), build_info);
             if full.chars().count() <= w {
@@ -744,23 +744,24 @@ mod tests {
         }
     }
 
-    fn ensure_test_jcode_home_if_unset() {
+    fn ensure_test_minnal_home_if_unset() {
         static TEST_HOME: OnceLock<std::path::PathBuf> = OnceLock::new();
 
-        if std::env::var_os("JCODE_HOME").is_some() {
+        if std::env::var_os("MINNAL_HOME").is_some() {
             return;
         }
 
         let path = TEST_HOME.get_or_init(|| {
-            let path = std::env::temp_dir().join(format!("jcode-test-home-{}", std::process::id()));
+            let path =
+                std::env::temp_dir().join(format!("minnal-test-home-{}", std::process::id()));
             let _ = std::fs::create_dir_all(&path);
             path
         });
-        crate::env::set_var("JCODE_HOME", path);
+        crate::env::set_var("MINNAL_HOME", path);
     }
 
     fn create_test_app() -> crate::tui::app::App {
-        ensure_test_jcode_home_if_unset();
+        ensure_test_minnal_home_if_unset();
 
         let provider: Arc<dyn Provider> = Arc::new(MockProvider);
         let rt = tokio::runtime::Runtime::new().expect("test runtime");
@@ -817,7 +818,7 @@ mod tests {
     #[test]
     fn configured_auth_count_includes_non_model_auth_surfaces() {
         let auth = AuthStatus {
-            jcode: AuthState::Available,
+            minnal: AuthState::Available,
             anthropic: ProviderAuth {
                 state: AuthState::Expired,
                 has_oauth: true,
@@ -846,10 +847,10 @@ mod tests {
     #[test]
     fn build_persistent_header_prefers_configured_model_during_remote_connect() {
         let _guard = crate::storage::lock_test_env();
-        let prev_model = std::env::var_os("JCODE_MODEL");
-        let prev_provider = std::env::var_os("JCODE_PROVIDER");
-        crate::env::set_var("JCODE_MODEL", "gpt-5.4");
-        crate::env::set_var("JCODE_PROVIDER", "openai");
+        let prev_model = std::env::var_os("MINNAL_MODEL");
+        let prev_provider = std::env::var_os("MINNAL_PROVIDER");
+        crate::env::set_var("MINNAL_MODEL", "gpt-5.4");
+        crate::env::set_var("MINNAL_PROVIDER", "openai");
 
         let app = crate::tui::app::App::new_for_remote(None);
         let lines = build_persistent_header(&app, 80);
@@ -863,14 +864,14 @@ mod tests {
         assert!(!rendered.contains("connecting to server…"));
 
         if let Some(prev_model) = prev_model {
-            crate::env::set_var("JCODE_MODEL", prev_model);
+            crate::env::set_var("MINNAL_MODEL", prev_model);
         } else {
-            crate::env::remove_var("JCODE_MODEL");
+            crate::env::remove_var("MINNAL_MODEL");
         }
         if let Some(prev_provider) = prev_provider {
-            crate::env::set_var("JCODE_PROVIDER", prev_provider);
+            crate::env::set_var("MINNAL_PROVIDER", prev_provider);
         } else {
-            crate::env::remove_var("JCODE_PROVIDER");
+            crate::env::remove_var("MINNAL_PROVIDER");
         }
     }
 

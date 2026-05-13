@@ -65,13 +65,13 @@ OVERALL_START=$(date +%s)
 echo "▸ Building Linux x86_64 + macOS aarch64 in parallel..."
 
 (
-    JCODE_RELEASE_BUILD=1 JCODE_BUILD_SEMVER="$VERSION_NUM" scripts/build_linux_compat.sh "$DIST" >/dev/null
+    MINNAL_RELEASE_BUILD=1 MINNAL_BUILD_SEMVER="$VERSION_NUM" scripts/build_linux_compat.sh "$DIST" >/dev/null
     echo "  ✅ Linux done ($(( $(date +%s) - OVERALL_START ))s)"
 ) &
 LINUX_PID=$!
 
 (
-    JCODE_RELEASE_BUILD=1 JCODE_BUILD_SEMVER="$VERSION_NUM" cargo build --release --target aarch64-apple-darwin 2>/dev/null
+    MINNAL_RELEASE_BUILD=1 MINNAL_BUILD_SEMVER="$VERSION_NUM" cargo build --release --target aarch64-apple-darwin 2>/dev/null
     cp target/aarch64-apple-darwin/release/minnal "$DIST/minnal-macos-aarch64"
     chmod +x "$DIST/minnal-macos-aarch64"
     (cd "$DIST" && tar czf minnal-macos-aarch64.tar.gz minnal-macos-aarch64)

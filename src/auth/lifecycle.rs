@@ -1,7 +1,7 @@
 use crate::protocol::{AuthChanged, CatalogNamespace, RuntimeProviderKey};
 use crate::provider::ModelRoute;
 use crate::provider::activation::{ProviderActivation, RuntimeProviderId};
-use jcode_provider_core::ActiveProvider;
+use minnal_provider_core::ActiveProvider;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AuthActivationRequest {
@@ -246,7 +246,7 @@ fn normalized_login_provider_id(provider_id: &str) -> Option<&'static str> {
             Some("openai-api")
         }
         "openrouter" => Some("openrouter"),
-        "jcode" | "subscription" | "jcode-subscription" => Some("jcode"),
+        "minnal" | "subscription" | "minnal-subscription" => Some("minnal"),
         "bedrock" | "aws-bedrock" | "aws_bedrock" => Some("bedrock"),
         "cursor" => Some("cursor"),
         "copilot" => Some("copilot"),
@@ -358,8 +358,8 @@ fn direct_provider_activation(provider_id: &str) -> Option<ProviderActivation> {
             RuntimeProviderId::OpenRouter,
             ActiveProvider::OpenRouter,
         )),
-        "jcode" => Some(ProviderActivation::locked(
-            RuntimeProviderId::Jcode,
+        "minnal" => Some(ProviderActivation::locked(
+            RuntimeProviderId::Minnal,
             ActiveProvider::OpenRouter,
         )),
         "bedrock" => Some(ProviderActivation::locked(
@@ -402,7 +402,7 @@ pub fn model_switch_request_for_provider_id(
         }
         Some("claude") => format!("claude:{}", model),
         Some("openai") | Some("openai-api") => format!("openai:{}", model),
-        Some("openrouter") | Some("jcode") => format!("openrouter:{}", model),
+        Some("openrouter") | Some("minnal") => format!("openrouter:{}", model),
         Some("bedrock") => format!("bedrock:{}", model),
         Some("cursor") => format!("cursor:{}", model),
         Some("copilot") => format!("copilot:{}", model),
@@ -481,7 +481,7 @@ mod tests {
             ("openai", "openai", "OpenAI"),
             ("openai-key", "openai-api", "OpenAI API"),
             ("openrouter", "openrouter", "OpenRouter"),
-            ("subscription", "jcode", "Jcode Subscription"),
+            ("subscription", "minnal", "Minnal Subscription"),
             ("bedrock", "bedrock", "AWS Bedrock"),
             ("cursor", "cursor", "Cursor"),
             ("copilot", "copilot", "GitHub Copilot"),
@@ -524,10 +524,10 @@ mod tests {
     #[test]
     fn direct_login_provider_activation_sets_runtime_identity_and_active_provider() {
         let _guard = EnvGuard::new(&[
-            "JCODE_RUNTIME_PROVIDER",
-            "JCODE_ACTIVE_PROVIDER",
-            "JCODE_FORCE_PROVIDER",
-            "JCODE_OPENROUTER_MODEL",
+            "MINNAL_RUNTIME_PROVIDER",
+            "MINNAL_ACTIVE_PROVIDER",
+            "MINNAL_FORCE_PROVIDER",
+            "MINNAL_OPENROUTER_MODEL",
         ]);
 
         for (provider, runtime, active) in [
@@ -535,16 +535,16 @@ mod tests {
             ("openai", "openai", "openai"),
             ("openai-api", "openai-api", "openai"),
             ("openrouter", "openrouter", "openrouter"),
-            ("jcode", "jcode", "openrouter"),
+            ("minnal", "minnal", "openrouter"),
             ("bedrock", "bedrock", "bedrock"),
             ("cursor", "cursor", "cursor"),
             ("copilot", "copilot", "copilot"),
             ("gemini", "gemini", "gemini"),
             ("antigravity", "antigravity", "antigravity"),
         ] {
-            crate::env::remove_var("JCODE_RUNTIME_PROVIDER");
-            crate::env::remove_var("JCODE_ACTIVE_PROVIDER");
-            crate::env::remove_var("JCODE_FORCE_PROVIDER");
+            crate::env::remove_var("MINNAL_RUNTIME_PROVIDER");
+            crate::env::remove_var("MINNAL_ACTIVE_PROVIDER");
+            crate::env::remove_var("MINNAL_FORCE_PROVIDER");
 
             let activation = activate_auth_change(&AuthActivationRequest::new(
                 None,
@@ -553,31 +553,31 @@ mod tests {
 
             assert_eq!(activation.provider_id.as_deref(), Some(provider));
             assert_eq!(
-                std::env::var("JCODE_RUNTIME_PROVIDER").as_deref(),
+                std::env::var("MINNAL_RUNTIME_PROVIDER").as_deref(),
                 Ok(runtime)
             );
             assert_eq!(
-                std::env::var("JCODE_ACTIVE_PROVIDER").as_deref(),
+                std::env::var("MINNAL_ACTIVE_PROVIDER").as_deref(),
                 Ok(active)
             );
-            assert_eq!(std::env::var("JCODE_FORCE_PROVIDER").as_deref(), Ok("1"));
+            assert_eq!(std::env::var("MINNAL_FORCE_PROVIDER").as_deref(), Ok("1"));
         }
     }
 
     #[test]
     fn direct_login_provider_descriptor_matrix_has_full_lifecycle_parity() {
         let _guard = EnvGuard::new(&[
-            "JCODE_RUNTIME_PROVIDER",
-            "JCODE_ACTIVE_PROVIDER",
-            "JCODE_FORCE_PROVIDER",
-            "JCODE_OPENROUTER_MODEL",
+            "MINNAL_RUNTIME_PROVIDER",
+            "MINNAL_ACTIVE_PROVIDER",
+            "MINNAL_FORCE_PROVIDER",
+            "MINNAL_OPENROUTER_MODEL",
         ]);
 
         let mut covered = Vec::new();
         for provider in crate::provider_catalog::login_providers() {
             let Some((normalized, runtime, active, switch_prefix)) = (match provider.target {
-                crate::provider_catalog::LoginProviderTarget::Jcode => {
-                    Some(("jcode", "jcode", "openrouter", "openrouter"))
+                crate::provider_catalog::LoginProviderTarget::Minnal => {
+                    Some(("minnal", "minnal", "openrouter", "openrouter"))
                 }
                 crate::provider_catalog::LoginProviderTarget::Claude => {
                     Some(("claude", "claude", "claude", "claude"))
@@ -634,9 +634,9 @@ mod tests {
                 provider.id
             );
 
-            crate::env::remove_var("JCODE_RUNTIME_PROVIDER");
-            crate::env::remove_var("JCODE_ACTIVE_PROVIDER");
-            crate::env::remove_var("JCODE_FORCE_PROVIDER");
+            crate::env::remove_var("MINNAL_RUNTIME_PROVIDER");
+            crate::env::remove_var("MINNAL_ACTIVE_PROVIDER");
+            crate::env::remove_var("MINNAL_FORCE_PROVIDER");
 
             let activation = activate_auth_change(&AuthActivationRequest::new(
                 None,
@@ -648,14 +648,14 @@ mod tests {
                 Some(provider.display_name)
             );
             assert_eq!(
-                std::env::var("JCODE_RUNTIME_PROVIDER").as_deref(),
+                std::env::var("MINNAL_RUNTIME_PROVIDER").as_deref(),
                 Ok(runtime)
             );
             assert_eq!(
-                std::env::var("JCODE_ACTIVE_PROVIDER").as_deref(),
+                std::env::var("MINNAL_ACTIVE_PROVIDER").as_deref(),
                 Ok(active)
             );
-            assert_eq!(std::env::var("JCODE_FORCE_PROVIDER").as_deref(), Ok("1"));
+            assert_eq!(std::env::var("MINNAL_FORCE_PROVIDER").as_deref(), Ok("1"));
             assert_eq!(
                 activation.model_switch_request("ignored-runtime", "shared-model"),
                 format!("{switch_prefix}:shared-model"),
@@ -669,7 +669,7 @@ mod tests {
             "openai",
             "openai-api",
             "openrouter",
-            "jcode",
+            "minnal",
             "bedrock",
             "cursor",
             "copilot",
@@ -703,7 +703,7 @@ mod tests {
             ("openai", "openai:shared-model"),
             ("openai-api", "openai:shared-model"),
             ("openrouter", "openrouter:shared-model"),
-            ("jcode", "openrouter:shared-model"),
+            ("minnal", "openrouter:shared-model"),
             ("azure-openai", "openrouter:shared-model"),
             ("bedrock", "bedrock:shared-model"),
             ("cursor", "cursor:shared-model"),

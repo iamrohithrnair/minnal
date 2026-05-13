@@ -113,7 +113,7 @@ pub fn gather_feedback_memories(memory_manager: &crate::memory::MemoryManager) -
     let mut feedback = Vec::new();
 
     // --- Source 1: Recent ambient transcripts ---
-    let transcripts_dir = match crate::storage::jcode_dir() {
+    let transcripts_dir = match crate::storage::minnal_dir() {
         Ok(d) => d.join("ambient").join("transcripts"),
         Err(_) => return feedback,
     };
@@ -171,7 +171,7 @@ pub fn gather_feedback_memories(memory_manager: &crate::memory::MemoryManager) -
 
 /// Gather recent sessions since a given timestamp.
 pub fn gather_recent_sessions(since: Option<DateTime<Utc>>) -> Vec<RecentSessionInfo> {
-    let sessions_dir = match crate::storage::jcode_dir() {
+    let sessions_dir = match crate::storage::minnal_dir() {
         Ok(d) => d.join("sessions"),
         Err(_) => return Vec::new(),
     };
@@ -244,7 +244,7 @@ pub fn build_ambient_system_prompt(
     let mut prompt = String::with_capacity(4096);
 
     prompt.push_str(
-        "You are the ambient agent for jcode. You operate autonomously without \
+        "You are the ambient agent for minnal. You operate autonomously without \
          user prompting. Your job is to maintain and improve the user's \
          development environment.\n\n",
     );
@@ -461,7 +461,7 @@ pub fn build_ambient_system_prompt(
          about what you're doing. Send a brief message when you start a cycle \
          and when you finish significant work. Keep messages short and useful — \
          the user should be able to glance at their messages and know what's happening \
-         without opening jcode. You can optionally target a specific channel \
+         without opening minnal. You can optionally target a specific channel \
          (e.g. telegram, discord) or omit channel to send to all.\n",
     );
 

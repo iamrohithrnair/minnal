@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Agent-friendly wrapper for the Linux-native jcode mobile simulator.
+# Agent-friendly wrapper for the Linux-native minnal mobile simulator.
 # It gives debug/tester workflows a stable socket, state directory, and command set
 # for spawning, driving, inspecting, capturing, and cleaning up simulator runs.
 
-state_dir="${JCODE_MOBILE_TESTER_DIR:-${TMPDIR:-/tmp}/jcode-mobile-tester-${USER:-user}}"
+state_dir="${MINNAL_MOBILE_TESTER_DIR:-${TMPDIR:-/tmp}/minnal-mobile-tester-${USER:-user}}"
 socket="$state_dir/mobile-sim.sock"
 
 usage() {
@@ -27,10 +27,10 @@ Commands:
   tap-at <x> <y>            Tap by coordinates
   type <node_id> <text>     Type text into semantic input/composer
   key <key> [node_id]       Send keypress, default node_id=chat.draft
-  wait [sim args...]        Forward to jcode-mobile-sim wait
+  wait [sim args...]        Forward to minnal-mobile-sim wait
   assert-screen <screen>    Assert current screen
   assert-text <text>        Assert text exists in state
-  assert-node <args...>     Forward to jcode-mobile-sim assert-node
+  assert-node <args...>     Forward to minnal-mobile-sim assert-node
   assert-hit <x> <y> <id>   Assert coordinate hit target
   log [limit]               Print transition/effect log
   shutdown                  Stop simulator
@@ -41,7 +41,7 @@ EOF
 }
 
 sim() {
-  cargo run -q -p jcode-mobile-sim -- "$@"
+  cargo run -q -p minnal-mobile-sim -- "$@"
 }
 
 ensure_dir() {

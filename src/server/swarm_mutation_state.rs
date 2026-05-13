@@ -9,7 +9,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{RwLock, mpsc};
 
-const SWARM_MUTATION_DIR: &str = "jcode-swarm-mutations";
+const SWARM_MUTATION_DIR: &str = "minnal-swarm-mutations";
 const FINAL_STATE_TTL: Duration = Duration::from_secs(30);
 const PENDING_STATE_TTL: Duration = Duration::from_secs(30 * 60);
 

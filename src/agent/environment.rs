@@ -1,4 +1,4 @@
-use super::{Agent, JCODE_REPO_SOURCE_STATE, WORKING_GIT_STATE_CACHE};
+use super::{Agent, MINNAL_REPO_SOURCE_STATE, WORKING_GIT_STATE_CACHE};
 use crate::logging;
 use crate::session::{EnvSnapshot, GitState};
 use chrono::Utc;
@@ -62,8 +62,8 @@ impl Agent {
         reason: &str,
         detail: EnvSnapshotDetail,
     ) -> EnvSnapshot {
-        let (jcode_git_hash, jcode_git_dirty) = match detail {
-            EnvSnapshotDetail::Full => JCODE_REPO_SOURCE_STATE.clone(),
+        let (minnal_git_hash, minnal_git_dirty) = match detail {
+            EnvSnapshotDetail::Full => MINNAL_REPO_SOURCE_STATE.clone(),
             EnvSnapshotDetail::Minimal => (None, None),
         };
 
@@ -82,9 +82,9 @@ impl Agent {
             working_dir,
             provider: self.provider.name().to_string(),
             model: self.provider.model().to_string(),
-            jcode_version: env!("JCODE_VERSION").to_string(),
-            jcode_git_hash,
-            jcode_git_dirty,
+            minnal_version: env!("MINNAL_VERSION").to_string(),
+            minnal_git_hash,
+            minnal_git_dirty,
             os: std::env::consts::OS.to_string(),
             arch: std::env::consts::ARCH.to_string(),
             pid: std::process::id(),

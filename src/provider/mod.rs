@@ -11,7 +11,7 @@ mod dispatch;
 mod failover;
 mod fingerprint;
 pub mod gemini;
-pub mod jcode;
+pub mod minnal;
 pub mod models;
 mod multi_provider;
 pub mod openai;
@@ -34,19 +34,19 @@ use account_failover::{
 use anyhow::Result;
 use async_trait::async_trait;
 #[cfg(test)]
-use jcode_provider_core::FailoverDecision;
+use minnal_provider_core::FailoverDecision;
 use std::sync::{Arc, RwLock};
 
-pub use jcode_provider_core::{
+pub use minnal_provider_core::{
     ALL_CLAUDE_MODELS, ALL_OPENAI_MODELS, CHEAPNESS_REFERENCE_INPUT_TOKENS,
-    CHEAPNESS_REFERENCE_OUTPUT_TOKENS, DEFAULT_CONTEXT_LIMIT, EventStream, JCODE_USER_AGENT,
+    CHEAPNESS_REFERENCE_OUTPUT_TOKENS, DEFAULT_CONTEXT_LIMIT, EventStream, MINNAL_USER_AGENT,
     ModelCapabilities, ModelCatalogRefreshSummary, ModelRoute, NativeCompactionResult,
     NativeToolResult, NativeToolResultSender, PremiumMode, Provider, RouteBillingKind,
     RouteCheapnessEstimate, RouteCostConfidence, RouteCostSource, dedupe_model_routes,
     explicit_model_provider_prefix, model_name_for_provider, normalize_copilot_model_name,
     provider_from_model_key, shared_http_client, summarize_model_catalog_refresh,
 };
-pub(crate) use jcode_provider_core::{ProviderFailoverPrompt, parse_failover_prompt_message};
+pub(crate) use minnal_provider_core::{ProviderFailoverPrompt, parse_failover_prompt_message};
 pub use route_builders::{
     build_anthropic_oauth_route, build_copilot_route, build_openai_api_key_route,
     build_openai_oauth_route, build_openrouter_auto_route, build_openrouter_endpoint_route,
@@ -1368,7 +1368,7 @@ impl Provider for MultiProvider {
         }
 
         let total_ms = routes_started.elapsed().as_millis();
-        if total_ms >= 250 || std::env::var("JCODE_LOG_MODEL_PICKER_TIMING").is_ok() {
+        if total_ms >= 250 || std::env::var("MINNAL_LOG_MODEL_PICKER_TIMING").is_ok() {
             crate::logging::info(&format!(
                 "[TIMING] model_routes: routes={}, openrouter_configured={}, openrouter_models={}, openrouter_endpoint_cache_hits={}, openrouter_endpoint_routes={}, openrouter_scheduled_endpoint_refreshes={}, total={}ms",
                 routes.len(),
@@ -1455,7 +1455,7 @@ impl Provider for MultiProvider {
     fn handles_tools_internally(&self) -> bool {
         match self.active_provider() {
             ActiveProvider::Claude => {
-                // Direct API does NOT handle tools internally - jcode executes them
+                // Direct API does NOT handle tools internally - minnal executes them
                 if self.anthropic_provider().is_some() {
                     false
                 } else {
@@ -1478,8 +1478,8 @@ impl Provider for MultiProvider {
                 .cursor_provider()
                 .map(|o| o.handles_tools_internally())
                 .unwrap_or(false),
-            ActiveProvider::Bedrock => false, // jcode executes Bedrock tool calls
-            ActiveProvider::OpenRouter => false, // jcode executes tools
+            ActiveProvider::Bedrock => false, // minnal executes Bedrock tool calls
+            ActiveProvider::OpenRouter => false, // minnal executes tools
         }
     }
 
@@ -1643,7 +1643,7 @@ impl Provider for MultiProvider {
                 .unwrap_or(false),
             ActiveProvider::Bedrock => self
                 .bedrock_provider()
-                .map(|o| o.uses_jcode_compaction())
+                .map(|o| o.uses_minnal_compaction())
                 .unwrap_or(false),
             ActiveProvider::OpenRouter => self
                 .openrouter_provider()
@@ -1652,41 +1652,41 @@ impl Provider for MultiProvider {
         }
     }
 
-    fn uses_jcode_compaction(&self) -> bool {
+    fn uses_minnal_compaction(&self) -> bool {
         match self.active_provider() {
             ActiveProvider::Claude => {
                 if self.anthropic_provider().is_some() {
                     true
                 } else {
                     self.claude_provider()
-                        .map(|c| c.uses_jcode_compaction())
+                        .map(|c| c.uses_minnal_compaction())
                         .unwrap_or(false)
                 }
             }
             ActiveProvider::OpenAI => self
                 .openai_provider()
-                .map(|o| o.uses_jcode_compaction())
+                .map(|o| o.uses_minnal_compaction())
                 .unwrap_or(false),
             ActiveProvider::Copilot => self
                 .copilot_provider()
-                .map(|o| o.uses_jcode_compaction())
+                .map(|o| o.uses_minnal_compaction())
                 .unwrap_or(false),
             ActiveProvider::Antigravity => self
                 .antigravity_provider()
-                .map(|o| o.uses_jcode_compaction())
+                .map(|o| o.uses_minnal_compaction())
                 .unwrap_or(false),
             ActiveProvider::Gemini => self
                 .gemini_provider()
-                .map(|o| o.uses_jcode_compaction())
+                .map(|o| o.uses_minnal_compaction())
                 .unwrap_or(false),
             ActiveProvider::Cursor => self
                 .cursor_provider()
-                .map(|o| o.uses_jcode_compaction())
+                .map(|o| o.uses_minnal_compaction())
                 .unwrap_or(false),
             ActiveProvider::Bedrock => false,
             ActiveProvider::OpenRouter => self
                 .openrouter_provider()
-                .map(|o| o.uses_jcode_compaction())
+                .map(|o| o.uses_minnal_compaction())
                 .unwrap_or(false),
         }
     }

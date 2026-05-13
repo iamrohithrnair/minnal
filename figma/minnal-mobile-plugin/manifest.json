@@ -1,0 +1,7 @@
+{
+  "name": "minnal Mobile Screens",
+  "id": "com.minnal.mobile.screens",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"]
+}

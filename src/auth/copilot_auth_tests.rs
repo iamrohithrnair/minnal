@@ -159,7 +159,7 @@ fn normalize_candidate_token_rejects_empty_and_unknown_values() {
 
 #[test]
 fn gh_cli_fallback_requires_explicit_opt_in() {
-    let key = "JCODE_COPILOT_ALLOW_GH_AUTH_TOKEN";
+    let key = "MINNAL_COPILOT_ALLOW_GH_AUTH_TOKEN";
     let previous = std::env::var_os(key);
 
     crate::env::remove_var(key);
@@ -205,10 +205,10 @@ fn save_github_token_creates_config_dir() -> Result<()> {
     let _guard = crate::storage::lock_test_env();
     let dir = TempDir::new().map_err(|e| anyhow!(e))?;
     let config_dir = dir.path().join("github-copilot");
-    let prev_jcode_home = std::env::var_os("JCODE_HOME");
+    let prev_minnal_home = std::env::var_os("MINNAL_HOME");
     let prev_xdg_config_home = std::env::var_os("XDG_CONFIG_HOME");
 
-    crate::env::remove_var("JCODE_HOME");
+    crate::env::remove_var("MINNAL_HOME");
     crate::env::set_var(
         "XDG_CONFIG_HOME",
         dir.path()
@@ -225,10 +225,10 @@ fn save_github_token_creates_config_dir() -> Result<()> {
     let loaded = load_token_from_json(&hosts_path)?;
     assert_eq!(loaded, "gho_newtoken");
 
-    if let Some(prev) = prev_jcode_home {
-        crate::env::set_var("JCODE_HOME", prev);
+    if let Some(prev) = prev_minnal_home {
+        crate::env::set_var("MINNAL_HOME", prev);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 
     if let Some(prev) = prev_xdg_config_home {
@@ -240,11 +240,11 @@ fn save_github_token_creates_config_dir() -> Result<()> {
 }
 
 #[test]
-fn legacy_copilot_config_dir_uses_jcode_home_external_dir() -> Result<()> {
+fn legacy_copilot_config_dir_uses_minnal_home_external_dir() -> Result<()> {
     let _guard = crate::storage::lock_test_env();
     let dir = TempDir::new().map_err(|e| anyhow!(e))?;
-    let prev = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", dir.path());
+    let prev = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", dir.path());
 
     let path = legacy_copilot_config_dir();
     assert_eq!(
@@ -256,9 +256,9 @@ fn legacy_copilot_config_dir_uses_jcode_home_external_dir() -> Result<()> {
     );
 
     if let Some(prev) = prev {
-        crate::env::set_var("JCODE_HOME", prev);
+        crate::env::set_var("MINNAL_HOME", prev);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
     Ok(())
 }
@@ -267,10 +267,10 @@ fn legacy_copilot_config_dir_uses_jcode_home_external_dir() -> Result<()> {
 fn save_github_token_makes_future_loads_available() -> Result<()> {
     let _guard = crate::storage::lock_test_env();
     let dir = TempDir::new().map_err(|e| anyhow!(e))?;
-    let prev_jcode_home = std::env::var_os("JCODE_HOME");
+    let prev_minnal_home = std::env::var_os("MINNAL_HOME");
     let prev_xdg_config_home = std::env::var_os("XDG_CONFIG_HOME");
 
-    crate::env::set_var("JCODE_HOME", dir.path());
+    crate::env::set_var("MINNAL_HOME", dir.path());
     crate::env::remove_var("XDG_CONFIG_HOME");
 
     save_github_token("gho_persisted_token", "testuser")?;
@@ -284,10 +284,10 @@ fn save_github_token_makes_future_loads_available() -> Result<()> {
     );
     assert_eq!(load_github_token()?, "gho_persisted_token");
 
-    if let Some(prev) = prev_jcode_home {
-        crate::env::set_var("JCODE_HOME", prev);
+    if let Some(prev) = prev_minnal_home {
+        crate::env::set_var("MINNAL_HOME", prev);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 
     if let Some(prev) = prev_xdg_config_home {

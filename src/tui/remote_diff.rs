@@ -80,7 +80,7 @@ impl RemoteDiffTracker {
 
 /// Check if client-side diff generation is enabled.
 pub(crate) fn show_diffs_enabled() -> bool {
-    std::env::var("JCODE_SHOW_DIFFS")
+    std::env::var("MINNAL_SHOW_DIFFS")
         .map(|v| v != "0" && v.to_lowercase() != "false")
         .unwrap_or(true)
 }

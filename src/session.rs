@@ -19,14 +19,14 @@ pub use crash::{
     CrashedSessionsInfo, detect_crashed_sessions, find_recent_crashed_sessions,
     find_session_by_name_or_id, recover_crashed_sessions,
 };
-pub use jcode_session_types::{
-    EnvSnapshot, GitState, SessionImproveMode, SessionStatus, StoredCompactionState,
-    StoredDisplayRole, StoredMemoryInjection, StoredMessage, StoredTokenUsage,
-};
 use journal::{PersistVectorMode, SessionJournalMeta, SessionPersistState};
 pub use memory_profile::SessionMemoryProfileSnapshot;
 use memory_profile::{
     ContentBlockMemoryStats, SessionMemoryProfileCache, summarize_blocks, summarize_message_content,
+};
+pub use minnal_session_types::{
+    EnvSnapshot, GitState, SessionImproveMode, SessionStatus, StoredCompactionState,
+    StoredDisplayRole, StoredMemoryInjection, StoredMessage, StoredTokenUsage,
 };
 use model::SESSION_CONTEXT_PREFIX;
 pub use model::{StoredReplayEvent, StoredReplayEventKind};
@@ -226,30 +226,30 @@ fn env_flag_enabled(name: &str) -> bool {
 }
 
 fn default_is_test_session() -> bool {
-    env_flag_enabled("JCODE_TEST_SESSION")
+    env_flag_enabled("MINNAL_TEST_SESSION")
 }
 
 pub fn derive_session_provider_key(provider_name: &str) -> Option<String> {
     let normalized_name = provider_name.trim().to_ascii_lowercase();
-    if normalized_name == "jcode" {
-        return Some("jcode".to_string());
+    if normalized_name == "minnal" {
+        return Some("minnal".to_string());
     }
 
-    if let Ok(runtime_provider) = std::env::var("JCODE_RUNTIME_PROVIDER") {
+    if let Ok(runtime_provider) = std::env::var("MINNAL_RUNTIME_PROVIDER") {
         let runtime_provider = runtime_provider.trim().to_ascii_lowercase();
         if !runtime_provider.is_empty() && runtime_provider != "openai-compatible" {
             return Some(runtime_provider);
         }
     }
 
-    if let Ok(namespace) = std::env::var("JCODE_OPENROUTER_CACHE_NAMESPACE") {
+    if let Ok(namespace) = std::env::var("MINNAL_OPENROUTER_CACHE_NAMESPACE") {
         let namespace = namespace.trim().to_ascii_lowercase();
         if !namespace.is_empty() {
             return Some(namespace);
         }
     }
 
-    if let Ok(active) = std::env::var("JCODE_ACTIVE_PROVIDER") {
+    if let Ok(active) = std::env::var("MINNAL_ACTIVE_PROVIDER") {
         let active = active.trim().to_ascii_lowercase();
         if !active.is_empty() {
             return Some(active);
@@ -980,15 +980,15 @@ impl Session {
         false
     }
 
-    /// Check if this session is working on the jcode repository
+    /// Check if this session is working on the minnal repository
     pub fn is_self_dev(&self) -> bool {
         if let Some(ref dir) = self.working_dir {
-            // Check if working dir contains jcode source
+            // Check if working dir contains minnal source
             let path = std::path::Path::new(dir);
             path.join("Cargo.toml").exists()
                 && path.join("src/main.rs").exists()
                 && std::fs::read_to_string(path.join("Cargo.toml"))
-                    .map(|s| s.contains("name = \"jcode\""))
+                    .map(|s| s.contains("name = \"minnal\""))
                     .unwrap_or(false)
         } else {
             false

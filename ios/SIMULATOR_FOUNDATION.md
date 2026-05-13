@@ -1,4 +1,4 @@
-# jcode Mobile App Simulator Foundation
+# minnal Mobile App Simulator Foundation
 
 This document describes the first simulation slice now checked into the repo.
 
@@ -10,7 +10,7 @@ For the current day-to-day agent workflow, see
 
 ## Product direction
 
-The simulator is intended to be a **Linux-native simulator for the jcode mobile
+The simulator is intended to be a **Linux-native simulator for the minnal mobile
 application itself**. It is not Apple iOS Simulator, not an iPhone mirror, and
 not a substitute for final on-device validation. Its purpose is to let humans
 and AI agents build, run, inspect, test, and iterate on the mobile app without a
@@ -31,14 +31,14 @@ shared mobile application core plus an agent-native automation surface.
 
 ### Workspace crates
 
-- `crates/jcode-mobile-core`
+- `crates/minnal-mobile-core`
   - shared simulator state
   - typed actions
   - reducer/store
   - semantic UI tree generation
   - transition/effect logging
   - baseline scenarios
-- `crates/jcode-mobile-sim`
+- `crates/minnal-mobile-sim`
   - headless simulator daemon
   - Unix socket automation protocol
   - CLI for starting, inspecting, and driving the simulator
@@ -82,7 +82,7 @@ The simulator's authoritative visual model is **not HTML**. HTML may be useful
 as a debugging shell in the future, but it should not define the mobile app's
 look or layout.
 
-`jcode-mobile-core` now emits a serializable `VisualScene` contract:
+`minnal-mobile-core` now emits a serializable `VisualScene` contract:
 
 - schema version and logical point coordinate space
 - viewport dimensions matching the mobile simulator target
@@ -107,7 +107,7 @@ This keeps the future iOS app thin: it should host a surface, forward input to
 Rust, receive Rust scene updates, and draw the same Rust-owned scene model that
 the Linux simulator can render.
 
-`jcode-mobile-sim` now includes the first non-HTML graphics backend:
+`minnal-mobile-sim` now includes the first non-HTML graphics backend:
 
 - `preview-mesh` converts `VisualScene` into deterministic wgpu triangle-list
   vertices for tests and backend contract validation
@@ -121,7 +121,7 @@ draw from the same Rust-owned visual contract intended for iOS.
 
 ## Rust-owned gateway protocol helpers
 
-`jcode-mobile-core::protocol` owns the gateway-facing mobile protocol shapes and
+`minnal-mobile-core::protocol` owns the gateway-facing mobile protocol shapes and
 transport helpers that the future iOS shell can call through FFI:
 
 - `MobileRequest` and `MobileServerEvent` for typed request/event JSON
@@ -139,8 +139,8 @@ The simulator listens on a **Unix socket** by default.
 
 Default path:
 
-- `$JCODE_RUNTIME_DIR/jcode-mobile-sim.sock` if `JCODE_RUNTIME_DIR` is set
-- otherwise `$XDG_RUNTIME_DIR/jcode-mobile-sim.sock`
+- `$MINNAL_RUNTIME_DIR/minnal-mobile-sim.sock` if `MINNAL_RUNTIME_DIR` is set
+- otherwise `$XDG_RUNTIME_DIR/minnal-mobile-sim.sock`
 - otherwise a private temp dir fallback
 
 You can always override the path with `--socket`.
@@ -164,7 +164,7 @@ Supported baseline scenarios:
 
 ## Fake backend model
 
-The simulator includes a deterministic in-process fake jcode backend for effects
+The simulator includes a deterministic in-process fake minnal backend for effects
 emitted by the mobile core.
 
 Current fake backend behavior:
@@ -183,7 +183,7 @@ MacBook, Xcode, Apple iOS Simulator, or iPhone.
 ### Start a simulator in the background
 
 ```bash
-cargo run -p jcode-mobile-sim -- start --scenario onboarding
+cargo run -p minnal-mobile-sim -- start --scenario onboarding
 ```
 
 This prints the socket path when the simulator is ready.
@@ -203,31 +203,31 @@ scripts/mobile_simulator_tester.sh tap pair.submit
 scripts/mobile_simulator_tester.sh cleanup
 ```
 
-The wrapper honors `JCODE_MOBILE_TESTER_DIR` so parallel agents can isolate
+The wrapper honors `MINNAL_MOBILE_TESTER_DIR` so parallel agents can isolate
 simulator state.
 
 ### Serve in the foreground
 
 ```bash
-cargo run -p jcode-mobile-sim -- serve --scenario pairing_ready
+cargo run -p minnal-mobile-sim -- serve --scenario pairing_ready
 ```
 
 ### Query status
 
 ```bash
-cargo run -p jcode-mobile-sim -- status
+cargo run -p minnal-mobile-sim -- status
 ```
 
 ### Dump full state
 
 ```bash
-cargo run -p jcode-mobile-sim -- state
+cargo run -p minnal-mobile-sim -- state
 ```
 
 ### Dump semantic UI tree
 
 ```bash
-cargo run -p jcode-mobile-sim -- tree
+cargo run -p minnal-mobile-sim -- tree
 ```
 
 ### Dump Rust visual scene graph
@@ -236,8 +236,8 @@ The `scene` command prints the Rust-owned visual scene that render backends
 consume. This is the contract a future wgpu or iOS renderer should draw from.
 
 ```bash
-cargo run -p jcode-mobile-sim -- scene
-cargo run -p jcode-mobile-sim -- scene --output /tmp/mobile-scene.json
+cargo run -p minnal-mobile-sim -- scene
+cargo run -p minnal-mobile-sim -- scene --output /tmp/mobile-scene.json
 scripts/mobile_simulator_tester.sh scene /tmp/mobile-scene.json
 ```
 
@@ -247,7 +247,7 @@ The `preview` command opens a non-HTML Linux window using winit and wgpu. It
 renders the Rust `VisualScene` through the simulator GPU backend.
 
 ```bash
-cargo run -p jcode-mobile-sim -- preview --scenario connected_chat
+cargo run -p minnal-mobile-sim -- preview --scenario connected_chat
 
 scripts/mobile_simulator_tester.sh start connected_chat
 scripts/mobile_simulator_tester.sh preview
@@ -262,8 +262,8 @@ wgpu preview draws. This is CI-friendly because it validates the GPU backend
 contract without requiring a window or GPU surface.
 
 ```bash
-cargo run -p jcode-mobile-sim -- preview-mesh --scenario connected_chat
-cargo run -p jcode-mobile-sim -- preview-mesh --output /tmp/mobile-preview-mesh.json
+cargo run -p minnal-mobile-sim -- preview-mesh --scenario connected_chat
+cargo run -p minnal-mobile-sim -- preview-mesh --output /tmp/mobile-preview-mesh.json
 scripts/mobile_simulator_tester.sh preview-mesh /tmp/mobile-preview-mesh.json
 ```
 
@@ -274,18 +274,18 @@ from the same Rust semantic UI tree used by agents. It is useful on Linux hosts
 without a graphical simulator.
 
 ```bash
-cargo run -p jcode-mobile-sim -- render
-cargo run -p jcode-mobile-sim -- render --output /tmp/mobile-render.txt
+cargo run -p minnal-mobile-sim -- render
+cargo run -p minnal-mobile-sim -- render --output /tmp/mobile-render.txt
 ```
 
 ### Find and assert semantic UI nodes
 
 ```bash
-cargo run -p jcode-mobile-sim -- find-node pair.submit
-cargo run -p jcode-mobile-sim -- assert-screen onboarding
-cargo run -p jcode-mobile-sim -- assert-node pair.submit --enabled true --role button
-cargo run -p jcode-mobile-sim -- assert-text "Ready to pair"
-cargo run -p jcode-mobile-sim -- assert-no-error
+cargo run -p minnal-mobile-sim -- find-node pair.submit
+cargo run -p minnal-mobile-sim -- assert-screen onboarding
+cargo run -p minnal-mobile-sim -- assert-node pair.submit --enabled true --role button
+cargo run -p minnal-mobile-sim -- assert-text "Ready to pair"
+cargo run -p minnal-mobile-sim -- assert-no-error
 ```
 
 Assertions are the preferred agent workflow because they return structured
@@ -294,8 +294,8 @@ success/failure instead of requiring ad-hoc JSON parsing.
 ### Dump transition/effect logs
 
 ```bash
-cargo run -p jcode-mobile-sim -- log
-cargo run -p jcode-mobile-sim -- log --limit 10
+cargo run -p minnal-mobile-sim -- log
+cargo run -p minnal-mobile-sim -- log --limit 10
 ```
 
 ### Export and assert replay traces
@@ -306,12 +306,12 @@ They can be replayed without a live simulator process or compared against a
 running simulator.
 
 ```bash
-cargo run -p jcode-mobile-sim -- export-replay --name pairing-ready-chat-send --output crates/jcode-mobile-core/tests/golden/pairing_ready_chat_send.json
-cargo run -p jcode-mobile-sim -- assert-replay crates/jcode-mobile-core/tests/golden/pairing_ready_chat_send.json
-cargo run -p jcode-mobile-sim -- assert-live-replay crates/jcode-mobile-core/tests/golden/pairing_ready_chat_send.json
+cargo run -p minnal-mobile-sim -- export-replay --name pairing-ready-chat-send --output crates/minnal-mobile-core/tests/golden/pairing_ready_chat_send.json
+cargo run -p minnal-mobile-sim -- assert-replay crates/minnal-mobile-core/tests/golden/pairing_ready_chat_send.json
+cargo run -p minnal-mobile-sim -- assert-live-replay crates/minnal-mobile-core/tests/golden/pairing_ready_chat_send.json
 ```
 
-The checked-in golden trace `crates/jcode-mobile-core/tests/golden/pairing_ready_chat_send.json`
+The checked-in golden trace `crates/minnal-mobile-core/tests/golden/pairing_ready_chat_send.json`
 locks the current pairing-to-chat-send behavior for regression tests.
 
 ### Export and assert deterministic screenshots
@@ -321,9 +321,9 @@ dimensions, theme, stable hash, SVG markup, and semantic layout metadata. This
 keeps screenshot regression tests Linux-native and dependency-free.
 
 ```bash
-cargo run -p jcode-mobile-sim -- screenshot --output /tmp/mobile-screenshot.json
-cargo run -p jcode-mobile-sim -- screenshot --format svg --output /tmp/mobile-screenshot.svg
-cargo run -p jcode-mobile-sim -- assert-screenshot /tmp/mobile-screenshot.json
+cargo run -p minnal-mobile-sim -- screenshot --output /tmp/mobile-screenshot.json
+cargo run -p minnal-mobile-sim -- screenshot --format svg --output /tmp/mobile-screenshot.svg
+cargo run -p minnal-mobile-sim -- assert-screenshot /tmp/mobile-screenshot.json
 ```
 
 `assert-screenshot` compares stable hashes and reports a structured diff with
@@ -332,9 +332,9 @@ lengths and first differing byte offset when snapshots diverge.
 ### Set fields
 
 ```bash
-cargo run -p jcode-mobile-sim -- set-field host devbox.tailnet.ts.net
-cargo run -p jcode-mobile-sim -- set-field pair_code 123456
-cargo run -p jcode-mobile-sim -- set-field draft "hello simulator"
+cargo run -p minnal-mobile-sim -- set-field host devbox.tailnet.ts.net
+cargo run -p minnal-mobile-sim -- set-field pair_code 123456
+cargo run -p minnal-mobile-sim -- set-field draft "hello simulator"
 ```
 
 Supported fields right now:
@@ -348,9 +348,9 @@ Supported fields right now:
 ### Tap semantic nodes
 
 ```bash
-cargo run -p jcode-mobile-sim -- tap pair.submit
-cargo run -p jcode-mobile-sim -- tap chat.send
-cargo run -p jcode-mobile-sim -- tap chat.interrupt
+cargo run -p minnal-mobile-sim -- tap pair.submit
+cargo run -p minnal-mobile-sim -- tap chat.send
+cargo run -p minnal-mobile-sim -- tap chat.interrupt
 ```
 
 ### Hit-test and tap by coordinates
@@ -360,9 +360,9 @@ headless tests. Agents can inspect the node under a point, assert expected hit
 targets, or tap spatially like a human.
 
 ```bash
-cargo run -p jcode-mobile-sim -- hit-test 195 354
-cargo run -p jcode-mobile-sim -- assert-hit 195 354 pair.submit
-cargo run -p jcode-mobile-sim -- tap-at 195 354
+cargo run -p minnal-mobile-sim -- hit-test 195 354
+cargo run -p minnal-mobile-sim -- assert-hit 195 354 pair.submit
+cargo run -p minnal-mobile-sim -- tap-at 195 354
 ```
 
 The default viewport is `390x844` logical pixels. Semantic node IDs remain the
@@ -375,12 +375,12 @@ The automation socket also supports higher-level agent operations beyond direct
 state dispatch:
 
 ```bash
-cargo run -p jcode-mobile-sim -- type-text chat.draft "hello from typing"
-cargo run -p jcode-mobile-sim -- keypress Enter --node-id chat.draft
-cargo run -p jcode-mobile-sim -- wait --screen chat --contains "Simulated response"
-cargo run -p jcode-mobile-sim -- scroll chat.messages 120
-cargo run -p jcode-mobile-sim -- gesture swipe_up
-cargo run -p jcode-mobile-sim -- inject-fault tool_failed
+cargo run -p minnal-mobile-sim -- type-text chat.draft "hello from typing"
+cargo run -p minnal-mobile-sim -- keypress Enter --node-id chat.draft
+cargo run -p minnal-mobile-sim -- wait --screen chat --contains "Simulated response"
+cargo run -p minnal-mobile-sim -- scroll chat.messages 120
+cargo run -p minnal-mobile-sim -- gesture swipe_up
+cargo run -p minnal-mobile-sim -- inject-fault tool_failed
 ```
 
 Text and keypress operations map onto the same reducer actions as semantic
@@ -391,25 +391,25 @@ injection drives deterministic error/offline scenarios.
 ### Load a scenario
 
 ```bash
-cargo run -p jcode-mobile-sim -- load-scenario connected_chat
+cargo run -p minnal-mobile-sim -- load-scenario connected_chat
 ```
 
 ### Reset to default onboarding state
 
 ```bash
-cargo run -p jcode-mobile-sim -- reset
+cargo run -p minnal-mobile-sim -- reset
 ```
 
 ### Dispatch an action directly as JSON
 
 ```bash
-cargo run -p jcode-mobile-sim -- dispatch-json '{"type":"set_host","value":"devbox.tailnet.ts.net"}'
+cargo run -p minnal-mobile-sim -- dispatch-json '{"type":"set_host","value":"devbox.tailnet.ts.net"}'
 ```
 
 ### Shut down the simulator
 
 ```bash
-cargo run -p jcode-mobile-sim -- shutdown
+cargo run -p minnal-mobile-sim -- shutdown
 ```
 
 ## Semantic node IDs
@@ -463,7 +463,7 @@ Not included yet:
 - live render inspector
 - iOS host integration
 - shared custom renderer backend
-- fake jcode backend that exercises real pairing/WebSocket/protocol flows
+- fake minnal backend that exercises real pairing/WebSocket/protocol flows
 - physical gesture physics beyond deterministic acknowledgement
 - Rust-owned mobile protocol adapters equivalent to the current Swift SDK
 
@@ -482,14 +482,14 @@ A good current loop is:
 Example:
 
 ```bash
-cargo run -p jcode-mobile-sim -- start --scenario pairing_ready
-cargo run -p jcode-mobile-sim -- state
-cargo run -p jcode-mobile-sim -- tap pair.submit
-cargo run -p jcode-mobile-sim -- assert-screen chat
-cargo run -p jcode-mobile-sim -- set-field draft "hello simulator"
-cargo run -p jcode-mobile-sim -- tap chat.send
-cargo run -p jcode-mobile-sim -- assert-text "Simulated response to: hello simulator"
-cargo run -p jcode-mobile-sim -- assert-no-error
-cargo run -p jcode-mobile-sim -- log --limit 10
-cargo run -p jcode-mobile-sim -- shutdown
+cargo run -p minnal-mobile-sim -- start --scenario pairing_ready
+cargo run -p minnal-mobile-sim -- state
+cargo run -p minnal-mobile-sim -- tap pair.submit
+cargo run -p minnal-mobile-sim -- assert-screen chat
+cargo run -p minnal-mobile-sim -- set-field draft "hello simulator"
+cargo run -p minnal-mobile-sim -- tap chat.send
+cargo run -p minnal-mobile-sim -- assert-text "Simulated response to: hello simulator"
+cargo run -p minnal-mobile-sim -- assert-no-error
+cargo run -p minnal-mobile-sim -- log --limit 10
+cargo run -p minnal-mobile-sim -- shutdown
 ```

@@ -273,7 +273,7 @@ pub(super) fn draw_help_overlay(frame: &mut Frame, area: Rect, scroll: usize, ap
     ));
     lines.push(help_entry(
         "/subscription",
-        "Inspect jcode subscription scaffold",
+        "Inspect minnal subscription scaffold",
     ));
 
     lines.push(Line::from(""));
@@ -299,7 +299,7 @@ pub(super) fn draw_help_overlay(frame: &mut Frame, area: Rect, scroll: usize, ap
         "/debug-visual",
         "Enable visual debugging for TUI issues",
     ));
-    lines.push(help_entry("/quit", "Exit jcode"));
+    lines.push(help_entry("/quit", "Exit minnal"));
 
     let skills = app.available_skills();
     if !skills.is_empty() {

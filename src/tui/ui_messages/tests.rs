@@ -240,7 +240,7 @@ fn render_background_task_messages_prefer_display_name() {
 #[test]
 fn render_system_message_uses_scheduled_task_card() {
     let msg = DisplayMessage::system(
-        "[Scheduled task]\nA scheduled task for this session is now due.\n\nTask: Follow up on the scheduler test\nWorking directory: /home/jeremy/jcode\nRelevant files: src/tui/ui_messages.rs\nBranch: master\n\nBackground: Verify the scheduled task card styling\nSuccess criteria: The due task renders clearly\nScheduled by session: session_test",
+        "[Scheduled task]\nA scheduled task for this session is now due.\n\nTask: Follow up on the scheduler test\nWorking directory: /home/jeremy/minnal\nRelevant files: src/tui/ui_messages.rs\nBranch: master\n\nBackground: Verify the scheduled task card styling\nSuccess criteria: The due task renders clearly\nScheduled by session: session_test",
     );
 
     let lines = render_system_message(&msg, 100, crate::config::DiffDisplayMode::Off);
@@ -265,7 +265,7 @@ fn render_system_message_uses_scheduled_task_card() {
 fn render_tool_message_uses_scheduled_card() {
     let msg = DisplayMessage {
         role: "tool".to_string(),
-        content: "Scheduled task 'Follow up on the scheduler test' for in 1m (id: sched_abc123)\nWorking directory: /home/jeremy/jcode\nRelevant files: src/tui/ui_messages.rs\nTarget: resume session session_test".to_string(),
+        content: "Scheduled task 'Follow up on the scheduler test' for in 1m (id: sched_abc123)\nWorking directory: /home/jeremy/minnal\nRelevant files: src/tui/ui_messages.rs\nTarget: resume session session_test".to_string(),
         tool_calls: Vec::new(),
         duration_secs: None,
         title: Some("scheduled: Follow up on the scheduler test".to_string()),
@@ -554,7 +554,7 @@ fn render_swarm_message_centered_mode_caps_wrap_width_for_long_notifications() {
     crate::tui::markdown::set_center_code_blocks(true);
     let msg = DisplayMessage::swarm(
         "File activity",
-        "/home/jeremy/jcode/src/tui/ui_messages.rs — moss just edited this file while you were working nearby, so the notification should still read as centered in wide layouts.",
+        "/home/jeremy/minnal/src/tui/ui_messages.rs — moss just edited this file while you were working nearby, so the notification should still read as centered in wide layouts.",
     );
 
     let lines = render_swarm_message(&msg, 120, crate::config::DiffDisplayMode::Off);
@@ -616,7 +616,7 @@ fn render_tool_message_shows_intent_and_technical_preview_on_one_line() {
             id: "call_intent".to_string(),
             name: "bash".to_string(),
             input: serde_json::json!({
-                "command": "cargo test -p jcode render_background_task --lib",
+                "command": "cargo test -p minnal render_background_task --lib",
                 "intent": "Verify compact progress card"
             }),
             intent: Some("Verify compact progress card".to_string()),

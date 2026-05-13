@@ -82,8 +82,8 @@ use crate::runtime_memory_log::{
 use crate::tool::selfdev::ReloadContext;
 use crate::transport::Listener;
 use anyhow::Result;
-use jcode_agent_runtime::{InterruptSignal, SoftInterruptSource};
-use jcode_swarm_core::{
+use minnal_agent_runtime::{InterruptSignal, SoftInterruptSource};
+use minnal_swarm_core::{
     append_swarm_completion_report_instructions, format_structured_completion_report,
     summarize_plan_items, truncate_detail,
 };
@@ -450,8 +450,8 @@ impl Server {
             id,
             name,
             icon,
-            git_hash: env!("JCODE_GIT_HASH").to_string(),
-            version: env!("JCODE_VERSION").to_string(),
+            git_hash: env!("MINNAL_GIT_HASH").to_string(),
+            version: env!("MINNAL_VERSION").to_string(),
         };
         crate::process_title::set_server_title(&identity.name);
 
@@ -1362,7 +1362,7 @@ impl Server {
         let registry_identity = self.identity.display_name();
         tokio::spawn(async move {
             let hash_path = format!("{}.hash", registry_info.socket.display());
-            let _ = std::fs::write(&hash_path, env!("JCODE_GIT_HASH"));
+            let _ = std::fs::write(&hash_path, env!("MINNAL_GIT_HASH"));
 
             let mut registry = crate::registry::ServerRegistry::load()
                 .await
@@ -1693,7 +1693,7 @@ impl Server {
 
     /// Start the server (both main and debug sockets)
     pub async fn run(&self) -> Result<()> {
-        // Ensure socket directory exists (for named sockets like /run/user/1000/jcode/)
+        // Ensure socket directory exists (for named sockets like /run/user/1000/minnal/)
         if let Some(parent) = self.socket_path.parent() {
             std::fs::create_dir_all(parent)?;
         }

@@ -6,7 +6,7 @@ use crate::agent::Agent;
 use crate::build;
 use crate::mcp::McpConfig;
 use anyhow::Result;
-use jcode_agent_runtime::{InterruptSignal, SoftInterruptSource};
+use minnal_agent_runtime::{InterruptSignal, SoftInterruptSource};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use std::time::Duration;
@@ -77,7 +77,7 @@ pub(super) async fn resolve_debug_session(
 }
 
 pub(super) fn debug_message_timeout_secs() -> Option<u64> {
-    let raw = std::env::var("JCODE_DEBUG_MESSAGE_TIMEOUT_SECS").ok()?;
+    let raw = std::env::var("MINNAL_DEBUG_MESSAGE_TIMEOUT_SECS").ok()?;
     let trimmed = raw.trim();
     if trimmed.is_empty() {
         return None;
@@ -237,8 +237,8 @@ pub(super) async fn execute_debug_command(
         let connected_servers: Vec<String> = connected.keys().cloned().collect();
 
         let config = McpConfig::load();
-        let config_path = if let Ok(jcode_dir) = crate::storage::jcode_dir() {
-            let path = jcode_dir.join("mcp.json");
+        let config_path = if let Ok(minnal_dir) = crate::storage::minnal_dir() {
+            let path = minnal_dir.join("mcp.json");
             if path.exists() {
                 Some(path.to_string_lossy().to_string())
             } else {
@@ -578,13 +578,13 @@ pub(super) async fn execute_debug_command(
 
     if trimmed == "reload" {
         let repo_dir = crate::build::get_repo_dir()
-            .ok_or_else(|| anyhow::anyhow!("Could not find jcode repository directory"))?;
+            .ok_or_else(|| anyhow::anyhow!("Could not find minnal repository directory"))?;
 
         let target_binary = crate::build::find_dev_binary(&repo_dir)
             .unwrap_or_else(|| build::release_binary_path(&repo_dir));
         if !target_binary.exists() {
             return Err(anyhow::anyhow!(format!(
-                "No binary found at {}. Run 'minnal self-dev --build' first, or build with 'scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal' and publish current.",
+                "No binary found at {}. Run 'minnal self-dev --build' first, or build with 'scripts/dev_cargo.sh build --profile selfdev -p minnal --bin minnal' and publish current.",
                 target_binary.display()
             )));
         }
@@ -601,8 +601,8 @@ pub(super) async fn execute_debug_command(
         manifest.canary_status = Some(crate::build::CanaryStatus::Testing);
         manifest.save()?;
 
-        let jcode_dir = crate::storage::jcode_dir()?;
-        let info_path = jcode_dir.join("reload-info");
+        let minnal_dir = crate::storage::minnal_dir()?;
+        let info_path = minnal_dir.join("reload-info");
         std::fs::write(&info_path, format!("reload:{}", hash))?;
 
         let _request_id = super::send_reload_signal(hash.clone(), None, false);
@@ -624,7 +624,7 @@ mod tests {
     use crate::tool::Registry;
     use anyhow::Result;
     use async_trait::async_trait;
-    use jcode_agent_runtime::InterruptSignal;
+    use minnal_agent_runtime::InterruptSignal;
     use std::collections::HashMap;
     use std::ffi::OsString;
     use std::sync::{Arc, Mutex, OnceLock};
@@ -691,8 +691,8 @@ mod tests {
     #[tokio::test]
     async fn debug_tool_selfdev_reload_returns_promptly_for_direct_execution() {
         let _env_lock = lock_env();
-        let _test_session = EnvGuard::set("JCODE_TEST_SESSION", "1");
-        let _debug_control = EnvGuard::set("JCODE_DEBUG_CONTROL", "1");
+        let _test_session = EnvGuard::set("MINNAL_TEST_SESSION", "1");
+        let _debug_control = EnvGuard::set("MINNAL_DEBUG_CONTROL", "1");
 
         let mut reload_rx = crate::server::subscribe_reload_signal_for_tests();
 

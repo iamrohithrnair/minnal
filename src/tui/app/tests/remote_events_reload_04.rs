@@ -313,8 +313,8 @@ fn test_info_widget_data_includes_connection_type() {
 fn test_remote_tui_state_prefers_cached_model_during_brief_connecting_phase() {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("create temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let session_id = "session_otter_123";
     let mut session = crate::session::Session::create_with_id(
@@ -335,9 +335,9 @@ fn test_remote_tui_state_prefers_cached_model_during_brief_connecting_phase() {
     );
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -345,8 +345,8 @@ fn test_remote_tui_state_prefers_cached_model_during_brief_connecting_phase() {
 fn test_remote_tui_state_falls_back_to_cached_model_after_startup_phase_clears() {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("create temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let session_id = "session_otter_124";
     let mut session = crate::session::Session::create_with_id(
@@ -364,9 +364,9 @@ fn test_remote_tui_state_falls_back_to_cached_model_after_startup_phase_clears()
     assert_eq!(crate::tui::TuiState::provider_name(&app), "openai");
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -374,8 +374,8 @@ fn test_remote_tui_state_falls_back_to_cached_model_after_startup_phase_clears()
 fn test_new_for_remote_uses_startup_stub_without_loading_full_transcript() {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("create temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let session_id = "session_otter_stub_125";
     let mut session = crate::session::Session::create_with_id(
@@ -410,9 +410,9 @@ fn test_new_for_remote_uses_startup_stub_without_loading_full_transcript() {
     assert_eq!(crate::tui::TuiState::provider_model(&app), "gpt-5.4");
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -429,10 +429,10 @@ fn test_remote_tui_state_shows_connected_after_startup_phase_clears_without_mode
 #[test]
 fn test_remote_tui_state_hides_brief_connecting_phase_without_cached_model() {
     let _guard = crate::storage::lock_test_env();
-    let prev_model = std::env::var_os("JCODE_MODEL");
-    let prev_provider = std::env::var_os("JCODE_PROVIDER");
-    crate::env::set_var("JCODE_MODEL", "unknown");
-    crate::env::remove_var("JCODE_PROVIDER");
+    let prev_model = std::env::var_os("MINNAL_MODEL");
+    let prev_provider = std::env::var_os("MINNAL_PROVIDER");
+    crate::env::set_var("MINNAL_MODEL", "unknown");
+    crate::env::remove_var("MINNAL_PROVIDER");
 
     let app = App::new_for_remote(None);
 
@@ -443,24 +443,24 @@ fn test_remote_tui_state_hides_brief_connecting_phase_without_cached_model() {
     assert_eq!(crate::tui::TuiState::provider_name(&app), "");
 
     if let Some(prev_model) = prev_model {
-        crate::env::set_var("JCODE_MODEL", prev_model);
+        crate::env::set_var("MINNAL_MODEL", prev_model);
     } else {
-        crate::env::remove_var("JCODE_MODEL");
+        crate::env::remove_var("MINNAL_MODEL");
     }
     if let Some(prev_provider) = prev_provider {
-        crate::env::set_var("JCODE_PROVIDER", prev_provider);
+        crate::env::set_var("MINNAL_PROVIDER", prev_provider);
     } else {
-        crate::env::remove_var("JCODE_PROVIDER");
+        crate::env::remove_var("MINNAL_PROVIDER");
     }
 }
 
 #[test]
 fn test_remote_tui_state_prefers_configured_model_during_brief_connecting_phase() {
     let _guard = crate::storage::lock_test_env();
-    let prev_model = std::env::var_os("JCODE_MODEL");
-    let prev_provider = std::env::var_os("JCODE_PROVIDER");
-    crate::env::set_var("JCODE_MODEL", "gpt-5.4");
-    crate::env::set_var("JCODE_PROVIDER", "openai");
+    let prev_model = std::env::var_os("MINNAL_MODEL");
+    let prev_provider = std::env::var_os("MINNAL_PROVIDER");
+    crate::env::set_var("MINNAL_MODEL", "gpt-5.4");
+    crate::env::set_var("MINNAL_PROVIDER", "openai");
 
     let app = App::new_for_remote(None);
 
@@ -468,14 +468,14 @@ fn test_remote_tui_state_prefers_configured_model_during_brief_connecting_phase(
     assert_eq!(crate::tui::TuiState::provider_name(&app), "openai");
 
     if let Some(prev_model) = prev_model {
-        crate::env::set_var("JCODE_MODEL", prev_model);
+        crate::env::set_var("MINNAL_MODEL", prev_model);
     } else {
-        crate::env::remove_var("JCODE_MODEL");
+        crate::env::remove_var("MINNAL_MODEL");
     }
     if let Some(prev_provider) = prev_provider {
-        crate::env::set_var("JCODE_PROVIDER", prev_provider);
+        crate::env::set_var("MINNAL_PROVIDER", prev_provider);
     } else {
-        crate::env::remove_var("JCODE_PROVIDER");
+        crate::env::remove_var("MINNAL_PROVIDER");
     }
 }
 
@@ -639,8 +639,8 @@ fn test_info_widget_remote_model_falls_back_to_model_provider_detection() {
 fn test_info_widget_local_gemini_shows_oauth_auth_method() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().expect("create temp dir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let path = crate::auth::gemini::tokens_path().expect("gemini tokens path");
     crate::storage::write_json_secret(
@@ -667,9 +667,9 @@ fn test_info_widget_local_gemini_shows_oauth_auth_method() {
     assert!(data.usage_info.is_none());
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
     crate::auth::AuthStatus::invalidate_cache();
 }
@@ -873,7 +873,7 @@ fn test_remote_review_shows_processing_until_split_response() {
 
 #[test]
 fn test_remote_super_space_routes_next_prompt_to_new_session() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.is_remote = true;
         app.input = "hello from split".to_string();

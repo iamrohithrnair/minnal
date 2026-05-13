@@ -1339,7 +1339,7 @@ pub(in crate::tui::app) fn handle_server_event(
                 .filter(|path| path.is_dir())
                 .or_else(|| std::env::current_dir().ok())
                 .unwrap_or_else(|| std::path::PathBuf::from("."));
-            let socket = std::env::var("JCODE_SOCKET").ok();
+            let socket = std::env::var("MINNAL_SOCKET").ok();
             match spawn_in_new_terminal(&exe, &new_session_id, &cwd, socket.as_deref()) {
                 Ok(true) => {
                     if let Some(label) = split_label.as_deref() {
@@ -1414,7 +1414,7 @@ fn runtime_activity_status_notice(message: &str) -> String {
             let line = line.trim();
             (!line.is_empty()).then_some(line)
         })
-        .unwrap_or("Jcode activity")
+        .unwrap_or("Minnal activity")
         .trim_matches('*')
         .trim()
         .trim_end_matches('.')

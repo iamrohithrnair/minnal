@@ -40,7 +40,7 @@ The iOS host should own platform capabilities:
 
 1. **Linux simulator first**
    - Every core behavior should be testable without Apple tooling.
-   - A new app flow should land in `jcode-mobile-core` and `jcode-mobile-sim` before relying on device testing.
+   - A new app flow should land in `minnal-mobile-core` and `minnal-mobile-sim` before relying on device testing.
 
 2. **Rust owns behavior, Swift owns platform**
    - Swift should not duplicate reducers, protocol parsing, or chat/tool state transitions.
@@ -61,14 +61,14 @@ The iOS host should own platform capabilities:
 ```mermaid
 graph TB
     subgraph Rust["Rust crates"]
-        Core["jcode-mobile-core\nstate/actions/effects/reducers"]
+        Core["minnal-mobile-core\nstate/actions/effects/reducers"]
         Protocol["protocol models/adapters"]
         Semantic["semantic UI tree"]
-        FFI["jcode-mobile-ffi\nC ABI + JSON bridge"]
+        FFI["minnal-mobile-ffi\nC ABI + JSON bridge"]
     end
 
     subgraph Linux["Linux simulator"]
-        Sim["jcode-mobile-sim"]
+        Sim["minnal-mobile-sim"]
         Fake["fake backend"]
         Agent["agent automation API"]
     end
@@ -94,20 +94,20 @@ graph TB
 
 ### Existing
 
-- `crates/jcode-mobile-core`
+- `crates/minnal-mobile-core`
   - shared app state and simulator state seed
   - actions/effects/reducer/store
   - semantic UI tree
   - protocol models
 
-- `crates/jcode-mobile-sim`
+- `crates/minnal-mobile-sim`
   - simulator daemon
   - automation CLI/API
   - scenarios and fake backend later
 
 ### Add later
 
-- `crates/jcode-mobile-ffi`
+- `crates/minnal-mobile-ffi`
   - `cdylib`/`staticlib` build target
   - C ABI functions
   - opaque app handle
@@ -130,24 +130,24 @@ Use a small C ABI around serialized commands initially.
 ### Core handle lifecycle
 
 ```c
-void *jcode_mobile_app_new(const char *initial_scenario_json);
-void jcode_mobile_app_free(void *app);
+void *minnal_mobile_app_new(const char *initial_scenario_json);
+void minnal_mobile_app_free(void *app);
 ```
 
 ### Dispatch and inspect
 
 ```c
-char *jcode_mobile_dispatch(void *app, const char *action_json);
-char *jcode_mobile_state(void *app);
-char *jcode_mobile_tree(void *app);
-char *jcode_mobile_logs(void *app, uint32_t limit);
-void jcode_mobile_string_free(char *ptr);
+char *minnal_mobile_dispatch(void *app, const char *action_json);
+char *minnal_mobile_state(void *app);
+char *minnal_mobile_tree(void *app);
+char *minnal_mobile_logs(void *app, uint32_t limit);
+void minnal_mobile_string_free(char *ptr);
 ```
 
 ### Platform events
 
 ```c
-char *jcode_mobile_platform_event(void *app, const char *event_json);
+char *minnal_mobile_platform_event(void *app, const char *event_json);
 ```
 
 Platform events should cover:
@@ -225,9 +225,9 @@ The platform returns event results:
 
 ```json
 { "type": "secure_store_write_finished", "key": "server_token", "ok": true }
-{ "type": "pair_finished", "ok": true, "token": "...", "server_name": "jcode" }
+{ "type": "pair_finished", "ok": true, "token": "...", "server_name": "minnal" }
 { "type": "websocket_event", "event": { "type": "text_delta", "text": "hello" } }
-{ "type": "qr_payload_scanned", "payload": "jcode://pair?..." }
+{ "type": "qr_payload_scanned", "payload": "minnal://pair?..." }
 { "type": "speech_transcript", "text": "run tests", "is_final": true }
 ```
 
@@ -272,7 +272,7 @@ Recommendation: start with Stage 1, but design semantic node IDs and effects as 
 
 Initial target flow:
 
-1. Add `jcode-mobile-ffi` crate.
+1. Add `minnal-mobile-ffi` crate.
 2. Build Rust static library for iOS targets:
    - `aarch64-apple-ios`
    - `aarch64-apple-ios-sim`
@@ -286,8 +286,8 @@ Example future commands, to be validated on macOS:
 
 ```bash
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim
-cargo build -p jcode-mobile-ffi --target aarch64-apple-ios --release
-cargo build -p jcode-mobile-ffi --target aarch64-apple-ios-sim --release
+cargo build -p minnal-mobile-ffi --target aarch64-apple-ios --release
+cargo build -p minnal-mobile-ffi --target aarch64-apple-ios-sim --release
 ```
 
 Then package with `xcodebuild -create-xcframework`.
@@ -298,8 +298,8 @@ Then package with `xcodebuild -create-xcframework`.
 
 Every new app behavior should have at least one of:
 
-- `jcode-mobile-core` reducer/protocol test
-- `jcode-mobile-sim` automation test
+- `minnal-mobile-core` reducer/protocol test
+- `minnal-mobile-sim` automation test
 - replay/golden test once available
 
 ### iOS smoke tests later

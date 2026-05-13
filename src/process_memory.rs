@@ -389,10 +389,10 @@ fn read_linux_memory_info(status: &str) -> Option<OsProcessMemoryInfo> {
 
 #[cfg(feature = "jemalloc-prof")]
 fn default_heap_profile_path() -> Result<PathBuf> {
-    let base = crate::storage::jcode_dir()?.join("profiles").join("heap");
+    let base = crate::storage::minnal_dir()?.join("profiles").join("heap");
     let timestamp = chrono::Utc::now().format("%Y%m%dT%H%M%SZ");
     let pid = std::process::id();
-    Ok(base.join(format!("jcode-{}-{}.heap", pid, timestamp)))
+    Ok(base.join(format!("minnal-{}-{}.heap", pid, timestamp)))
 }
 
 #[cfg(feature = "jemalloc")]

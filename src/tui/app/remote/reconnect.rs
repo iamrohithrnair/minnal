@@ -612,9 +612,9 @@ pub(in crate::tui::app) async fn handle_post_connect<B: ratatui::backend::Backen
                 .clone()
                 .unwrap_or_else(|| crate::id::new_id("ses"));
             if (has_reload_ctx_for_session || !app.reload_info.is_empty())
-                && let Ok(jcode_dir) = crate::storage::jcode_dir()
+                && let Ok(minnal_dir) = crate::storage::minnal_dir()
             {
-                let marker = jcode_dir.join(format!("client-reload-pending-{}", session_id));
+                let marker = minnal_dir.join(format!("client-reload-pending-{}", session_id));
                 let info = if app.reload_info.is_empty() {
                     "reload".to_string()
                 } else {
@@ -739,8 +739,8 @@ pub(super) fn load_reload_reconnect_hints(
 
     let has_client_reload_marker = session_to_resume
         .and_then(|sid| {
-            let jcode_dir = crate::storage::jcode_dir().ok()?;
-            let marker = jcode_dir.join(format!("client-reload-pending-{}", sid));
+            let minnal_dir = crate::storage::minnal_dir().ok()?;
+            let marker = minnal_dir.join(format!("client-reload-pending-{}", sid));
             if marker.exists() {
                 let info = std::fs::read_to_string(&marker).ok()?;
                 let _ = std::fs::remove_file(&marker);

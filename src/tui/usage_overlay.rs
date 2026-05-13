@@ -1,6 +1,6 @@
 use anyhow::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
-pub use jcode_tui_usage_overlay::{UsageOverlayItem, UsageOverlayStatus, UsageOverlaySummary};
+pub use minnal_tui_usage_overlay::{UsageOverlayItem, UsageOverlayStatus, UsageOverlaySummary};
 use ratatui::{
     prelude::*,
     widgets::{Block, Borders, Paragraph, Wrap},
@@ -213,7 +213,7 @@ impl UsageOverlay {
             .iter()
             .enumerate()
             .filter_map(|(idx, item)| {
-                jcode_tui_usage_overlay::item_matches_filter(item, &self.filter).then_some(idx)
+                minnal_tui_usage_overlay::item_matches_filter(item, &self.filter).then_some(idx)
             })
             .collect();
         if self.selected >= self.filtered.len() {

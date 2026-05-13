@@ -174,7 +174,7 @@ async fn run_ambient_visible() -> Result<()> {
 
     let _ = crossterm::execute!(
         std::io::stdout(),
-        crossterm::terminal::SetTitle("🤖 jcode ambient cycle")
+        crossterm::terminal::SetTitle("🤖 minnal ambient cycle")
     );
 
     let result = app.run(terminal).await;
@@ -428,7 +428,7 @@ pub fn run_memory_command(cmd: MemorySubcommand) -> Result<()> {
         }
 
         MemorySubcommand::ClearTest => {
-            let test_dir = storage::jcode_dir()?.join("memory").join("test");
+            let test_dir = storage::minnal_dir()?.join("memory").join("test");
             if test_dir.exists() {
                 let count = std::fs::read_dir(&test_dir)?.count();
                 std::fs::remove_dir_all(&test_dir)?;
@@ -480,7 +480,7 @@ pub fn run_pair_command(list: bool, revoke: Option<String>) -> Result<()> {
     let gw_config = &crate::config::config().gateway;
 
     if !gw_config.enabled {
-        eprintln!("\x1b[33m⚠\x1b[0m  Gateway is disabled. Enable it in ~/.jcode/config.toml:\n");
+        eprintln!("\x1b[33m⚠\x1b[0m  Gateway is disabled. Enable it in ~/.minnal/config.toml:\n");
         eprintln!("    \x1b[2m[gateway]\x1b[0m");
         eprintln!("    \x1b[2menabled = true\x1b[0m");
         eprintln!("    \x1b[2mport = {}\x1b[0m\n", gw_config.port);
@@ -490,12 +490,12 @@ pub fn run_pair_command(list: bool, revoke: Option<String>) -> Result<()> {
     let code = registry.generate_pairing_code();
     let connect_host = resolve_connect_host(&gw_config.bind_addr);
     let pair_uri = format!(
-        "jcode://pair?host={}&port={}&code={}",
+        "minnal://pair?host={}&port={}&code={}",
         connect_host, gw_config.port, code
     );
 
     eprintln!();
-    eprintln!("  \x1b[1mScan with the jcode iOS app:\x1b[0m\n");
+    eprintln!("  \x1b[1mScan with the minnal iOS app:\x1b[0m\n");
     match crate::login_qr::render_unicode_qr(&pair_uri) {
         Ok(qr) => {
             for line in qr.lines() {
@@ -519,7 +519,7 @@ pub fn run_pair_command(list: bool, revoke: Option<String>) -> Result<()> {
 
     if connect_host == "<your-mac-hostname>" {
         eprintln!(
-            "\n  \x1b[33mTip:\x1b[0m set JCODE_GATEWAY_HOST to your reachable Tailscale hostname."
+            "\n  \x1b[33mTip:\x1b[0m set MINNAL_GATEWAY_HOST to your reachable Tailscale hostname."
         );
     }
 
@@ -541,7 +541,7 @@ pub fn run_pair_command(list: bool, revoke: Option<String>) -> Result<()> {
 
 pub fn resolve_connect_host(bind_addr: &str) -> String {
     if bind_addr == "0.0.0.0" || bind_addr == "::" {
-        if let Some(host) = std::env::var("JCODE_GATEWAY_HOST")
+        if let Some(host) = std::env::var("MINNAL_GATEWAY_HOST")
             .ok()
             .map(|s| s.trim().to_string())
             .filter(|s| !s.is_empty())
@@ -640,7 +640,7 @@ pub async fn run_browser(action: &str) -> Result<()> {
                 println!("\nBuilt-in browser tool is ready.");
             } else if status.responding && !status.compatible {
                 println!(
-                    "\nThe browser bridge is connected, but the installed Firefox extension is out of date for this jcode build. Run `minnal browser setup` to repair or update it."
+                    "\nThe browser bridge is connected, but the installed Firefox extension is out of date for this minnal build. Run `minnal browser setup` to repair or update it."
                 );
             } else {
                 println!("\nRun `minnal browser setup` to install or repair it.");
@@ -760,7 +760,7 @@ pub async fn run_single_message_command(
 }
 
 fn run_command_auto_poke_enabled() -> bool {
-    std::env::var("JCODE_RUN_AUTO_POKE")
+    std::env::var("MINNAL_RUN_AUTO_POKE")
         .ok()
         .map(|value| {
             let value = value.trim().to_ascii_lowercase();
@@ -770,7 +770,7 @@ fn run_command_auto_poke_enabled() -> bool {
 }
 
 fn run_command_auto_poke_max_turns() -> Option<usize> {
-    std::env::var("JCODE_RUN_AUTO_POKE_MAX_TURNS")
+    std::env::var("MINNAL_RUN_AUTO_POKE_MAX_TURNS")
         .ok()
         .and_then(|value| value.trim().parse::<usize>().ok())
         .filter(|value| *value > 0)
@@ -826,7 +826,7 @@ async fn run_single_message_command_plain_with_auto_poke(
         }
         next_message = build_run_poke_message(&incomplete);
         eprintln!(
-            "Auto-poking: {} incomplete todo(s). Set JCODE_RUN_AUTO_POKE=0 to disable.",
+            "Auto-poking: {} incomplete todo(s). Set MINNAL_RUN_AUTO_POKE=0 to disable.",
             incomplete.len()
         );
     }

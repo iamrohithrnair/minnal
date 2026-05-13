@@ -311,9 +311,9 @@ impl SafetySystem {
         lines.join("\n")
     }
 
-    /// Persist a transcript to ~/.jcode/ambient/transcripts/{timestamp}.json
+    /// Persist a transcript to ~/.minnal/ambient/transcripts/{timestamp}.json
     pub fn save_transcript(&self, transcript: &AmbientTranscript) -> Result<()> {
-        let dir = storage::jcode_dir()?.join("ambient").join("transcripts");
+        let dir = storage::minnal_dir()?.join("ambient").join("transcripts");
         storage::ensure_dir(&dir)?;
 
         let filename = transcript.started_at.format("%Y-%m-%d-%H%M%S").to_string();
@@ -333,11 +333,11 @@ impl Default for SafetySystem {
 // ---------------------------------------------------------------------------
 
 fn queue_path() -> Result<std::path::PathBuf> {
-    Ok(storage::jcode_dir()?.join("safety").join("queue.json"))
+    Ok(storage::minnal_dir()?.join("safety").join("queue.json"))
 }
 
 fn history_path() -> Result<std::path::PathBuf> {
-    Ok(storage::jcode_dir()?.join("safety").join("history.json"))
+    Ok(storage::minnal_dir()?.join("safety").join("history.json"))
 }
 
 fn persist_queue(queue: &[PermissionRequest]) -> Result<()> {
@@ -510,15 +510,15 @@ mod tests {
         F: FnOnce() -> T,
     {
         let _guard = crate::storage::lock_test_env();
-        let prev_home = std::env::var_os("JCODE_HOME");
+        let prev_home = std::env::var_os("MINNAL_HOME");
         let temp = tempfile::TempDir::new().expect("create temp dir");
-        crate::env::set_var("JCODE_HOME", temp.path());
+        crate::env::set_var("MINNAL_HOME", temp.path());
 
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(f));
 
         match prev_home {
-            Some(value) => crate::env::set_var("JCODE_HOME", value),
-            None => crate::env::remove_var("JCODE_HOME"),
+            Some(value) => crate::env::set_var("MINNAL_HOME", value),
+            None => crate::env::remove_var("MINNAL_HOME"),
         }
 
         result.unwrap_or_else(|payload| std::panic::resume_unwind(payload))

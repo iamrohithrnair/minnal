@@ -339,7 +339,7 @@ async fn comm_message_with_wake_queues_soft_interrupt_for_busy_connected_session
     assert_eq!(pending[0].content, "DM from falcon: hello now");
     assert_eq!(
         pending[0].source,
-        jcode_agent_runtime::SoftInterruptSource::System
+        minnal_agent_runtime::SoftInterruptSource::System
     );
 }
 

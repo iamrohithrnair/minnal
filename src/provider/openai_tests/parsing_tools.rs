@@ -220,7 +220,7 @@ fn test_parse_openai_response_image_generation_saves_metadata_and_emits_event() 
     let _lock = ENV_LOCK.lock().unwrap();
     let original_dir = std::env::current_dir().expect("current dir");
     let temp = tempfile::Builder::new()
-        .prefix("jcode-openai-image-test-")
+        .prefix("minnal-openai-image-test-")
         .tempdir()
         .expect("tempdir");
     std::env::set_current_dir(temp.path()).expect("set temp cwd");
@@ -605,7 +605,7 @@ fn test_chatgpt_instructions_with_selfdev_appends_selfdev_block() {
     let system = "# Environment\nDate: 2026-01-01\n\n# Self-Development Mode\nUse selfdev tool\n\n# Available Skills\n- test";
 
     let instructions = OpenAIProvider::chatgpt_instructions_with_selfdev(system);
-    assert!(instructions.contains("Jcode Agent, in the Jcode harness"));
+    assert!(instructions.contains("Minnal Agent, in the Minnal harness"));
     assert!(instructions.contains("# Self-Development Mode"));
     assert!(instructions.contains("Use selfdev tool"));
 }

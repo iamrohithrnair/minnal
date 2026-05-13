@@ -4,7 +4,7 @@ use crate::message::{ConnectionPhase, Message, Role, StreamEvent, ToolDefinition
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use chrono::Utc;
-pub use jcode_provider_gemini::{
+pub use minnal_provider_gemini::{
     AVAILABLE_MODELS, CODE_ASSIST_API_VERSION, CODE_ASSIST_ENDPOINT, ClientMetadata,
     CodeAssistGenerateRequest, CodeAssistGenerateResponse, DEFAULT_MODEL, GeminiCandidate,
     GeminiContent, GeminiFunctionCall, GeminiFunctionCallingConfig, GeminiFunctionDeclaration,
@@ -80,7 +80,7 @@ impl GeminiProvider {
     }
 
     pub fn new() -> Self {
-        let model = std::env::var("JCODE_GEMINI_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
+        let model = std::env::var("MINNAL_GEMINI_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
         let provider = Self {
             client: gemini_http_client(),
             model: Arc::new(RwLock::new(model)),
@@ -776,7 +776,7 @@ fn is_vpc_sc_error(err: &anyhow::Error) -> bool {
 
 fn gemini_http_client() -> reqwest::Client {
     reqwest::Client::builder()
-        .user_agent("jcode/1.0 (gemini)")
+        .user_agent("minnal/1.0 (gemini)")
         .http1_only()
         .connect_timeout(Duration::from_secs(20))
         .timeout(Duration::from_secs(90))

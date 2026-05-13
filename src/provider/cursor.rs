@@ -236,7 +236,7 @@ impl CursorCliProvider {
     }
 
     pub fn new() -> Self {
-        let model = std::env::var("JCODE_CURSOR_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
+        let model = std::env::var("MINNAL_CURSOR_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
         let provider = Self {
             client: crate::provider::shared_http_client(),
             model: Arc::new(RwLock::new(model)),
@@ -473,7 +473,7 @@ async fn run_native_text_command_via_curl(
     let client_key = cursor_auth::client_key_for_access_token(access_token);
     let client_version = cursor_auth::cursor_direct_client_version();
 
-    let body_path = std::env::temp_dir().join(format!("jcode-cursor-{}.bin", Uuid::new_v4()));
+    let body_path = std::env::temp_dir().join(format!("minnal-cursor-{}.bin", Uuid::new_v4()));
     std::fs::write(&body_path, &body).context("Failed writing Cursor request body temp file")?;
     let body_path_str = body_path.to_string_lossy().to_string();
 
@@ -728,7 +728,7 @@ fn encode_metadata() -> Vec<u8> {
         2,
         std::env::consts::ARCH.as_bytes().to_vec(),
     ));
-    bytes.extend(encode_field(4, 2, b"jcode".to_vec()));
+    bytes.extend(encode_field(4, 2, b"minnal".to_vec()));
     bytes.extend(encode_field(
         5,
         2,

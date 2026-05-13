@@ -120,8 +120,8 @@ async fn stream_response(
 
     if send_openrouter_headers {
         req = req
-            .header("HTTP-Referer", "https://github.com/jcode")
-            .header("X-Title", "jcode");
+            .header("HTTP-Referer", "https://github.com/minnal")
+            .header("X-Title", "minnal");
     }
 
     let response = req

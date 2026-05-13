@@ -5,7 +5,7 @@ pub fn enter_selfdev_session(
     working_dir: Option<&Path>,
 ) -> Result<SelfDevLaunchResult> {
     let repo_dir = SelfDevTool::resolve_repo_dir(working_dir).ok_or_else(|| {
-        anyhow::anyhow!("Could not find the jcode repository to enter self-dev mode")
+        anyhow::anyhow!("Could not find the minnal repository to enter self-dev mode")
     })?;
 
     let mut inherited_context = false;

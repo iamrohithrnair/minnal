@@ -94,7 +94,7 @@ fn spawn_visible_session_window(
     let exe = crate::build::client_update_candidate(selfdev_requested)
         .map(|(path, _label)| path)
         .or_else(|| std::env::current_exe().ok())
-        .unwrap_or_else(|| PathBuf::from("jcode"));
+        .unwrap_or_else(|| PathBuf::from("minnal"));
     if selfdev_requested {
         crate::cli::tui_launch::spawn_selfdev_in_new_terminal_with_provider(
             &exe,
@@ -151,8 +151,8 @@ fn persist_headed_startup_message(session_id: &str, message: &str) {
 }
 
 fn clear_headed_startup_message(session_id: &str) {
-    if let Ok(jcode_dir) = crate::storage::jcode_dir() {
-        let path = jcode_dir.join(format!("client-input-{}", session_id));
+    if let Ok(minnal_dir) = crate::storage::minnal_dir() {
+        let path = minnal_dir.join(format!("client-input-{}", session_id));
         let _ = std::fs::remove_file(path);
     }
 }

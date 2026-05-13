@@ -44,7 +44,7 @@ impl App {
     }
 
     fn configured_remote_provider_hint(&self) -> Option<String> {
-        std::env::var("JCODE_PROVIDER")
+        std::env::var("MINNAL_PROVIDER")
             .ok()
             .or_else(|| crate::config::config().provider.default_provider.clone())
             .map(|provider| provider.trim().to_string())
@@ -53,7 +53,7 @@ impl App {
 
     fn configured_remote_model_hint(&self) -> Option<String> {
         Self::sanitize_remote_model_hint(
-            std::env::var("JCODE_MODEL")
+            std::env::var("MINNAL_MODEL")
                 .ok()
                 .or_else(|| crate::config::config().provider.default_model.clone()),
         )
@@ -545,7 +545,7 @@ impl crate::tui::TuiState for App {
 
     fn status_notice(&self) -> Option<String> {
         if !self.is_remote
-            && self.provider.uses_jcode_compaction()
+            && self.provider.uses_minnal_compaction()
             && let Ok(manager) = self.registry.compaction().try_read()
             && manager.is_compacting()
         {
@@ -622,7 +622,7 @@ impl crate::tui::TuiState for App {
         };
         let (compaction_count, compaction_summary_chars, is_compacting) = if self.is_remote {
             (0, 0, false)
-        } else if self.provider.uses_jcode_compaction() {
+        } else if self.provider.uses_minnal_compaction() {
             self.registry
                 .compaction()
                 .try_read()
@@ -689,7 +689,7 @@ impl crate::tui::TuiState for App {
                 }
             }
         } else {
-            let skip = if self.provider.uses_jcode_compaction() {
+            let skip = if self.provider.uses_minnal_compaction() {
                 let compaction = self.registry.compaction();
                 let result = compaction
                     .try_read()
@@ -1061,7 +1061,7 @@ impl crate::tui::TuiState for App {
 
         let workspace_animation_tick = self.app_started.elapsed().as_millis() as u64 / 180;
 
-        let compaction_info = if !self.is_remote && self.provider.uses_jcode_compaction() {
+        let compaction_info = if !self.is_remote && self.provider.uses_minnal_compaction() {
             let compaction = self.registry.compaction();
             compaction.try_read().ok().and_then(|manager| {
                 let compacted_messages = manager.compacted_count();
@@ -1116,7 +1116,7 @@ impl crate::tui::TuiState for App {
             observed_context_tokens: self.current_stream_context_tokens(),
             cache_hit_info,
             compaction_info,
-            is_compacting: if !self.is_remote && self.provider.uses_jcode_compaction() {
+            is_compacting: if !self.is_remote && self.provider.uses_minnal_compaction() {
                 let compaction = self.registry.compaction();
                 compaction
                     .try_read()

@@ -5,23 +5,23 @@ use std::path::PathBuf;
 use std::time::{Duration, SystemTime};
 
 pub(super) fn telemetry_id_path() -> Option<PathBuf> {
-    storage::jcode_dir().ok().map(|d| d.join("telemetry_id"))
+    storage::minnal_dir().ok().map(|d| d.join("telemetry_id"))
 }
 
 pub(super) fn install_recorded_path() -> Option<PathBuf> {
-    storage::jcode_dir()
+    storage::minnal_dir()
         .ok()
         .map(|d| d.join("telemetry_install_sent"))
 }
 
 pub(super) fn version_recorded_path() -> Option<PathBuf> {
-    storage::jcode_dir()
+    storage::minnal_dir()
         .ok()
         .map(|d| d.join("telemetry_version_sent"))
 }
 
 pub(super) fn telemetry_state_path(name: &str) -> Option<PathBuf> {
-    storage::jcode_dir().ok().map(|d| d.join(name))
+    storage::minnal_dir().ok().map(|d| d.join(name))
 }
 
 pub(super) fn milestone_recorded_path(id: &str, key: &str) -> Option<PathBuf> {

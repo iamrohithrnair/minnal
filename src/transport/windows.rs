@@ -10,18 +10,18 @@ use tokio::sync::Mutex;
 
 /// Convert a filesystem path to a Windows named pipe path.
 ///
-/// e.g. `/run/user/1000/jcode.sock` -> `\\.\pipe\jcode`
-/// e.g. `/run/user/1000/jcode/myserver.sock` -> `\\.\pipe\jcode-myserver`
+/// e.g. `/run/user/1000/minnal.sock` -> `\\.\pipe\minnal`
+/// e.g. `/run/user/1000/minnal/myserver.sock` -> `\\.\pipe\minnal-myserver`
 fn path_to_pipe_name(path: &Path) -> String {
     let stem: String = path
         .file_stem()
         .and_then(|s| s.to_str())
-        .unwrap_or("jcode")
+        .unwrap_or("minnal")
         .chars()
         .filter(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '-' | '_'))
         .take(32)
         .collect();
-    let stem = if stem.is_empty() { "jcode" } else { &stem };
+    let stem = if stem.is_empty() { "minnal" } else { &stem };
     let normalized = path
         .to_string_lossy()
         .replace('\\', "/")
@@ -131,7 +131,7 @@ impl Stream {
         use std::sync::atomic::{AtomicU64, Ordering};
         static PAIR_COUNTER: AtomicU64 = AtomicU64::new(0);
         let counter = PAIR_COUNTER.fetch_add(1, Ordering::Relaxed);
-        let pipe_name = format!(r"\\.\pipe\jcode-pair-{}-{}", std::process::id(), counter);
+        let pipe_name = format!(r"\\.\pipe\minnal-pair-{}-{}", std::process::id(), counter);
         let mut server = ServerOptions::new()
             .first_pipe_instance(true)
             .create(&pipe_name)?;
@@ -388,8 +388,8 @@ mod tests {
 
     #[test]
     fn pipe_name_is_stable_and_normalizes_case_and_separators() {
-        let a = path_to_pipe_name(Path::new(r"C:\Temp\Jcode\server.sock"));
-        let b = path_to_pipe_name(Path::new("c:/temp/jcode/server.sock"));
+        let a = path_to_pipe_name(Path::new(r"C:\Temp\Minnal\server.sock"));
+        let b = path_to_pipe_name(Path::new("c:/temp/minnal/server.sock"));
         assert_eq!(a, b, "pipe names should be normalized consistently");
         assert!(
             a.starts_with(r"\\.\pipe\server-"),
@@ -402,7 +402,7 @@ mod tests {
     fn pipe_name_falls_back_when_stem_is_empty() {
         let name = path_to_pipe_name(Path::new("..."));
         assert!(
-            name.starts_with(r"\\.\pipe\jcode-"),
+            name.starts_with(r"\\.\pipe\minnal-"),
             "unexpected pipe name: {}",
             name
         );

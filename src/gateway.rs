@@ -2,7 +2,7 @@
 //!
 //! Accepts WebSocket connections over TCP and bridges them to the
 //! existing newline-delimited JSON protocol used by Unix socket clients.
-//! This lets iOS/web clients interact with jcode sessions identically
+//! This lets iOS/web clients interact with minnal sessions identically
 //! to TUI clients.
 //!
 //! Architecture:
@@ -28,7 +28,7 @@ mod registry;
 use auth::{WsAuth, WsAuthSource, extract_ws_auth, ws_error_response};
 #[cfg(test)]
 pub(crate) use auth::{is_valid_hex_token, parse_bearer_token, parse_query_token};
-pub use jcode_gateway_types::{PairedDevice, PairingCode};
+pub use minnal_gateway_types::{PairedDevice, PairingCode};
 pub use registry::DeviceRegistry;
 
 /// Default gateway port ("jc" on phone keypad = 52, but we use 7643)
@@ -363,7 +363,7 @@ async fn handle_http(
         ("GET", "/health") => {
             let body = serde_json::json!({
                 "status": "ok",
-                "version": env!("JCODE_VERSION"),
+                "version": env!("MINNAL_VERSION"),
                 "gateway": true,
             });
             http_response(200, "OK", &body.to_string())
@@ -408,7 +408,7 @@ async fn handle_http(
 /// ```json
 /// {
 ///   "token": "hex-auth-token",
-///   "server_name": "jcode",
+///   "server_name": "minnal",
 ///   "server_version": "v0.4.0"
 /// }
 /// ```
@@ -455,8 +455,8 @@ async fn handle_pair_request(
 
     let body = serde_json::json!({
         "token": token,
-        "server_name": "jcode",
-        "server_version": env!("JCODE_VERSION"),
+        "server_name": "minnal",
+        "server_version": env!("MINNAL_VERSION"),
     });
     http_response(200, "OK", &body.to_string())
 }

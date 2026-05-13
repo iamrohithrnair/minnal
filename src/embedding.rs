@@ -1,18 +1,18 @@
-//! Embedding facade for jcode.
+//! Embedding facade for minnal.
 //!
-//! The heavy ONNX/tokenizer implementation lives in the `jcode-embedding`
+//! The heavy ONNX/tokenizer implementation lives in the `minnal-embedding`
 //! workspace crate so unchanged embedding code can stay cached across self-dev
-//! builds. This module keeps jcode's process-wide cache, stats, and local path /
+//! builds. This module keeps minnal's process-wide cache, stats, and local path /
 //! logging integration stable.
 
 use anyhow::Result;
-use jcode_embedding as backend;
+use minnal_embedding as backend;
 use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
-use crate::storage::jcode_dir;
+use crate::storage::minnal_dir;
 
 /// LRU cache capacity for recent embeddings
 const EMBEDDING_CACHE_CAPACITY: usize = 128;
@@ -424,7 +424,7 @@ pub fn find_similar(
 
 /// Get the models directory path.
 pub fn models_dir() -> Result<PathBuf> {
-    let dir = jcode_dir()?.join("models").join(backend::MODEL_NAME);
+    let dir = minnal_dir()?.join("models").join(backend::MODEL_NAME);
     std::fs::create_dir_all(&dir)?;
     Ok(dir)
 }

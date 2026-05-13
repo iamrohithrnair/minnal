@@ -93,7 +93,7 @@ jobs:
         shell: bash
         run: |
           python3 .github/scripts/run_with_timeout.py 600 \
-            cargo test -p jcode-mobile-core -p jcode-mobile-sim
+            cargo test -p minnal-mobile-core -p minnal-mobile-sim
 
       - name: Run mobile simulator CLI smoke
         shell: bash
@@ -293,9 +293,9 @@ jobs:
       - name: Run Windows lifecycle e2e tests
         shell: pwsh
         env:
-          JCODE_E2E_ARTIFACT_DIR: ${{ runner.temp }}/jcode-windows-e2e-logs
+          MINNAL_E2E_ARTIFACT_DIR: ${{ runner.temp }}/minnal-windows-e2e-logs
         run: |
-          New-Item -ItemType Directory -Force -Path $env:JCODE_E2E_ARTIFACT_DIR | Out-Null
+          New-Item -ItemType Directory -Force -Path $env:MINNAL_E2E_ARTIFACT_DIR | Out-Null
           $tests = @(
             'windows_lifecycle::windows_binary_server_accepts_clients_and_debug_cli',
             'windows_lifecycle::windows_binary_server_rebinds_named_pipe_after_exit'
@@ -312,7 +312,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-e2e-diagnostics
-          path: ${{ runner.temp }}/jcode-windows-e2e-logs
+          path: ${{ runner.temp }}/minnal-windows-e2e-logs
           if-no-files-found: ignore
 
       - name: Verify built binary launches

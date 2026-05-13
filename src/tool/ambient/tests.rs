@@ -341,13 +341,13 @@ fn test_parse_schedule_target_rejects_removed_session_alias() {
 #[tokio::test]
 #[allow(
     clippy::await_holding_lock,
-    reason = "test intentionally serializes process-wide JCODE_HOME/env state across async tool execution"
+    reason = "test intentionally serializes process-wide MINNAL_HOME/env state across async tool execution"
 )]
 async fn test_schedule_tool_defaults_to_resuming_originating_session() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let tool = ScheduleTool::new();
     let input = json!({
@@ -388,9 +388,9 @@ async fn test_schedule_tool_defaults_to_resuming_originating_session() {
     );
 
     if let Some(prev) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev);
+        crate::env::set_var("MINNAL_HOME", prev);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 

@@ -3,7 +3,7 @@ use super::*;
 pub(super) fn can_prompt_for_external_auth() -> bool {
     std::io::stdin().is_terminal()
         && std::io::stderr().is_terminal()
-        && std::env::var("JCODE_NON_INTERACTIVE").is_err()
+        && std::env::var("MINNAL_NON_INTERACTIVE").is_err()
 }
 
 pub(super) fn external_auth_blocked_message(
@@ -13,7 +13,7 @@ pub(super) fn external_auth_blocked_message(
     login_hint: &str,
 ) -> String {
     format!(
-        "Found existing {} credentials from {} at {} but jcode will not read them without confirmation. Re-run in an interactive terminal to approve this auth source for future jcode sessions, or run `{}`.",
+        "Found existing {} credentials from {} at {} but minnal will not read them without confirmation. Re-run in an interactive terminal to approve this auth source for future minnal sessions, or run `{}`.",
         provider_name,
         source_name,
         path.display(),
@@ -33,9 +33,9 @@ pub(super) fn prompt_to_trust_external_auth(
         source_name,
         path.display()
     );
-    eprintln!("jcode will only read that source in place after you approve it.");
+    eprintln!("minnal will only read that source in place after you approve it.");
     eprintln!("It will not move, delete, or rewrite the original auth there.");
-    eprint!("Trust this auth source for future jcode sessions? [y/N]: ");
+    eprint!("Trust this auth source for future minnal sessions? [y/N]: ");
     io::stdout().flush()?;
 
     let mut input = String::new();
@@ -204,10 +204,10 @@ fn prompt_to_review_external_auth_sources(
     }
 
     eprintln!();
-    eprintln!("Found existing logins that jcode can reuse.");
+    eprintln!("Found existing logins that minnal can reuse.");
     eprintln!("Nothing has been imported yet.");
     eprintln!(
-        "Approve the sources you want jcode to read in place; rejected sources stay untouched."
+        "Approve the sources you want minnal to read in place; rejected sources stay untouched."
     );
     eprintln!();
 
@@ -422,7 +422,7 @@ pub(crate) fn format_external_auth_review_candidates_markdown(
     candidates: &[ExternalAuthReviewCandidate],
 ) -> String {
     let mut message = String::from(
-        "**Auto Import Existing Logins**\n\nFound existing logins that jcode can reuse. Nothing has been imported yet.\n\nReply with `a` to approve all, `1,3` to approve specific sources, or `/cancel` to abort.\n",
+        "**Auto Import Existing Logins**\n\nFound existing logins that minnal can reuse. Nothing has been imported yet.\n\nReply with `a` to approve all, `1,3` to approve specific sources, or `/cancel` to abort.\n",
     );
     for (index, candidate) in candidates.iter().enumerate() {
         message.push_str(&format!(

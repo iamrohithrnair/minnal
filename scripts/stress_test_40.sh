@@ -6,17 +6,17 @@
 set -euo pipefail
 
 NUM_INSTANCES=${1:-40}
-JCODE_BIN="${JCODE_BIN:-$(which jcode)}"
-LOG_DIR="/tmp/jcode-stress-test-$(date +%s)"
+MINNAL_BIN="${MINNAL_BIN:-$(which minnal)}"
+LOG_DIR="/tmp/minnal-stress-test-$(date +%s)"
 mkdir -p "$LOG_DIR"
 
-MAIN_SOCK="/run/user/$(id -u)/jcode.sock"
-DEBUG_SOCK="/run/user/$(id -u)/jcode-debug.sock"
+MAIN_SOCK="/run/user/$(id -u)/minnal.sock"
+DEBUG_SOCK="/run/user/$(id -u)/minnal-debug.sock"
 
 echo "========================================="
-echo " jcode Stress Test: $NUM_INSTANCES instances"
+echo " minnal Stress Test: $NUM_INSTANCES instances"
 echo "========================================="
-echo "Binary: $JCODE_BIN"
+echo "Binary: $MINNAL_BIN"
 echo "Log dir: $LOG_DIR"
 echo "Main socket: $MAIN_SOCK"
 echo ""
@@ -40,7 +40,7 @@ snapshot() {
     echo "" >> "$LOG_DIR/snapshots.log"
 
     # minnal process count and total RSS
-    local jcode_procs=$(pgrep -c minnal 2>/dev/null || echo 0)
+    local minnal_procs=$(pgrep -c minnal 2>/dev/null || echo 0)
     local total_rss=0
     local total_vms=0
     for pid in $(pgrep minnal 2>/dev/null); do
@@ -49,7 +49,7 @@ snapshot() {
         total_rss=$((total_rss + rss))
         total_vms=$((total_vms + vms))
     done
-    echo "minnal_processes: $jcode_procs" >> "$LOG_DIR/snapshots.log"
+    echo "minnal_processes: $minnal_procs" >> "$LOG_DIR/snapshots.log"
     echo "total_rss_kb: $total_rss" >> "$LOG_DIR/snapshots.log"
     echo "total_vms_kb: $total_vms" >> "$LOG_DIR/snapshots.log"
 
@@ -72,7 +72,7 @@ snapshot() {
     echo "===" >> "$LOG_DIR/snapshots.log"
 
     # Print summary line to stdout
-    echo "[$label] procs=$jcode_procs rss=${total_rss}KB($(( total_rss / 1024 ))MB) server_rss=$(awk '/^VmRSS:/{print $2}' /proc/${server_pid:-0}/status 2>/dev/null || echo '?')KB fds=$(ls /proc/${server_pid:-0}/fd 2>/dev/null | wc -l) threads=$(ls /proc/${server_pid:-0}/task 2>/dev/null | wc -l)"
+    echo "[$label] procs=$minnal_procs rss=${total_rss}KB($(( total_rss / 1024 ))MB) server_rss=$(awk '/^VmRSS:/{print $2}' /proc/${server_pid:-0}/status 2>/dev/null || echo '?')KB fds=$(ls /proc/${server_pid:-0}/fd 2>/dev/null | wc -l) threads=$(ls /proc/${server_pid:-0}/task 2>/dev/null | wc -l)"
 }
 
 check_socket_health() {
@@ -154,7 +154,7 @@ echo "=== Starting background monitor ==="
 (
     while true; do
         ts=$(date +%s)
-        jcode_procs=$(pgrep -c minnal 2>/dev/null || echo 0)
+        minnal_procs=$(pgrep -c minnal 2>/dev/null || echo 0)
         total_rss=0
         for pid in $(pgrep minnal 2>/dev/null); do
             rss=$(awk '/^VmRSS:/{print $2}' /proc/$pid/status 2>/dev/null || echo 0)
@@ -165,7 +165,7 @@ echo "=== Starting background monitor ==="
         server_fds=$(ls /proc/${server_pid:-0}/fd 2>/dev/null | wc -l)
         server_threads=$(ls /proc/${server_pid:-0}/task 2>/dev/null | wc -l)
         cpu_load=$(awk '{print $1}' /proc/loadavg)
-        echo "$ts,$jcode_procs,$total_rss,$server_rss,$server_fds,$server_threads,$cpu_load"
+        echo "$ts,$minnal_procs,$total_rss,$server_rss,$server_fds,$server_threads,$cpu_load"
         sleep 1
     done
 ) > "$LOG_DIR/timeseries.csv" &
@@ -184,7 +184,7 @@ for i in $(seq 1 $NUM_INSTANCES); do
 
     # Each instance gets its own pseudo-terminal via script(1)
     # We connect to the existing server, which creates sessions
-    script -q -c "$JCODE_BIN --no-update --no-selfdev" /dev/null \
+    script -q -c "$MINNAL_BIN --no-update --no-selfdev" /dev/null \
         > "$LOG_DIR/instance_${i}_stdout.log" \
         2> "$LOG_DIR/instance_${i}_stderr.log" &
     pid=$!
@@ -311,7 +311,7 @@ echo "========================================="
 echo ""
 echo "Configuration:"
 echo "  Instances spawned: $NUM_INSTANCES"
-echo "  Binary: $JCODE_BIN"
+echo "  Binary: $MINNAL_BIN"
 echo ""
 
 # Spawn time stats

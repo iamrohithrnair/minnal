@@ -1,1 +1,1 @@
-pub use jcode_build_support::*;
+pub use minnal_build_support::*;

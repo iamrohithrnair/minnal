@@ -1888,7 +1888,7 @@ impl App {
 
             if self.is_remote {
                 self.push_display_message(DisplayMessage::system(
-                    "Input-line `!` shell commands are only available in a local jcode TUI session.",
+                    "Input-line `!` shell commands are only available in a local minnal TUI session.",
                 ));
                 self.set_status_notice("Local shell unavailable in remote mode");
                 return;
@@ -1914,7 +1914,7 @@ impl App {
             // daemon-side `skill_manage reload_all` can update a different process.
             // On a slash miss, synchronously refresh from the active session working
             // directory before reporting Unknown skill so project-local skills such
-            // as .jcode/skills/optimization work immediately after reload/build.
+            // as .minnal/skills/optimization work immediately after reload/build.
             if skill.is_none() {
                 let working_dir = self
                     .session

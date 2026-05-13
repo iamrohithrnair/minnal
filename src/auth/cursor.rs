@@ -102,7 +102,7 @@ pub fn has_cursor_native_auth() -> bool {
 /// Full auth status may spend a little time probing external commands, while
 /// `AuthStatus::check_fast()` intentionally skips this path for UI responsiveness.
 pub fn has_authenticated_cli_session() -> bool {
-    let command = std::env::var_os("JCODE_CURSOR_CLI_PATH")
+    let command = std::env::var_os("MINNAL_CURSOR_CLI_PATH")
         .unwrap_or_else(|| std::ffi::OsString::from("cursor-agent"));
     let command_label = command.to_string_lossy();
     if !super::command_exists(&command_label) {
@@ -177,7 +177,7 @@ pub fn trust_external_auth_source(source: ExternalCursorAuthSource) -> Result<()
 
 /// Resolve the advertised client version for native Cursor API requests.
 pub fn cursor_direct_client_version() -> String {
-    std::env::var("JCODE_CURSOR_CLIENT_VERSION")
+    std::env::var("MINNAL_CURSOR_CLIENT_VERSION")
         .ok()
         .map(|raw| raw.trim().to_string())
         .filter(|raw| !raw.is_empty())
@@ -297,7 +297,7 @@ fn command_output_with_timeout(command: &mut Command, timeout: Duration) -> Resu
 
 /// Load Cursor API key. Checks in order:
 /// 1. `CURSOR_API_KEY` env var
-/// 2. Saved key in `~/.config/jcode/cursor.env`
+/// 2. Saved key in `~/.config/minnal/cursor.env`
 pub fn load_api_key() -> Result<String> {
     if let Ok(key) = std::env::var("CURSOR_API_KEY") {
         let trimmed = key.trim().to_string();
@@ -328,7 +328,7 @@ pub fn load_api_key() -> Result<String> {
     )
 }
 
-/// Save a Cursor API key to `~/.config/jcode/cursor.env`.
+/// Save a Cursor API key to `~/.config/minnal/cursor.env`.
 pub fn save_api_key(key: &str) -> Result<()> {
     let file_path = config_file_path()?;
     crate::storage::upsert_env_file_value(&file_path, "CURSOR_API_KEY", Some(key))?;

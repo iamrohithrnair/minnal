@@ -2,7 +2,7 @@
 """
 Benchmark: single agent vs swarm on the Anthropic Performance Take-Home.
 
-Compares jcode's swarm (multi-agent coordination) with single-agent performance
+Compares minnal's swarm (multi-agent coordination) with single-agent performance
 on the VLIW SIMD kernel optimization challenge.
 
 Usage:
@@ -13,9 +13,9 @@ Usage:
     python scripts/benchmark_swarm.py --check-interval 15  # Check cycles every 15s
 
 Environment:
-    Requires jcode server running with debug_control enabled:
-        touch ~/.jcode/debug_control
-        jcode serve
+    Requires minnal server running with debug_control enabled:
+        touch ~/.minnal/debug_control
+        minnal serve
 """
 
 import argparse
@@ -29,8 +29,8 @@ import sys
 import time
 from pathlib import Path
 
-DEBUG_SOCKET = f"/run/user/{os.getuid()}/jcode-debug.sock"
-MAIN_SOCKET = f"/run/user/{os.getuid()}/jcode.sock"
+DEBUG_SOCKET = f"/run/user/{os.getuid()}/minnal-debug.sock"
+MAIN_SOCKET = f"/run/user/{os.getuid()}/minnal.sock"
 TAKEHOME_SOURCE = os.environ.get(
     "TAKEHOME_SOURCE", str(Path.home() / "original_performance_takehome")
 )
@@ -541,9 +541,9 @@ def main():
     # Validate environment
     if not os.path.exists(DEBUG_SOCKET):
         print(f"Error: Debug socket not found: {DEBUG_SOCKET}")
-        print("Make sure jcode server is running with debug_control enabled:")
-        print("  touch ~/.jcode/debug_control")
-        print("  jcode serve")
+        print("Make sure minnal server is running with debug_control enabled:")
+        print("  touch ~/.minnal/debug_control")
+        print("  minnal serve")
         sys.exit(1)
 
     if not os.path.exists(TAKEHOME_SOURCE):

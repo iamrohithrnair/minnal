@@ -90,9 +90,9 @@ pub fn show_crash_resume_hint() {
 
 fn init_tui_terminal() -> Result<ratatui::DefaultTerminal> {
     if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
-        anyhow::bail!("jcode TUI requires an interactive terminal (stdin/stdout must be a TTY)");
+        anyhow::bail!("minnal TUI requires an interactive terminal (stdin/stdout must be a TTY)");
     }
-    let is_resuming = std::env::var("JCODE_RESUMING").is_ok();
+    let is_resuming = std::env::var("MINNAL_RESUMING").is_ok();
     if is_resuming {
         init_tui_terminal_resume()
     } else {
@@ -107,8 +107,8 @@ fn init_tui_terminal() -> Result<ratatui::DefaultTerminal> {
 
 pub fn init_tui_runtime() -> Result<(ratatui::DefaultTerminal, TuiRuntimeState)> {
     let terminal = init_tui_terminal()?;
-    crate::tui::mermaid::install_jcode_mermaid_hooks();
-    crate::tui::markdown::install_jcode_markdown_hooks();
+    crate::tui::mermaid::install_minnal_mermaid_hooks();
+    crate::tui::markdown::install_minnal_markdown_hooks();
     crate::tui::mermaid::init_picker();
 
     let perf_policy = crate::perf::tui_policy();

@@ -82,7 +82,7 @@ async fn test_persistent_ws_state() -> (PersistentWsState, tokio::task::JoinHand
 
 struct LiveOpenAITestEnv {
     _lock: MutexGuard<'static, ()>,
-    _jcode_home: EnvVarGuard,
+    _minnal_home: EnvVarGuard,
     _transport: EnvVarGuard,
     _temp: tempfile::TempDir,
 }
@@ -95,7 +95,7 @@ impl LiveOpenAITestEnv {
         };
 
         let temp = tempfile::Builder::new()
-            .prefix("jcode-openai-live-")
+            .prefix("minnal-openai-live-")
             .tempdir()?;
         let target_auth = temp
             .path()
@@ -109,12 +109,12 @@ impl LiveOpenAITestEnv {
         )?;
         std::fs::copy(source_auth, &target_auth)?;
 
-        let jcode_home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
-        let transport = EnvVarGuard::set("JCODE_OPENAI_TRANSPORT", "https");
+        let minnal_home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
+        let transport = EnvVarGuard::set("MINNAL_OPENAI_TRANSPORT", "https");
 
         Ok(Some(Self {
             _lock: lock,
-            _jcode_home: jcode_home,
+            _minnal_home: minnal_home,
             _transport: transport,
             _temp: temp,
         }))

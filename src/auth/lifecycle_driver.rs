@@ -481,7 +481,7 @@ impl AuthLifecycleDriver {
                 resolved.default_model.as_deref().unwrap_or("none")
             ));
             transcript.push(format!(
-                "**{} API key saved.**\n\nStored at `{}`.\nFetching models now. Jcode will switch to an accessible model returned by the live catalog and show the catalog diff when discovery finishes.",
+                "**{} API key saved.**\n\nStored at `{}`.\nFetching models now. Minnal will switch to an accessible model returned by the live catalog and show the catalog diff when discovery finishes.",
                 spec.provider_label,
                 self.sandbox.env_file_path(&resolved.env_file).display()
             ));
@@ -497,7 +497,7 @@ impl AuthLifecycleDriver {
                 .to_string(),
         );
         transcript.push(
-            "**Auth Model Routes Updating**\n\nCredentials are reloaded. Jcode is pushing an updated model catalog snapshot to connected clients."
+            "**Auth Model Routes Updating**\n\nCredentials are reloaded. Minnal is pushing an updated model catalog snapshot to connected clients."
                 .to_string(),
         );
         let mut updated = format!(
@@ -650,7 +650,7 @@ mod tests {
     }
 
     fn live_cerebras_api_key() -> Option<String> {
-        std::env::var("JCODE_AUTH_LIFECYCLE_CEREBRAS_API_KEY")
+        std::env::var("MINNAL_AUTH_LIFECYCLE_CEREBRAS_API_KEY")
             .ok()
             .map(|value| value.trim().to_string())
             .filter(|value| !value.is_empty())
@@ -1183,14 +1183,14 @@ mod tests {
 
     #[tokio::test(flavor = "current_thread")]
     async fn cerebras_live_opt_in_catalog_lifecycle_uses_isolated_sandbox() {
-        if !env_truthy("JCODE_AUTH_LIFECYCLE_LIVE") {
+        if !env_truthy("MINNAL_AUTH_LIFECYCLE_LIVE") {
             eprintln!(
-                "skipping live Cerebras auth lifecycle test; set JCODE_AUTH_LIFECYCLE_LIVE=1 and JCODE_AUTH_LIFECYCLE_CEREBRAS_API_KEY"
+                "skipping live Cerebras auth lifecycle test; set MINNAL_AUTH_LIFECYCLE_LIVE=1 and MINNAL_AUTH_LIFECYCLE_CEREBRAS_API_KEY"
             );
             return;
         }
         let api_key = live_cerebras_api_key()
-            .expect("JCODE_AUTH_LIFECYCLE_LIVE=1 requires JCODE_AUTH_LIFECYCLE_CEREBRAS_API_KEY");
+            .expect("MINNAL_AUTH_LIFECYCLE_LIVE=1 requires MINNAL_AUTH_LIFECYCLE_CEREBRAS_API_KEY");
 
         let models = fetch_live_openai_compatible_models(
             crate::provider_catalog::CEREBRAS_PROFILE,
@@ -1226,7 +1226,7 @@ mod tests {
             result.failure_report(&spec)
         );
 
-        if env_truthy("JCODE_AUTH_LIFECYCLE_SMOKE") {
+        if env_truthy("MINNAL_AUTH_LIFECYCLE_SMOKE") {
             run_live_openai_compatible_smoke(
                 crate::provider_catalog::CEREBRAS_PROFILE,
                 &api_key,

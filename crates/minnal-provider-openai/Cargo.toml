@@ -1,0 +1,10 @@
+[package]
+name = "minnal-provider-openai"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+minnal-message-types = { path = "../minnal-message-types" }
+minnal-provider-core = { path = "../minnal-provider-core" }
+serde_json = "1"

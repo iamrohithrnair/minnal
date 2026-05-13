@@ -589,7 +589,7 @@ pub(super) async fn handle_notify_auth_changed(
         crate::bus::Bus::global().publish(crate::bus::BusEvent::UiActivity(
             crate::bus::UiActivity::catalog(
                 Some(session_id.clone()),
-                "**Auth Model Routes Updating**\n\nCredentials are reloaded. Jcode is pushing an updated model catalog snapshot to connected clients.",
+                "**Auth Model Routes Updating**\n\nCredentials are reloaded. Minnal is pushing an updated model catalog snapshot to connected clients.",
                 Some("Auth: model routes updating..."),
             ),
         ));

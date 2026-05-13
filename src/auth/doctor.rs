@@ -34,7 +34,7 @@ pub fn diagnostics(
 
     match assessment.state {
         AuthState::NotConfigured => diagnostics.push(format!(
-            "{} is not configured for jcode yet.",
+            "{} is not configured for minnal yet.",
             provider.display_name
         )),
         AuthState::Expired => diagnostics.push(format!(
@@ -129,7 +129,7 @@ pub fn recommended_actions(
             );
         } else {
             actions.push(format!(
-                "Retry credential refresh by re-running validation: `jcode auth doctor {} --validate`",
+                "Retry credential refresh by re-running validation: `minnal auth doctor {} --validate`",
                 provider.id
             ));
         }
@@ -170,7 +170,7 @@ pub fn recommended_actions(
         ));
     }
 
-    actions.push("Review current state: `jcode auth status --json`".to_string());
+    actions.push("Review current state: `minnal auth status --json`".to_string());
     actions.dedup();
     actions
 }
@@ -187,8 +187,8 @@ mod tests {
             state: AuthState::Available,
             readiness: crate::auth::AuthReadinessLevel::RequestValid,
             method_detail: "OAuth".to_string(),
-            credential_source: AuthCredentialSource::JcodeManagedFile,
-            credential_source_detail: "~/.jcode/auth.json".to_string(),
+            credential_source: AuthCredentialSource::MinnalManagedFile,
+            credential_source_detail: "~/.minnal/auth.json".to_string(),
             expiry_confidence: AuthExpiryConfidence::Exact,
             refresh_support: AuthRefreshSupport::Automatic,
             validation_method: AuthValidationMethod::TimestampCheck,

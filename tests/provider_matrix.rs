@@ -1,8 +1,8 @@
 use anyhow::Result;
-use jcode::auth::{AuthState, AuthStatus};
-use jcode::provider::Provider;
-use jcode::provider::openrouter::OpenRouterProvider;
-use jcode::provider_catalog::{
+use minnal::auth::{AuthState, AuthStatus};
+use minnal::provider::Provider;
+use minnal::provider::openrouter::OpenRouterProvider;
+use minnal::provider_catalog::{
     OPENAI_COMPAT_PROFILE, apply_openai_compatible_profile_env, load_api_key_from_env_or_config,
     openai_compatible_profile_is_configured, openai_compatible_profiles,
     resolve_openai_compatible_profile, save_env_value_to_env_file,
@@ -23,32 +23,32 @@ fn lock_env() -> MutexGuard<'static, ()> {
 
 fn tracked_env_vars() -> Vec<String> {
     let mut keys: HashSet<String> = [
-        "JCODE_HOME",
+        "MINNAL_HOME",
         "XDG_CONFIG_HOME",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_ALLOW_NO_AUTH",
-        "JCODE_OPENROUTER_PROVIDER",
-        "JCODE_OPENROUTER_NO_FALLBACK",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_STATIC_MODELS",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_AUTH_HEADER_NAME",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_THINKING",
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_SETUP_URL",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
-        "JCODE_OPENAI_COMPAT_LOCAL_ENABLED",
-        "JCODE_NAMED_PROVIDER_PROFILE",
-        "JCODE_PROVIDER_PROFILE_ACTIVE",
-        "JCODE_PROVIDER_PROFILE_NAME",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_ALLOW_NO_AUTH",
+        "MINNAL_OPENROUTER_PROVIDER",
+        "MINNAL_OPENROUTER_NO_FALLBACK",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_STATIC_MODELS",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_AUTH_HEADER_NAME",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_THINKING",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_SETUP_URL",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_LOCAL_ENABLED",
+        "MINNAL_NAMED_PROVIDER_PROFILE",
+        "MINNAL_PROVIDER_PROFILE_ACTIVE",
+        "MINNAL_PROVIDER_PROFILE_NAME",
         "OPENROUTER_API_KEY",
     ]
     .into_iter()
@@ -74,7 +74,7 @@ impl TestEnv {
     fn new() -> Result<Self> {
         let lock = lock_env();
         let temp = tempfile::Builder::new()
-            .prefix("jcode-provider-matrix-")
+            .prefix("minnal-provider-matrix-")
             .tempdir()?;
         let saved = tracked_env_vars()
             .into_iter()
@@ -85,12 +85,12 @@ impl TestEnv {
             .collect::<Vec<_>>();
 
         for (key, _) in &saved {
-            jcode::env::remove_var(key);
+            minnal::env::remove_var(key);
         }
 
-        let config_root = temp.path().join("config").join("jcode");
+        let config_root = temp.path().join("config").join("minnal");
         std::fs::create_dir_all(&config_root)?;
-        jcode::env::set_var("JCODE_HOME", temp.path());
+        minnal::env::set_var("MINNAL_HOME", temp.path());
         apply_openai_compatible_profile_env(None);
         AuthStatus::invalidate_cache();
 
@@ -102,13 +102,13 @@ impl TestEnv {
     }
 
     fn config_dir(&self) -> PathBuf {
-        self.temp.path().join("config").join("jcode")
+        self.temp.path().join("config").join("minnal")
     }
 
     fn clear_profile_keys(&self) {
-        jcode::env::remove_var("OPENROUTER_API_KEY");
+        minnal::env::remove_var("OPENROUTER_API_KEY");
         for profile in openai_compatible_profiles() {
-            jcode::env::remove_var(profile.api_key_env);
+            minnal::env::remove_var(profile.api_key_env);
         }
         AuthStatus::invalidate_cache();
     }
@@ -120,9 +120,9 @@ impl Drop for TestEnv {
         AuthStatus::invalidate_cache();
         for (key, value) in &self.saved {
             if let Some(value) = value {
-                jcode::env::set_var(key, value);
+                minnal::env::set_var(key, value);
             } else {
-                jcode::env::remove_var(key);
+                minnal::env::remove_var(key);
             }
         }
         AuthStatus::invalidate_cache();
@@ -156,24 +156,24 @@ impl OpenAiCompatibleBaseState {
 
 fn clear_openai_compatible_runtime_env() {
     for key in [
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_SETUP_URL",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
-        "JCODE_OPENAI_COMPAT_LOCAL_ENABLED",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_SETUP_URL",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_LOCAL_ENABLED",
         "OPENAI_COMPAT_API_KEY",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_ALLOW_NO_AUTH",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_OPENROUTER_STATIC_MODELS",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_ALLOW_NO_AUTH",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_OPENROUTER_STATIC_MODELS",
     ] {
-        jcode::env::remove_var(key);
+        minnal::env::remove_var(key);
     }
     AuthStatus::invalidate_cache();
 }
@@ -209,7 +209,7 @@ fn provider_matrix_openai_compatible_auth_state_space_material_states_preserve_l
                         OpenAiCompatibleBaseState::SavedRemote
                         | OpenAiCompatibleBaseState::SavedLocal => {
                             save_env_value_to_env_file(
-                                "JCODE_OPENAI_COMPAT_API_BASE",
+                                "MINNAL_OPENAI_COMPAT_API_BASE",
                                 env_file,
                                 Some(base_state.expected_api_base()),
                             )?;
@@ -226,7 +226,7 @@ fn provider_matrix_openai_compatible_auth_state_space_material_states_preserve_l
 
                     if has_default_model {
                         save_env_value_to_env_file(
-                            "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
+                            "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
                             env_file,
                             Some(&model),
                         )?;
@@ -273,24 +273,24 @@ fn provider_matrix_openai_compatible_auth_state_space_material_states_preserve_l
                     apply_openai_compatible_profile_env(Some(OPENAI_COMPAT_PROFILE));
                     AuthStatus::invalidate_cache();
                     assert_eq!(
-                        std::env::var("JCODE_OPENROUTER_API_BASE").ok().as_deref(),
+                        std::env::var("MINNAL_OPENROUTER_API_BASE").ok().as_deref(),
                         Some(resolved.api_base.as_str()),
                         "runtime api base mismatch for {state_label}"
                     );
                     assert_eq!(
-                        std::env::var("JCODE_OPENROUTER_API_KEY_NAME")
+                        std::env::var("MINNAL_OPENROUTER_API_KEY_NAME")
                             .ok()
                             .as_deref(),
                         Some(resolved.api_key_env.as_str()),
                         "runtime api key env mismatch for {state_label}"
                     );
                     assert_eq!(
-                        std::env::var("JCODE_OPENROUTER_ENV_FILE").ok().as_deref(),
+                        std::env::var("MINNAL_OPENROUTER_ENV_FILE").ok().as_deref(),
                         Some(resolved.env_file.as_str()),
                         "runtime env file mismatch for {state_label}"
                     );
                     assert_eq!(
-                        std::env::var("JCODE_OPENROUTER_ALLOW_NO_AUTH")
+                        std::env::var("MINNAL_OPENROUTER_ALLOW_NO_AUTH")
                             .ok()
                             .as_deref(),
                         (base_state == OpenAiCompatibleBaseState::SavedLocal).then_some("1"),
@@ -352,31 +352,31 @@ fn provider_matrix_env_credentials_activate_openrouter_runtime() -> Result<()> {
         env.clear_profile_keys();
         apply_openai_compatible_profile_env(Some(profile));
         let resolved = resolve_openai_compatible_profile(profile);
-        jcode::env::set_var(&resolved.api_key_env, "matrix-env-secret");
+        minnal::env::set_var(&resolved.api_key_env, "matrix-env-secret");
         AuthStatus::invalidate_cache();
 
         assert_eq!(
-            std::env::var("JCODE_OPENROUTER_API_BASE").ok().as_deref(),
+            std::env::var("MINNAL_OPENROUTER_API_BASE").ok().as_deref(),
             Some(resolved.api_base.as_str())
         );
         assert_eq!(
-            std::env::var("JCODE_OPENROUTER_API_KEY_NAME")
+            std::env::var("MINNAL_OPENROUTER_API_KEY_NAME")
                 .ok()
                 .as_deref(),
             Some(resolved.api_key_env.as_str())
         );
         assert_eq!(
-            std::env::var("JCODE_OPENROUTER_ENV_FILE").ok().as_deref(),
+            std::env::var("MINNAL_OPENROUTER_ENV_FILE").ok().as_deref(),
             Some(resolved.env_file.as_str())
         );
         assert_eq!(
-            std::env::var("JCODE_OPENROUTER_CACHE_NAMESPACE")
+            std::env::var("MINNAL_OPENROUTER_CACHE_NAMESPACE")
                 .ok()
                 .as_deref(),
             Some(resolved.id.as_str())
         );
         assert_eq!(
-            std::env::var("JCODE_OPENROUTER_PROVIDER_FEATURES")
+            std::env::var("MINNAL_OPENROUTER_PROVIDER_FEATURES")
                 .ok()
                 .as_deref(),
             Some("0")
@@ -389,7 +389,7 @@ fn provider_matrix_env_credentials_activate_openrouter_runtime() -> Result<()> {
         OpenRouterProvider::new()?;
         assert_eq!(AuthStatus::check().openrouter, AuthState::Available);
 
-        jcode::env::remove_var(&resolved.api_key_env);
+        minnal::env::remove_var(&resolved.api_key_env);
     }
 
     Ok(())
@@ -429,13 +429,13 @@ fn provider_matrix_custom_compat_overrides_flow_into_runtime() -> Result<()> {
     let env = TestEnv::new()?;
     env.clear_profile_keys();
 
-    jcode::env::set_var(
-        "JCODE_OPENAI_COMPAT_API_BASE",
+    minnal::env::set_var(
+        "MINNAL_OPENAI_COMPAT_API_BASE",
         "https://api.groq.com/openai/v1/",
     );
-    jcode::env::set_var("JCODE_OPENAI_COMPAT_API_KEY_NAME", "GROQ_API_KEY");
-    jcode::env::set_var("JCODE_OPENAI_COMPAT_ENV_FILE", "groq.env");
-    jcode::env::set_var("JCODE_OPENAI_COMPAT_DEFAULT_MODEL", "openai/gpt-oss-120b");
+    minnal::env::set_var("MINNAL_OPENAI_COMPAT_API_KEY_NAME", "GROQ_API_KEY");
+    minnal::env::set_var("MINNAL_OPENAI_COMPAT_ENV_FILE", "groq.env");
+    minnal::env::set_var("MINNAL_OPENAI_COMPAT_DEFAULT_MODEL", "openai/gpt-oss-120b");
 
     apply_openai_compatible_profile_env(Some(OPENAI_COMPAT_PROFILE));
     let resolved = resolve_openai_compatible_profile(OPENAI_COMPAT_PROFILE);
@@ -450,17 +450,17 @@ fn provider_matrix_custom_compat_overrides_flow_into_runtime() -> Result<()> {
     assert_eq!(resolved.api_key_env, "GROQ_API_KEY");
     assert_eq!(resolved.env_file, "groq.env");
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_API_BASE").ok().as_deref(),
+        std::env::var("MINNAL_OPENROUTER_API_BASE").ok().as_deref(),
         Some("https://api.groq.com/openai/v1")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_API_KEY_NAME")
+        std::env::var("MINNAL_OPENROUTER_API_KEY_NAME")
             .ok()
             .as_deref(),
         Some("GROQ_API_KEY")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_ENV_FILE").ok().as_deref(),
+        std::env::var("MINNAL_OPENROUTER_ENV_FILE").ok().as_deref(),
         Some("groq.env")
     );
     assert!(OpenRouterProvider::has_credentials());
@@ -476,7 +476,7 @@ fn provider_matrix_custom_local_compat_without_api_key_activates_openrouter_runt
     let env = TestEnv::new()?;
     env.clear_profile_keys();
 
-    jcode::env::set_var("JCODE_OPENAI_COMPAT_API_BASE", "http://localhost:11434/v1");
+    minnal::env::set_var("MINNAL_OPENAI_COMPAT_API_BASE", "http://localhost:11434/v1");
 
     apply_openai_compatible_profile_env(Some(OPENAI_COMPAT_PROFILE));
     let resolved = resolve_openai_compatible_profile(OPENAI_COMPAT_PROFILE);
@@ -485,7 +485,7 @@ fn provider_matrix_custom_local_compat_without_api_key_activates_openrouter_runt
     assert_eq!(resolved.api_base, "http://localhost:11434/v1");
     assert!(!resolved.requires_api_key);
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_ALLOW_NO_AUTH")
+        std::env::var("MINNAL_OPENROUTER_ALLOW_NO_AUTH")
             .ok()
             .as_deref(),
         Some("1")

@@ -437,7 +437,7 @@ impl Provider for CountingModelRoutesProvider {
 
 #[test]
 fn test_model_picker_reuses_cached_entries_until_invalidated() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -478,7 +478,7 @@ fn test_model_picker_reuses_cached_entries_until_invalidated() {
 
 #[test]
 fn test_tui_api_key_auth_refreshes_catalog_shows_diff_without_opening_picker() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -562,19 +562,19 @@ fn test_tui_cerebras_paste_key_lifecycle_has_no_degraded_success_messages() {
     let _env_lock = crate::storage::lock_test_env();
     let _guard = AzureLoginEnvGuard::save(&[
         "CEREBRAS_API_KEY",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -648,7 +648,7 @@ fn test_tui_cerebras_paste_key_lifecycle_has_no_degraded_success_messages() {
                     assert!(
                         login
                             .message
-                            .contains("Stored at `~/.config/jcode/cerebras.env`.")
+                            .contains("Stored at `~/.config/minnal/cerebras.env`.")
                     );
                     assert!(login.message.contains("Fetching models now."));
                     assert!(!login.message.contains("did not switch models"));
@@ -833,7 +833,7 @@ fn test_tui_cerebras_paste_key_lifecycle_has_no_degraded_success_messages() {
 
 #[test]
 fn test_tui_openai_compatible_empty_catalog_does_not_switch_to_profile_default() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -885,7 +885,7 @@ fn test_tui_openai_compatible_empty_catalog_does_not_switch_to_profile_default()
         "post-login activation must not try the metadata default when the catalog has no selectable route"
     );
     assert!(activity.message.contains("Saved credentials are active"));
-    assert!(activity.message.contains("Jcode is still processing"));
+    assert!(activity.message.contains("Minnal is still processing"));
     assert!(!activity.message.contains("did not switch models"));
     assert!(!activity.message.contains("documented default"));
     assert!(!activity.message.contains("qwen-3-coder-480b"));
@@ -893,7 +893,7 @@ fn test_tui_openai_compatible_empty_catalog_does_not_switch_to_profile_default()
 
 #[test]
 fn test_tui_openai_compatible_local_refresh_failure_is_pending_not_final_failure() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -956,7 +956,7 @@ fn test_tui_openai_compatible_local_refresh_failure_is_pending_not_final_failure
 
 #[test]
 fn test_model_picker_opens_loading_state_before_async_routes_complete() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -1002,7 +1002,7 @@ fn test_model_picker_opens_loading_state_before_async_routes_complete() {
 
 #[test]
 fn test_model_picker_state_space_preserves_provider_labels_after_route_hydration() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -1073,7 +1073,7 @@ fn test_model_picker_state_space_preserves_provider_labels_after_route_hydration
 
 #[test]
 fn test_model_picker_does_not_cache_single_model_fallback() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -1133,7 +1133,7 @@ fn test_local_model_picker_selection_failure_keeps_picker_open_and_shows_next_st
 
 #[test]
 fn test_login_completed_spawns_auth_refresh_when_runtime_is_available() {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -1323,25 +1323,25 @@ fn test_azure_login_completion_switches_local_model_without_completion() {
         "AZURE_OPENAI_MODEL",
         "AZURE_OPENAI_API_KEY",
         "AZURE_OPENAI_USE_ENTRA",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
     crate::env::set_var("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com");
     crate::env::set_var("AZURE_OPENAI_MODEL", "azure-deployment");
     crate::env::set_var("AZURE_OPENAI_API_KEY", "test-key");
     crate::env::set_var("AZURE_OPENAI_USE_ENTRA", "0");
 
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -1375,7 +1375,7 @@ fn test_azure_login_completion_switches_local_model_without_completion() {
     assert_eq!(auth_changed.load(Ordering::SeqCst), 1);
     assert_eq!(complete_calls.load(Ordering::SeqCst), 0);
     assert_eq!(
-        std::env::var("JCODE_RUNTIME_PROVIDER").as_deref(),
+        std::env::var("MINNAL_RUNTIME_PROVIDER").as_deref(),
         Ok("azure-openai")
     );
     assert_eq!(
@@ -1761,7 +1761,7 @@ fn test_autojudge_command_toggles_session_preference() {
 
 #[test]
 fn test_transcript_path_command_reports_current_session_file() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         let expected = crate::session::session_path(&app.session.id).expect("session path");
 
@@ -1779,7 +1779,7 @@ fn test_transcript_path_command_reports_current_session_file() {
 
 #[test]
 fn test_poke_arms_auto_poke_until_todos_are_done() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         crate::todo::save_todos(
             &app.session.id,
@@ -1807,7 +1807,7 @@ fn test_poke_arms_auto_poke_until_todos_are_done() {
 
 #[test]
 fn test_poke_status_reports_current_state() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         crate::todo::save_todos(
             &app.session.id,
@@ -1853,7 +1853,7 @@ fn test_poke_status_reports_current_state() {
 
 #[test]
 fn test_poke_off_disarms_and_clears_queued_followup() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         crate::todo::save_todos(
             &app.session.id,
@@ -1893,7 +1893,7 @@ fn test_poke_off_disarms_and_clears_queued_followup() {
 
 #[test]
 fn test_poke_queues_when_turn_is_in_progress() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         crate::todo::save_todos(
             &app.session.id,
@@ -1961,7 +1961,7 @@ fn test_poke_queues_when_turn_is_in_progress() {
 
 #[test]
 fn test_finish_turn_auto_pokes_again_when_todos_remain() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         crate::todo::save_todos(
             &app.session.id,
@@ -1988,7 +1988,7 @@ fn test_finish_turn_auto_pokes_again_when_todos_remain() {
 
 #[test]
 fn test_finish_turn_auto_poke_preserves_visible_turn_started() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         crate::todo::save_todos(
             &app.session.id,
@@ -2033,7 +2033,7 @@ fn test_help_topic_shows_overnight_command_details() {
 
 #[test]
 fn test_overnight_status_without_runs_is_handled() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         assert!(super::commands::handle_session_command(
             &mut app,
@@ -2068,7 +2068,7 @@ fn test_overnight_help_command_is_handled() {
 
 #[test]
 fn test_overnight_start_runs_as_visible_local_turn() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         assert!(super::commands::handle_session_command(
             &mut app,
@@ -2089,7 +2089,7 @@ fn test_overnight_start_runs_as_visible_local_turn() {
 
 #[test]
 fn test_overnight_start_queues_remote_turn_without_stuck_sending() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.is_remote = true;
         assert!(super::commands::handle_session_command(

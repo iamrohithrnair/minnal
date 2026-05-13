@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
-pub use jcode_task_types::{Goal, GoalMilestone, GoalScope, GoalStatus, GoalStep, GoalUpdate};
+pub use minnal_task_types::{Goal, GoalMilestone, GoalScope, GoalStatus, GoalStep, GoalUpdate};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GoalDisplayMode {
@@ -78,7 +78,7 @@ pub fn create_goal(input: GoalCreateInput, working_dir: Option<&Path>) -> Result
     }
     let mut goal = Goal::new(&input.title, input.scope);
     if let Some(id) = input.id.as_deref().map(str::trim).filter(|s| !s.is_empty()) {
-        goal.id = jcode_task_types::sanitize_goal_id(id);
+        goal.id = minnal_task_types::sanitize_goal_id(id);
     }
     goal.id = next_available_goal_id(&goal.id, goal.scope, working_dir)?;
     goal.description = input.description.unwrap_or_default().trim().to_string();
@@ -162,7 +162,7 @@ pub fn load_goal(
     scope_hint: Option<GoalScope>,
     working_dir: Option<&Path>,
 ) -> Result<Option<Goal>> {
-    let id = jcode_task_types::sanitize_goal_id(id);
+    let id = minnal_task_types::sanitize_goal_id(id);
     let mut candidates = Vec::new();
     match scope_hint {
         Some(GoalScope::Global) => candidates.push(goal_file_in_dir(&global_goals_dir()?, &id)),
@@ -351,7 +351,7 @@ pub fn write_goal_page(
 }
 
 pub fn goal_page_id(id: &str) -> String {
-    format!("goal.{}", jcode_task_types::sanitize_goal_id(id))
+    format!("goal.{}", minnal_task_types::sanitize_goal_id(id))
 }
 
 pub fn header_badge(
@@ -520,11 +520,11 @@ fn goal_file(goal: &Goal, working_dir: Option<&Path>) -> Result<PathBuf> {
 }
 
 fn goal_file_in_dir(dir: &Path, id: &str) -> PathBuf {
-    dir.join(format!("{}.json", jcode_task_types::sanitize_goal_id(id)))
+    dir.join(format!("{}.json", minnal_task_types::sanitize_goal_id(id)))
 }
 
 fn global_goals_dir() -> Result<PathBuf> {
-    Ok(crate::storage::jcode_dir()?.join("goals").join("global"))
+    Ok(crate::storage::minnal_dir()?.join("goals").join("global"))
 }
 
 fn project_goals_dir(working_dir: Option<&Path>) -> Result<Option<PathBuf>> {
@@ -532,7 +532,7 @@ fn project_goals_dir(working_dir: Option<&Path>) -> Result<Option<PathBuf>> {
         return Ok(None);
     };
     Ok(Some(
-        crate::storage::jcode_dir()?
+        crate::storage::minnal_dir()?
             .join("goals")
             .join("projects")
             .join(project_hash(dir)),
@@ -576,7 +576,7 @@ fn project_hash(path: &Path) -> String {
 }
 
 fn session_attachment_path(session_id: &str) -> Result<PathBuf> {
-    Ok(crate::storage::jcode_dir()?
+    Ok(crate::storage::minnal_dir()?
         .join("goals")
         .join("sessions")
         .join(format!("{}.json", session_id)))
@@ -587,10 +587,10 @@ fn next_available_goal_id(
     scope: GoalScope,
     working_dir: Option<&Path>,
 ) -> Result<String> {
-    let mut candidate = jcode_task_types::sanitize_goal_id(base);
+    let mut candidate = minnal_task_types::sanitize_goal_id(base);
     let mut idx = 2;
     while load_goal(&candidate, Some(scope), working_dir)?.is_some() {
-        candidate = format!("{}-{}", jcode_task_types::sanitize_goal_id(base), idx);
+        candidate = format!("{}-{}", minnal_task_types::sanitize_goal_id(base), idx);
         idx += 1;
     }
     Ok(candidate)

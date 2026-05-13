@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-Compare token usage between jcode and Claude Code CLI.
+Compare token usage between minnal and Claude Code CLI.
 
 This script runs the same prompts through both tools and compares their token usage.
-The goal is to verify that jcode's token consumption is within expected bounds
+The goal is to verify that minnal's token consumption is within expected bounds
 compared to the official Claude Code CLI.
 
-NOTE: jcode typically uses FEWER tokens than Claude CLI because:
-1. jcode has a smaller/simpler system prompt
-2. jcode registers fewer tools (Claude CLI has many built-in tools)
+NOTE: minnal typically uses FEWER tokens than Claude CLI because:
+1. minnal has a smaller/simpler system prompt
+2. minnal registers fewer tools (Claude CLI has many built-in tools)
 3. Different prompt caching behavior
 
-The test PASSES if jcode uses fewer tokens OR at most 50% more tokens.
+The test PASSES if minnal uses fewer tokens OR at most 50% more tokens.
 Using more tokens would indicate a problem with the system prompt or tool registration.
 
 Usage:
     python scripts/compare_token_usage.py [--verbose] [--runs N]
 
 Requirements:
-    - jcode built and in PATH or at target/release/jcode
+    - minnal built and in PATH or at target/release/minnal
     - claude CLI installed and authenticated
     - Both should use the same model (claude-opus-4-5-20251101 by default)
 """
@@ -67,20 +67,20 @@ class RunResult:
     error: Optional[str] = None
 
 
-def find_jcode_binary() -> str:
-    """Find the jcode binary."""
+def find_minnal_binary() -> str:
+    """Find the minnal binary."""
     # Check target/release first
     repo_root = Path(__file__).parent.parent
-    release_binary = repo_root / "target" / "release" / "jcode"
+    release_binary = repo_root / "target" / "release" / "minnal"
     if release_binary.exists():
         return str(release_binary)
 
     # Check PATH
-    result = subprocess.run(["which", "jcode"], capture_output=True, text=True)
+    result = subprocess.run(["which", "minnal"], capture_output=True, text=True)
     if result.returncode == 0:
         return result.stdout.strip()
 
-    raise FileNotFoundError("jcode binary not found. Run 'cargo build --release' first.")
+    raise FileNotFoundError("minnal binary not found. Run 'cargo build --release' first.")
 
 
 def run_claude_cli(prompt: str, workdir: str, model: str = "opus") -> RunResult:
@@ -161,18 +161,18 @@ def run_claude_cli(prompt: str, workdir: str, model: str = "opus") -> RunResult:
         )
 
 
-def run_jcode(prompt: str, workdir: str, jcode_binary: str, model: str = "claude-opus-4-5-20251101") -> RunResult:
-    """Run jcode and capture token usage from trace output."""
+def run_minnal(prompt: str, workdir: str, minnal_binary: str, model: str = "claude-opus-4-5-20251101") -> RunResult:
+    """Run minnal and capture token usage from trace output."""
     try:
-        # Create a temporary JCODE_HOME to avoid polluting user's sessions
+        # Create a temporary MINNAL_HOME to avoid polluting user's sessions
         with tempfile.TemporaryDirectory() as tmpdir:
             env = os.environ.copy()
-            env["JCODE_HOME"] = tmpdir
-            env["JCODE_TRACE"] = "1"
+            env["MINNAL_HOME"] = tmpdir
+            env["MINNAL_TRACE"] = "1"
 
             result = subprocess.run(
                 [
-                    jcode_binary,
+                    minnal_binary,
                     "run",
                     "--no-update",
                     "--model", model,
@@ -213,7 +213,7 @@ def run_jcode(prompt: str, workdir: str, jcode_binary: str, model: str = "claude
             )
 
             return RunResult(
-                tool="jcode",
+                tool="minnal",
                 prompt=prompt,
                 usage=token_usage,
                 success=result.returncode == 0,
@@ -223,7 +223,7 @@ def run_jcode(prompt: str, workdir: str, jcode_binary: str, model: str = "claude
 
     except subprocess.TimeoutExpired:
         return RunResult(
-            tool="jcode",
+            tool="minnal",
             prompt=prompt,
             usage=TokenUsage(0, 0, 0, 0),
             success=False,
@@ -232,7 +232,7 @@ def run_jcode(prompt: str, workdir: str, jcode_binary: str, model: str = "claude
         )
     except Exception as e:
         return RunResult(
-            tool="jcode",
+            tool="minnal",
             prompt=prompt,
             usage=TokenUsage(0, 0, 0, 0),
             success=False,
@@ -241,10 +241,10 @@ def run_jcode(prompt: str, workdir: str, jcode_binary: str, model: str = "claude
         )
 
 
-def compare_usage(claude_result: RunResult, jcode_result: RunResult, verbose: bool = False) -> dict:
-    """Compare token usage between Claude CLI and jcode."""
+def compare_usage(claude_result: RunResult, minnal_result: RunResult, verbose: bool = False) -> dict:
+    """Compare token usage between Claude CLI and minnal."""
     c = claude_result.usage
-    j = jcode_result.usage
+    j = minnal_result.usage
 
     # Calculate differences
     input_diff = j.input_tokens - c.input_tokens
@@ -273,7 +273,7 @@ def compare_usage(claude_result: RunResult, jcode_result: RunResult, verbose: bo
             "cost_usd": c.total_cost_usd,
             "duration_ms": c.duration_ms,
         },
-        "jcode": {
+        "minnal": {
             "input": j.input_tokens,
             "output": j.output_tokens,
             "cache_read": j.cache_read_tokens,
@@ -302,11 +302,11 @@ def print_comparison(comparison: dict, prompt: str, verbose: bool = False):
     print(f"{'='*60}")
 
     c = comparison["claude"]
-    j = comparison["jcode"]
+    j = comparison["minnal"]
     d = comparison["diff"]
     p = comparison["pct_diff"]
 
-    print(f"\n{'Metric':<20} {'Claude':<15} {'jcode':<15} {'Diff':<15} {'% Diff':<10}")
+    print(f"\n{'Metric':<20} {'Claude':<15} {'minnal':<15} {'Diff':<15} {'% Diff':<10}")
     print("-" * 75)
     print(f"{'Input tokens':<20} {c['input']:<15} {j['input']:<15} {d['input']:+<15} {p['input']:+.1f}%")
     print(f"{'Output tokens':<20} {c['output']:<15} {j['output']:<15} {d['output']:+<15} {p['output']:+.1f}%")
@@ -330,8 +330,8 @@ def run_test_suite(verbose: bool = False, runs: int = 1) -> list:
         "List three primary colors, one per line.",
     ]
 
-    jcode_binary = find_jcode_binary()
-    print(f"Using jcode binary: {jcode_binary}")
+    minnal_binary = find_minnal_binary()
+    print(f"Using minnal binary: {minnal_binary}")
     print(f"Running {len(prompts)} prompts, {runs} run(s) each\n")
 
     results = []
@@ -354,17 +354,17 @@ def run_test_suite(verbose: bool = False, runs: int = 1) -> list:
                 # Small delay to avoid rate limiting
                 time.sleep(1)
 
-                print("  Running jcode...", end=" ", flush=True)
-                jcode_result = run_jcode(prompt, workdir, jcode_binary)
-                if jcode_result.success:
-                    print(f"OK ({jcode_result.usage.total} tokens)")
+                print("  Running minnal...", end=" ", flush=True)
+                minnal_result = run_minnal(prompt, workdir, minnal_binary)
+                if minnal_result.success:
+                    print(f"OK ({minnal_result.usage.total} tokens)")
                 else:
-                    print(f"FAILED: {jcode_result.error}")
+                    print(f"FAILED: {minnal_result.error}")
                     if verbose:
-                        print(f"    Output: {jcode_result.output[:200]}")
+                        print(f"    Output: {minnal_result.output[:200]}")
 
-                if claude_result.success and jcode_result.success:
-                    comparison = compare_usage(claude_result, jcode_result, verbose)
+                if claude_result.success and minnal_result.success:
+                    comparison = compare_usage(claude_result, minnal_result, verbose)
                     results.append({
                         "prompt": prompt,
                         "run": run_num + 1,
@@ -391,60 +391,60 @@ def summarize_results(results: list) -> bool:
     print(f"{'='*60}")
 
     total_claude = sum(r["comparison"]["claude"]["total"] for r in results)
-    total_jcode = sum(r["comparison"]["jcode"]["total"] for r in results)
-    total_diff = total_jcode - total_claude
+    total_minnal = sum(r["comparison"]["minnal"]["total"] for r in results)
+    total_diff = total_minnal - total_claude
 
     # Also compare just input+output (excluding cache)
     total_claude_io = sum(
         r["comparison"]["claude"]["input"] + r["comparison"]["claude"]["output"]
         for r in results
     )
-    total_jcode_io = sum(
-        r["comparison"]["jcode"]["input"] + r["comparison"]["jcode"]["output"]
+    total_minnal_io = sum(
+        r["comparison"]["minnal"]["input"] + r["comparison"]["minnal"]["output"]
         for r in results
     )
 
     if total_claude > 0:
-        pct_diff = ((total_jcode - total_claude) / total_claude) * 100
+        pct_diff = ((total_minnal - total_claude) / total_claude) * 100
     else:
         pct_diff = 0
 
     print(f"\nTotal runs: {len(results)}")
     print(f"\n--- Total Tokens (including cache) ---")
     print(f"Claude CLI: {total_claude}")
-    print(f"jcode:      {total_jcode}")
+    print(f"minnal:      {total_minnal}")
     print(f"Difference: {total_diff:+} ({pct_diff:+.1f}%)")
 
     print(f"\n--- Input + Output only (excluding cache) ---")
     print(f"Claude CLI: {total_claude_io}")
-    print(f"jcode:      {total_jcode_io}")
+    print(f"minnal:      {total_minnal_io}")
     if total_claude_io > 0:
-        io_pct_diff = ((total_jcode_io - total_claude_io) / total_claude_io) * 100
-        print(f"Difference: {total_jcode_io - total_claude_io:+} ({io_pct_diff:+.1f}%)")
+        io_pct_diff = ((total_minnal_io - total_claude_io) / total_claude_io) * 100
+        print(f"Difference: {total_minnal_io - total_claude_io:+} ({io_pct_diff:+.1f}%)")
 
     # Check if within acceptable bounds
-    # jcode using fewer tokens is always good (negative diff)
-    # jcode using more tokens is acceptable up to MAX_OVERHEAD_PCT
+    # minnal using fewer tokens is always good (negative diff)
+    # minnal using more tokens is acceptable up to MAX_OVERHEAD_PCT
     MAX_OVERHEAD_PCT = 50  # Allow up to 50% more tokens (for different system prompts)
 
     passed = True
     if pct_diff <= 0:
-        print(f"\n✅ PASS: jcode uses {abs(pct_diff):.1f}% fewer tokens than Claude CLI")
+        print(f"\n✅ PASS: minnal uses {abs(pct_diff):.1f}% fewer tokens than Claude CLI")
     elif pct_diff <= MAX_OVERHEAD_PCT:
-        print(f"\n✅ PASS: jcode uses {pct_diff:.1f}% more tokens (within {MAX_OVERHEAD_PCT}% threshold)")
+        print(f"\n✅ PASS: minnal uses {pct_diff:.1f}% more tokens (within {MAX_OVERHEAD_PCT}% threshold)")
     else:
-        print(f"\n❌ FAIL: jcode uses {pct_diff:.1f}% more tokens (exceeds {MAX_OVERHEAD_PCT}% threshold)")
+        print(f"\n❌ FAIL: minnal uses {pct_diff:.1f}% more tokens (exceeds {MAX_OVERHEAD_PCT}% threshold)")
         passed = False
 
     # Per-prompt breakdown
     print("\nPer-prompt breakdown:")
-    print(f"{'Prompt':<40} {'Claude':<10} {'jcode':<10} {'Diff':<10}")
+    print(f"{'Prompt':<40} {'Claude':<10} {'minnal':<10} {'Diff':<10}")
     print("-" * 70)
 
     for r in results:
         prompt = r["prompt"][:37] + "..." if len(r["prompt"]) > 40 else r["prompt"]
         c_total = r["comparison"]["claude"]["total"]
-        j_total = r["comparison"]["jcode"]["total"]
+        j_total = r["comparison"]["minnal"]["total"]
         diff = j_total - c_total
         print(f"{prompt:<40} {c_total:<10} {j_total:<10} {diff:+<10}")
 
@@ -453,7 +453,7 @@ def summarize_results(results: list) -> bool:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Compare token usage between jcode and Claude Code CLI"
+        description="Compare token usage between minnal and Claude Code CLI"
     )
     parser.add_argument(
         "--verbose", "-v",
@@ -474,7 +474,7 @@ def main():
 
     args = parser.parse_args()
 
-    print("Token Usage Comparison: jcode vs Claude Code CLI")
+    print("Token Usage Comparison: minnal vs Claude Code CLI")
     print("=" * 50)
 
     try:

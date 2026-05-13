@@ -1,12 +1,12 @@
 # Onboarding sandbox
 
-If you want to iterate on onboarding repeatedly without touching your real auth state, use a separate sandbox rooted under `JCODE_HOME` and `JCODE_RUNTIME_DIR`.
+If you want to iterate on onboarding repeatedly without touching your real auth state, use a separate sandbox rooted under `MINNAL_HOME` and `MINNAL_RUNTIME_DIR`.
 
 This repo already supports that isolation:
 
-- `JCODE_HOME` redirects jcode-owned state such as `~/.jcode` into a sandbox directory.
-- `JCODE_HOME` also redirects app config into `JCODE_HOME/config/jcode`.
-- `JCODE_RUNTIME_DIR` redirects sockets and other ephemeral runtime files.
+- `MINNAL_HOME` redirects minnal-owned state such as `~/.minnal` into a sandbox directory.
+- `MINNAL_HOME` also redirects app config into `MINNAL_HOME/config/minnal`.
+- `MINNAL_RUNTIME_DIR` redirects sockets and other ephemeral runtime files.
 - External auth trust decisions are stored in the sandbox config, so a fresh sandbox starts with no trusted external auth imports.
 
 ## Fast start
@@ -15,7 +15,7 @@ This repo already supports that isolation:
 scripts/onboarding_sandbox.sh fresh
 ```
 
-That gives you a clean jcode launch with isolated state.
+That gives you a clean minnal launch with isolated state.
 
 ## Common commands
 
@@ -28,7 +28,7 @@ scripts/onboarding_sandbox.sh status
 scripts/onboarding_sandbox.sh reset
 scripts/onboarding_sandbox.sh fresh
 
-# Log into a provider without touching your normal jcode config
+# Log into a provider without touching your normal minnal config
 scripts/onboarding_sandbox.sh login openai
 scripts/onboarding_sandbox.sh login claude
 scripts/onboarding_sandbox.sh auth-status
@@ -43,7 +43,7 @@ scripts/onboarding_sandbox.sh auth-status
 # Or load and run one command in the fixture-backed sandbox
 scripts/onboarding_sandbox.sh fixture-run normal-openai -- auth-test --provider openai --no-smoke
 
-# Run arbitrary jcode commands in the sandbox
+# Run arbitrary minnal commands in the sandbox
 scripts/onboarding_sandbox.sh minnal auth status
 scripts/onboarding_sandbox.sh minnal pair
 ```
@@ -51,7 +51,7 @@ scripts/onboarding_sandbox.sh minnal pair
 ## Reusable local auth fixtures
 
 For repeated login testing, use local auth fixtures. A fixture is a copy of a
-sandbox `JCODE_HOME` after you have put it into an interesting state, for
+sandbox `MINNAL_HOME` after you have put it into an interesting state, for
 example a typical logged-in OpenAI user, an expired token state, or an external
 auth import approval state.
 
@@ -85,10 +85,10 @@ scripts/auth_fixture.sh run normal-openai -- auth status
 
 Useful environment overrides:
 
-- `JCODE_ONBOARDING_SANDBOX`: select which sandbox receives the fixture.
-- `JCODE_ONBOARDING_DIR`: use an explicit sandbox directory.
-- `JCODE_AUTH_FIXTURE_DIR`: use a fixture store outside the repo, for example
-  `~/.local/share/jcode-auth-fixtures`.
+- `MINNAL_ONBOARDING_SANDBOX`: select which sandbox receives the fixture.
+- `MINNAL_ONBOARDING_DIR`: use an explicit sandbox directory.
+- `MINNAL_AUTH_FIXTURE_DIR`: use a fixture store outside the repo, for example
+  `~/.local/share/minnal-auth-fixtures`.
 
 Suggested fixture names:
 
@@ -125,12 +125,12 @@ Supported scenarios today:
 
 A fresh sandbox means:
 
-- no real jcode config files are reused
+- no real minnal config files are reused
 - no real runtime sockets are reused
 - no previously trusted external auth sources are reused
 - you can blow it away with one `reset`
 
-When using fixtures, the sandbox is still isolated from your normal jcode state,
+When using fixtures, the sandbox is still isolated from your normal minnal state,
 but the loaded fixture may intentionally contain copied auth state from an earlier
 sandbox login.
 
@@ -148,4 +148,4 @@ If you are iterating specifically on mobile onboarding UX, keep the simulator ru
 
 ## Caveat
 
-This sandbox is designed to isolate jcode-owned state and trusted external-import state. If you later decide to test explicit import/reuse flows from external tools, do that intentionally and treat it as a separate test case from first-run onboarding.
+This sandbox is designed to isolate minnal-owned state and trusted external-import state. If you later decide to test explicit import/reuse flows from external tools, do that intentionally and treat it as a separate test case from first-run onboarding.

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-pub use jcode_side_panel_types::{
+pub use minnal_side_panel_types::{
     PersistedSidePanelPage, PersistedSidePanelState, SidePanelPage, SidePanelPageFormat,
     SidePanelPageSource, SidePanelSnapshot, snapshot_is_empty,
 };
@@ -312,7 +312,7 @@ fn save_state(session_id: &str, state: &PersistedSidePanelState) -> Result<()> {
 }
 
 fn session_dir(session_id: &str) -> Result<PathBuf> {
-    let base = crate::storage::jcode_dir()?.join("side_panel");
+    let base = crate::storage::minnal_dir()?.join("side_panel");
     Ok(base.join(session_id))
 }
 

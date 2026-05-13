@@ -44,7 +44,7 @@ pub(crate) fn handle_auth_command(app: &mut App, trimmed: &str) -> bool {
     }
 
     if trimmed == "/subscription" || trimmed == "/subscription status" {
-        app.show_jcode_subscription_status();
+        app.show_minnal_subscription_status();
         return true;
     }
 
@@ -745,7 +745,7 @@ fn save_openai_compat_setting(app: &mut App, setting: OpenAiCompatSetting, value
                 },
                 None => None,
             };
-            ("JCODE_OPENAI_COMPAT_API_BASE", normalized)
+            ("MINNAL_OPENAI_COMPAT_API_BASE", normalized)
         }
         OpenAiCompatSetting::ApiKeyName => {
             if let Some(value) = value
@@ -758,7 +758,7 @@ fn save_openai_compat_setting(app: &mut App, setting: OpenAiCompatSetting, value
                 return;
             }
             (
-                "JCODE_OPENAI_COMPAT_API_KEY_NAME",
+                "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
                 value.map(ToString::to_string),
             )
         }
@@ -772,12 +772,12 @@ fn save_openai_compat_setting(app: &mut App, setting: OpenAiCompatSetting, value
                 return;
             }
             (
-                "JCODE_OPENAI_COMPAT_ENV_FILE",
+                "MINNAL_OPENAI_COMPAT_ENV_FILE",
                 value.map(ToString::to_string),
             )
         }
         OpenAiCompatSetting::DefaultModel => (
-            "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
+            "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
             value.map(ToString::to_string),
         ),
     };
@@ -1071,6 +1071,6 @@ mod tests {
         assert!(markdown.contains("**OpenAI** (`openai`)"));
         assert!(markdown.contains("**Next steps**"));
         assert!(markdown.contains("minnal login --provider openai"));
-        assert!(markdown.contains("Review current state: `jcode auth status --json`"));
+        assert!(markdown.contains("Review current state: `minnal auth status --json`"));
     }
 }

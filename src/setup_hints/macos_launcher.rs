@@ -1,6 +1,6 @@
 use super::{
     MacTerminalKind, SetupHintsState, effective_macos_terminal, escape_applescript_text,
-    escape_shell_single_quotes, launch_command_for_macos_terminal, paused_jcode_shell_command,
+    escape_shell_single_quotes, launch_command_for_macos_terminal, paused_minnal_shell_command,
     save_preferred_macos_terminal,
 };
 use anyhow::{Context, Result};
@@ -33,7 +33,7 @@ pub(super) fn install_macos_app_launcher() -> Result<(PathBuf, MacTerminalKind)>
     let exe = std::env::current_exe()?;
     let exe_path = exe.to_string_lossy().into_owned();
     let terminal = effective_macos_terminal();
-    let launcher_path = macos_dir.join("jcode-launcher");
+    let launcher_path = macos_dir.join("minnal-launcher");
     let launcher_script = macos_launcher_script(terminal, &exe_path, &app_dir);
     std::fs::write(&launcher_path, launcher_script)?;
 
@@ -49,17 +49,17 @@ pub(super) fn install_macos_app_launcher() -> Result<(PathBuf, MacTerminalKind)>
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>Jcode</string>
+    <string>Minnal</string>
     <key>CFBundleDisplayName</key>
-    <string>Jcode</string>
+    <string>Minnal</string>
     <key>CFBundleIdentifier</key>
-    <string>com.jcode.launcher</string>
+    <string>com.minnal.launcher</string>
     <key>CFBundleVersion</key>
     <string>{version}</string>
     <key>CFBundleShortVersionString</key>
     <string>{version}</string>
     <key>CFBundleExecutable</key>
-    <string>jcode-launcher</string>
+    <string>minnal-launcher</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSApplicationCategoryType</key>
@@ -67,7 +67,7 @@ pub(super) fn install_macos_app_launcher() -> Result<(PathBuf, MacTerminalKind)>
 </dict>
 </plist>
 "#,
-        version = env!("JCODE_VERSION")
+        version = env!("MINNAL_VERSION")
     );
     std::fs::write(contents_dir.join("Info.plist"), info_plist)?;
 
@@ -85,12 +85,12 @@ pub(super) fn install_macos_app_launcher() -> Result<(PathBuf, MacTerminalKind)>
 
 fn macos_app_launcher_dir() -> Result<PathBuf> {
     let home = dirs::home_dir().context("Could not find home directory")?;
-    Ok(home.join("Applications").join("Jcode.app"))
+    Ok(home.join("Applications").join("Minnal.app"))
 }
 
 fn legacy_macos_app_launcher_dir() -> Result<PathBuf> {
     let home = dirs::home_dir().context("Could not find home directory")?;
-    Ok(home.join("Applications").join("jcode.app"))
+    Ok(home.join("Applications").join("minnal.app"))
 }
 
 fn macos_app_launcher_info_plist_path(app_dir: &Path) -> PathBuf {
@@ -101,7 +101,7 @@ fn macos_app_launcher_executable_path(app_dir: &Path) -> PathBuf {
     app_dir
         .join("Contents")
         .join("MacOS")
-        .join("jcode-launcher")
+        .join("minnal-launcher")
 }
 
 fn macos_app_launcher_is_valid(app_dir: &Path) -> bool {
@@ -155,14 +155,14 @@ fn should_refresh_macos_app_launcher_paths(
 fn macos_launcher_script(terminal: MacTerminalKind, exe_path: &str, app_dir: &Path) -> String {
     let app_dir_escaped = escape_shell_single_quotes(&app_dir.to_string_lossy());
     let exe_path_escaped = escape_shell_single_quotes(exe_path);
-    let shell_command = paused_jcode_shell_command(exe_path);
+    let shell_command = paused_minnal_shell_command(exe_path);
     let launch_command = launch_command_for_macos_terminal(terminal, &shell_command);
     let missing_message = escape_applescript_text(&format!(
-        "Jcode could not launch because the executable was not found.\n\nExpected path:\n{}\n\nTry reinstalling jcode or rerun:\njcode setup-launcher",
+        "Minnal could not launch because the executable was not found.\n\nExpected path:\n{}\n\nTry reinstalling minnal or rerun:\nminnal setup-launcher",
         exe_path
     ));
     let terminal_failure_message = escape_applescript_text(&format!(
-        "Jcode could not open {}.\n\nTry rerunning:\njcode setup-launcher\n\nLauncher log:\n~/.jcode/launcher/macos-launcher.log",
+        "Minnal could not open {}.\n\nTry rerunning:\nminnal setup-launcher\n\nLauncher log:\n~/.minnal/launcher/macos-launcher.log",
         terminal.label()
     ));
 
@@ -171,19 +171,19 @@ fn macos_launcher_script(terminal: MacTerminalKind, exe_path: &str, app_dir: &Pa
 set -u
 
 PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-LOG_DIR="$HOME/.jcode/launcher"
+LOG_DIR="$HOME/.minnal/launcher"
 LOG_FILE="$LOG_DIR/macos-launcher.log"
 mkdir -p "$LOG_DIR" >/dev/null 2>&1 || true
 
 show_missing_executable() {{
   /usr/bin/osascript <<'APPLESCRIPT' >/dev/null 2>&1 || true
-display alert "Jcode launch failed" message "{missing_message}" as critical
+display alert "Minnal launch failed" message "{missing_message}" as critical
 APPLESCRIPT
 }}
 
 show_terminal_launch_failure() {{
   /usr/bin/osascript <<'APPLESCRIPT' >/dev/null 2>&1 || true
-display alert "Jcode launch failed" message "{terminal_failure_message}" as critical
+display alert "Minnal launch failed" message "{terminal_failure_message}" as critical
 APPLESCRIPT
 }}
 

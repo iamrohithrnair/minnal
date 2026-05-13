@@ -1,11 +1,11 @@
 use crate::message::ToolCall;
 use crate::side_panel::SidePanelSnapshot;
 use crate::todo::TodoItem;
-pub use jcode_background_types::{
+pub use minnal_background_types::{
     BackgroundTaskProgress, BackgroundTaskProgressEvent, BackgroundTaskProgressKind,
     BackgroundTaskProgressSource, BackgroundTaskStatus,
 };
-pub use jcode_batch_types::{BatchProgress, BatchSubcallProgress, BatchSubcallState};
+pub use minnal_batch_types::{BatchProgress, BatchSubcallProgress, BatchSubcallState};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};

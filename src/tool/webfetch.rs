@@ -80,7 +80,7 @@ impl Tool for WebFetchTool {
             .get(&params.url)
             .header(
                 reqwest::header::USER_AGENT,
-                "Mozilla/5.0 (compatible; JCode/1.0)",
+                "Mozilla/5.0 (compatible; Minnal/1.0)",
             )
             .timeout(Duration::from_secs(timeout))
             .send()

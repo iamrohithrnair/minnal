@@ -3,7 +3,7 @@ use crate::auth::{claude as claude_auth, oauth};
 use crate::message::{ContentBlock, Message, Role, StreamEvent, ToolDefinition};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
-use jcode_provider_core::NativeToolResultSender;
+use minnal_provider_core::NativeToolResultSender;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::collections::HashSet;
@@ -40,7 +40,7 @@ const AVAILABLE_MODELS: &[&str] = &[
     "claude-opus-4-5-20251101",
 ];
 
-/// Native tools that jcode handles locally (not Claude Code built-ins)
+/// Native tools that minnal handles locally (not Claude Code built-ins)
 const NATIVE_TOOL_NAMES: &[&str] = &["selfdev", "communicate", "memory", "session_search", "bg"];
 
 #[derive(Clone)]
@@ -114,12 +114,12 @@ struct ClaudeCliConfig {
 
 impl ClaudeCliConfig {
     fn from_env() -> Self {
-        let cli_path = std::env::var("JCODE_CLAUDE_CLI_PATH")
+        let cli_path = std::env::var("MINNAL_CLAUDE_CLI_PATH")
             .ok()
             .filter(|value| !value.trim().is_empty())
             .unwrap_or_else(|| "claude".to_string());
 
-        let mut model = std::env::var("JCODE_CLAUDE_CLI_MODEL")
+        let mut model = std::env::var("MINNAL_CLAUDE_CLI_MODEL")
             .ok()
             .filter(|value| !value.trim().is_empty())
             .unwrap_or_else(|| DEFAULT_MODEL.to_string());
@@ -131,19 +131,19 @@ impl ClaudeCliConfig {
             model = DEFAULT_MODEL.to_string();
         }
 
-        let permission_mode = std::env::var("JCODE_CLAUDE_CLI_PERMISSION_MODE")
+        let permission_mode = std::env::var("MINNAL_CLAUDE_CLI_PERMISSION_MODE")
             .ok()
             .filter(|value| !value.trim().is_empty())
             .or_else(|| {
-                std::env::var("JCODE_CLAUDE_SDK_PERMISSION_MODE")
+                std::env::var("MINNAL_CLAUDE_SDK_PERMISSION_MODE")
                     .ok()
                     .filter(|value| !value.trim().is_empty())
             })
             .or_else(|| Some(DEFAULT_PERMISSION_MODE.to_string()));
 
-        let include_partial_messages = std::env::var("JCODE_CLAUDE_CLI_PARTIAL")
+        let include_partial_messages = std::env::var("MINNAL_CLAUDE_CLI_PARTIAL")
             .ok()
-            .or_else(|| std::env::var("JCODE_CLAUDE_SDK_PARTIAL").ok())
+            .or_else(|| std::env::var("MINNAL_CLAUDE_SDK_PARTIAL").ok())
             .map(|value| {
                 let value = value.to_lowercase();
                 !(value == "0" || value == "false" || value == "no")

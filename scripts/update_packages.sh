@@ -35,11 +35,11 @@ echo "  macOS Intel SHA256: $MACOS_INTEL_SHA"
 # --- Homebrew tap ---
 echo ""
 echo "Updating Homebrew tap..."
-BREW_DIR="$tmpdir/homebrew-jcode"
-git clone --depth 1 git@github.com:1jehuang/homebrew-jcode.git "$BREW_DIR" 2>/dev/null
+BREW_DIR="$tmpdir/homebrew-minnal"
+git clone --depth 1 git@github.com:1jehuang/homebrew-minnal.git "$BREW_DIR" 2>/dev/null
 
-cat > "$BREW_DIR/Formula/jcode.rb" <<EOF
-class Jcode < Formula
+cat > "$BREW_DIR/Formula/minnal.rb" <<EOF
+class Minnal < Formula
   desc "AI coding agent powered by Claude and ChatGPT"
   homepage "https://github.com/codeslord/minnal"
   version "$VERSION_NUM"
@@ -96,18 +96,18 @@ class Jcode < Formula
 end
 EOF
 
-(cd "$BREW_DIR" && git add -A && git commit -m "Update jcode to $VERSION" && git push origin main)
+(cd "$BREW_DIR" && git add -A && git commit -m "Update minnal to $VERSION" && git push origin main)
 echo "  ✅ Homebrew tap updated"
 
 # --- AUR ---
 echo ""
 echo "Updating AUR package..."
-AUR_DIR="$tmpdir/jcode-bin-aur"
-git clone ssh://aur@aur.archlinux.org/jcode-bin.git "$AUR_DIR" 2>/dev/null
+AUR_DIR="$tmpdir/minnal-bin-aur"
+git clone ssh://aur@aur.archlinux.org/minnal-bin.git "$AUR_DIR" 2>/dev/null
 
 cat > "$AUR_DIR/PKGBUILD" <<EOF
 # Maintainer: Jeremy Huang <jeremyhuang55555@gmail.com>
-pkgname=jcode-bin
+pkgname=minnal-bin
 pkgver=$VERSION_NUM
 pkgrel=1
 pkgdesc="AI coding agent powered by Claude and ChatGPT"
@@ -120,12 +120,12 @@ source=("$LINUX_URL")
 sha256sums=('$LINUX_SHA')
 
 package() {
-    install -Dm755 "\${srcdir}/minnal-linux-x86_64" "\${pkgdir}/usr/lib/jcode/minnal-linux-x86_64"
-    install -Dm755 "\${srcdir}/minnal-linux-x86_64.bin" "\${pkgdir}/usr/lib/jcode/minnal-linux-x86_64.bin"
-    install -Dm644 "\${srcdir}"/libssl.so* "\${pkgdir}/usr/lib/jcode/"
-    install -Dm644 "\${srcdir}"/libcrypto.so* "\${pkgdir}/usr/lib/jcode/"
+    install -Dm755 "\${srcdir}/minnal-linux-x86_64" "\${pkgdir}/usr/lib/minnal/minnal-linux-x86_64"
+    install -Dm755 "\${srcdir}/minnal-linux-x86_64.bin" "\${pkgdir}/usr/lib/minnal/minnal-linux-x86_64.bin"
+    install -Dm644 "\${srcdir}"/libssl.so* "\${pkgdir}/usr/lib/minnal/"
+    install -Dm644 "\${srcdir}"/libcrypto.so* "\${pkgdir}/usr/lib/minnal/"
     mkdir -p "\${pkgdir}/usr/bin"
-    ln -s /usr/lib/jcode/minnal-linux-x86_64 "\${pkgdir}/usr/bin/minnal"
+    ln -s /usr/lib/minnal/minnal-linux-x86_64 "\${pkgdir}/usr/bin/minnal"
 }
 EOF
 

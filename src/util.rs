@@ -1,4 +1,4 @@
-pub use jcode_core::util::*;
+pub use minnal_core::util::*;
 
 /// Read an HTTP error body without hiding failures behind an empty string.
 ///

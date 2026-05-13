@@ -4,7 +4,7 @@ use crate::message::{ConnectionPhase, Message, StreamEvent, ToolDefinition};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
-use jcode_provider_gemini::{
+use minnal_provider_gemini::{
     CodeAssistGenerateRequest, CodeAssistGenerateResponse, GeminiFunctionCallingConfig,
     GeminiToolConfig, VertexGenerateContentRequest,
 };
@@ -33,7 +33,7 @@ const FETCH_MODELS_API_URL: &str =
     "https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels";
 const GENERATE_CONTENT_API_URL: &str =
     "https://cloudcode-pa.googleapis.com/v1internal:generateContent";
-const VERSION_ENV: &str = "JCODE_ANTIGRAVITY_VERSION";
+const VERSION_ENV: &str = "MINNAL_ANTIGRAVITY_VERSION";
 const ANTIGRAVITY_VERSION: &str = "1.18.3";
 const X_GOOG_API_CLIENT: &str = "google-cloud-sdk vscode_cloudshelleditor/0.1";
 const CATALOG_REFRESH_TTL_HOURS: i64 = 6;
@@ -417,7 +417,7 @@ impl AntigravityProvider {
 
     pub fn new() -> Self {
         let model =
-            std::env::var("JCODE_ANTIGRAVITY_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
+            std::env::var("MINNAL_ANTIGRAVITY_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.into());
 
         let provider = Self {
             client: crate::provider::shared_http_client(),

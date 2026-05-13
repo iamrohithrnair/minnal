@@ -1,0 +1,15 @@
+[package]
+name = "minnal-tui-session-picker"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+minnal-message-types = { path = "../minnal-message-types" }
+minnal-session-types = { path = "../minnal-session-types" }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[features]
+default = []
+serde = ["dep:serde"]

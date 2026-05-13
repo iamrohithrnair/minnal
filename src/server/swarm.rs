@@ -7,7 +7,7 @@ use crate::protocol::{NotificationType, ServerEvent};
 use crate::session::Session;
 use anyhow::Result;
 use futures::future::try_join_all;
-use jcode_swarm_core::{
+use minnal_swarm_core::{
     completion_notification_message, normalize_completion_report, truncate_detail,
 };
 use serde::Deserialize;
@@ -45,7 +45,7 @@ fn swarm_status_debounce_member_threshold() -> usize {
     static CACHED: OnceLock<AtomicUsize> = OnceLock::new();
     CACHED
         .get_or_init(|| {
-            let configured = std::env::var("JCODE_SWARM_STATUS_DEBOUNCE_MEMBER_THRESHOLD")
+            let configured = std::env::var("MINNAL_SWARM_STATUS_DEBOUNCE_MEMBER_THRESHOLD")
                 .ok()
                 .and_then(|value| value.trim().parse::<usize>().ok())
                 .filter(|value| *value > 0)
@@ -59,7 +59,7 @@ fn swarm_status_debounce_ms() -> u64 {
     static CACHED: OnceLock<AtomicU64> = OnceLock::new();
     CACHED
         .get_or_init(|| {
-            let configured = std::env::var("JCODE_SWARM_STATUS_DEBOUNCE_MS")
+            let configured = std::env::var("MINNAL_SWARM_STATUS_DEBOUNCE_MS")
                 .ok()
                 .and_then(|value| value.trim().parse::<u64>().ok())
                 .filter(|value| *value > 0)
@@ -86,21 +86,21 @@ pub(super) fn now_unix_ms() -> u64 {
 
 pub(super) fn swarm_task_heartbeat_interval() -> Duration {
     Duration::from_secs(configured_positive_u64(
-        "JCODE_SWARM_TASK_HEARTBEAT_SECS",
+        "MINNAL_SWARM_TASK_HEARTBEAT_SECS",
         DEFAULT_SWARM_TASK_HEARTBEAT_SECS,
     ))
 }
 
 pub(super) fn swarm_task_stale_after() -> Duration {
     Duration::from_secs(configured_positive_u64(
-        "JCODE_SWARM_TASK_STALE_AFTER_SECS",
+        "MINNAL_SWARM_TASK_STALE_AFTER_SECS",
         DEFAULT_SWARM_TASK_STALE_AFTER_SECS,
     ))
 }
 
 pub(super) fn swarm_task_sweep_interval() -> Duration {
     Duration::from_secs(configured_positive_u64(
-        "JCODE_SWARM_TASK_SWEEP_INTERVAL_SECS",
+        "MINNAL_SWARM_TASK_SWEEP_INTERVAL_SECS",
         DEFAULT_SWARM_TASK_SWEEP_INTERVAL_SECS,
     ))
 }
@@ -958,7 +958,7 @@ mod tests {
     use crate::plan::PlanItem;
     use crate::protocol::{NotificationType, ServerEvent};
     use crate::server::{SwarmMember, VersionedPlan};
-    use jcode_swarm_core::{
+    use minnal_swarm_core::{
         append_swarm_completion_report_instructions, summarize_plan_items, truncate_detail,
     };
     use std::collections::{HashMap, HashSet};

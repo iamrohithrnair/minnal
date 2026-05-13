@@ -92,17 +92,17 @@ jobs:
           fi
           cargo build --release --target ${{ matrix.target }}
         env:
-          JCODE_RELEASE_BUILD: "1"
-          JCODE_BUILD_SEMVER: ${{ github.ref_name }}
+          MINNAL_RELEASE_BUILD: "1"
+          MINNAL_BUILD_SEMVER: ${{ github.ref_name }}
 
       - name: Build portable Linux x86_64 release binary
         if: matrix.compat_container == true
         shell: bash
         run: scripts/build_linux_compat.sh dist
         env:
-          JCODE_RELEASE_BUILD: "1"
-          JCODE_BUILD_SEMVER: ${{ github.ref_name }}
-          JCODE_COMPAT_ARTIFACT: ${{ matrix.artifact }}
+          MINNAL_RELEASE_BUILD: "1"
+          MINNAL_BUILD_SEMVER: ${{ github.ref_name }}
+          MINNAL_COMPAT_ARTIFACT: ${{ matrix.artifact }}
 
       - name: Package binary
         if: matrix.compat_container != true
@@ -186,8 +186,8 @@ jobs:
 
           & cargo @cargoArgs
         env:
-          JCODE_RELEASE_BUILD: "1"
-          JCODE_BUILD_SEMVER: ${{ github.ref_name }}
+          MINNAL_RELEASE_BUILD: "1"
+          MINNAL_BUILD_SEMVER: ${{ github.ref_name }}
 
       - name: Run Windows runtime smoke tests (x64)
         if: matrix.target == 'x86_64-pc-windows-msvc'
@@ -303,10 +303,10 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
 
-          git clone git@github.com:1jehuang/homebrew-jcode.git /tmp/homebrew-jcode
+          git clone git@github.com:1jehuang/homebrew-minnal.git /tmp/homebrew-minnal
 
-          cat > /tmp/homebrew-jcode/Formula/jcode.rb << FORMULA
-          class Jcode < Formula
+          cat > /tmp/homebrew-minnal/Formula/minnal.rb << FORMULA
+          class Minnal < Formula
             desc "AI coding agent powered by Claude and ChatGPT"
             homepage "https://github.com/codeslord/minnal"
             version "${VERSION_NUM}"
@@ -363,12 +363,12 @@ jobs:
           end
           FORMULA
 
-          sed -i 's/^          //' /tmp/homebrew-jcode/Formula/jcode.rb
+          sed -i 's/^          //' /tmp/homebrew-minnal/Formula/minnal.rb
 
-          cd /tmp/homebrew-jcode
-          git config user.name "jcode-release-bot"
-          git config user.email "release@jcode.dev"
-          git add Formula/jcode.rb
+          cd /tmp/homebrew-minnal
+          git config user.name "minnal-release-bot"
+          git config user.email "release@minnal.dev"
+          git add Formula/minnal.rb
           git commit -m "Update to ${VERSION}" || echo "No changes"
           git push
 
@@ -412,13 +412,13 @@ jobs:
 
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/aur_key -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=10 -o ConnectionAttempts=3"
 
-          retry 3 5 bash -lc 'rm -rf /tmp/jcode-aur && git clone --depth 1 ssh://aur@aur.archlinux.org/jcode-bin.git /tmp/jcode-aur'
-          cd /tmp/jcode-aur
-          git remote set-url origin ssh://aur@aur.archlinux.org/jcode-bin.git
+          retry 3 5 bash -lc 'rm -rf /tmp/minnal-aur && git clone --depth 1 ssh://aur@aur.archlinux.org/minnal-bin.git /tmp/minnal-aur'
+          cd /tmp/minnal-aur
+          git remote set-url origin ssh://aur@aur.archlinux.org/minnal-bin.git
 
           cat > PKGBUILD << 'PKGBUILD_END'
           # Maintainer: Jeremy Huang <jeremyhuang55555@gmail.com>
-          pkgname=jcode-bin
+          pkgname=minnal-bin
           pkgver=VERSION_PLACEHOLDER
           pkgrel=1
           pkgdesc="AI coding agent powered by Claude and ChatGPT"
@@ -431,12 +431,12 @@ jobs:
           sha256sums=('SHA_PLACEHOLDER')
 
           package() {
-              install -Dm755 "${srcdir}/minnal-linux-x86_64" "${pkgdir}/usr/lib/jcode/minnal-linux-x86_64"
-              install -Dm755 "${srcdir}/minnal-linux-x86_64.bin" "${pkgdir}/usr/lib/jcode/minnal-linux-x86_64.bin"
-              install -Dm644 "${srcdir}"/libssl.so* "${pkgdir}/usr/lib/jcode/"
-              install -Dm644 "${srcdir}"/libcrypto.so* "${pkgdir}/usr/lib/jcode/"
+              install -Dm755 "${srcdir}/minnal-linux-x86_64" "${pkgdir}/usr/lib/minnal/minnal-linux-x86_64"
+              install -Dm755 "${srcdir}/minnal-linux-x86_64.bin" "${pkgdir}/usr/lib/minnal/minnal-linux-x86_64.bin"
+              install -Dm644 "${srcdir}"/libssl.so* "${pkgdir}/usr/lib/minnal/"
+              install -Dm644 "${srcdir}"/libcrypto.so* "${pkgdir}/usr/lib/minnal/"
               mkdir -p "${pkgdir}/usr/bin"
-              ln -s /usr/lib/jcode/minnal-linux-x86_64 "${pkgdir}/usr/bin/minnal"
+              ln -s /usr/lib/minnal/minnal-linux-x86_64 "${pkgdir}/usr/bin/minnal"
           }
           PKGBUILD_END
 
@@ -446,7 +446,7 @@ jobs:
           sed -i 's/^          //' PKGBUILD
 
           # Generate .SRCINFO without makepkg (AUR uses tab indentation)
-          printf 'pkgbase = jcode-bin\n' > .SRCINFO
+          printf 'pkgbase = minnal-bin\n' > .SRCINFO
           printf '\tpkgdesc = AI coding agent powered by Claude and ChatGPT\n' >> .SRCINFO
           printf '\tpkgver = %s\n' "${VERSION_NUM}" >> .SRCINFO
           printf '\tpkgrel = 1\n' >> .SRCINFO
@@ -457,7 +457,7 @@ jobs:
           printf '\tconflicts = minnal\n' >> .SRCINFO
           printf '\tsource = %s\n' "${LINUX_URL}" >> .SRCINFO
           printf '\tsha256sums = %s\n' "${LINUX_SHA}" >> .SRCINFO
-          printf '\npkgname = jcode-bin\n' >> .SRCINFO
+          printf '\npkgname = minnal-bin\n' >> .SRCINFO
 
           git config user.name "Jeremy Huang"
           git config user.email "jeremyhuang55555@gmail.com"

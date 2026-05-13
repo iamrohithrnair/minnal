@@ -4,8 +4,8 @@
 
 use anyhow::Result;
 use async_stream::stream;
-use jcode::message::{Message, StreamEvent, ToolDefinition};
-use jcode::provider::{EventStream, Provider};
+use minnal::message::{Message, StreamEvent, ToolDefinition};
+use minnal::provider::{EventStream, Provider};
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 

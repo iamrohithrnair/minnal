@@ -4,10 +4,10 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
-const TEMP_SERVER_ENV: &str = "JCODE_TEMP_SERVER";
-const SERVER_SCOPE_ENV: &str = "JCODE_SERVER_SCOPE";
-const OWNER_PID_ENV: &str = "JCODE_SERVER_OWNER_PID";
-const TEMP_IDLE_SECS_ENV: &str = "JCODE_TEMP_SERVER_IDLE_SECS";
+const TEMP_SERVER_ENV: &str = "MINNAL_TEMP_SERVER";
+const SERVER_SCOPE_ENV: &str = "MINNAL_SERVER_SCOPE";
+const OWNER_PID_ENV: &str = "MINNAL_SERVER_OWNER_PID";
+const TEMP_IDLE_SECS_ENV: &str = "MINNAL_TEMP_SERVER_IDLE_SECS";
 const DEFAULT_TEMP_IDLE_SECS: u64 = 30 * 60;
 const TEMP_SERVER_EXIT_CODE: i32 = super::EXIT_IDLE_TIMEOUT;
 
@@ -82,7 +82,7 @@ pub(crate) fn metadata_path(socket_path: &Path) -> PathBuf {
     let filename = socket_path
         .file_name()
         .and_then(|name| name.to_str())
-        .unwrap_or("jcode.sock");
+        .unwrap_or("minnal.sock");
     socket_path.with_file_name(format!("{filename}.server.json"))
 }
 
@@ -308,8 +308,8 @@ mod tests {
     #[test]
     fn temporary_metadata_path_is_socket_scoped() {
         assert_eq!(
-            metadata_path(Path::new("/tmp/example/jcode.sock")),
-            PathBuf::from("/tmp/example/jcode.sock.server.json")
+            metadata_path(Path::new("/tmp/example/minnal.sock")),
+            PathBuf::from("/tmp/example/minnal.sock.server.json")
         );
     }
 

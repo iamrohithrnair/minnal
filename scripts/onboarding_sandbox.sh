@@ -7,15 +7,15 @@ if [[ $# -gt 0 ]]; then
   shift
 fi
 
-sandbox_name=${JCODE_ONBOARDING_SANDBOX:-default}
+sandbox_name=${MINNAL_ONBOARDING_SANDBOX:-default}
 sandbox_root_default="$repo_root/.tmp/onboarding/$sandbox_name"
-sandbox_root=${JCODE_ONBOARDING_DIR:-$sandbox_root_default}
-jcode_home="$sandbox_root/home"
+sandbox_root=${MINNAL_ONBOARDING_DIR:-$sandbox_root_default}
+minnal_home="$sandbox_root/home"
 runtime_dir="$sandbox_root/runtime"
-mobile_socket="$runtime_dir/jcode-mobile-sim.sock"
+mobile_socket="$runtime_dir/minnal-mobile-sim.sock"
 
 ensure_dirs() {
-  mkdir -p "$jcode_home" "$runtime_dir"
+  mkdir -p "$minnal_home" "$runtime_dir"
 }
 
 run_in_sandbox() {
@@ -23,8 +23,8 @@ run_in_sandbox() {
   (
     cd "$repo_root"
     env \
-      JCODE_HOME="$jcode_home" \
-      JCODE_RUNTIME_DIR="$runtime_dir" \
+      MINNAL_HOME="$minnal_home" \
+      MINNAL_RUNTIME_DIR="$runtime_dir" \
       "$@"
   )
 }
@@ -49,9 +49,9 @@ Commands:
   fixture-run <name> -- [args...]
                          Load a fixture, then run minnal with args
   mobile-start [scenario]
-                         Start jcode-mobile-sim in background (default: onboarding)
+                         Start minnal-mobile-sim in background (default: onboarding)
   mobile-serve [scenario]
-                         Run jcode-mobile-sim in foreground (default: onboarding)
+                         Run minnal-mobile-sim in foreground (default: onboarding)
   mobile-status          Show mobile simulator status
   mobile-state           Show full mobile simulator state
   mobile-reset           Reset the mobile simulator back to its initial scenario
@@ -59,9 +59,9 @@ Commands:
   help                   Show this help
 
 Environment overrides:
-  JCODE_ONBOARDING_SANDBOX   Sandbox name (default: default)
-  JCODE_ONBOARDING_DIR       Explicit sandbox directory
-  JCODE_AUTH_FIXTURE_DIR     Fixture store (default: .tmp/auth-fixtures)
+  MINNAL_ONBOARDING_SANDBOX   Sandbox name (default: default)
+  MINNAL_ONBOARDING_DIR       Explicit sandbox directory
+  MINNAL_AUTH_FIXTURE_DIR     Fixture store (default: .tmp/auth-fixtures)
 
 Examples:
   $(basename "$0") fresh
@@ -77,8 +77,8 @@ EOF
 print_env() {
   ensure_dirs
   cat <<EOF
-export JCODE_HOME="$jcode_home"
-export JCODE_RUNTIME_DIR="$runtime_dir"
+export MINNAL_HOME="$minnal_home"
+export MINNAL_RUNTIME_DIR="$runtime_dir"
 EOF
 }
 
@@ -86,13 +86,13 @@ status() {
   ensure_dirs
   echo "Sandbox name: $sandbox_name"
   echo "Sandbox root: $sandbox_root"
-  echo "JCODE_HOME:   $jcode_home"
+  echo "MINNAL_HOME:   $minnal_home"
   echo "RUNTIME_DIR:  $runtime_dir"
   echo
 
-  if [[ -d "$jcode_home" ]]; then
+  if [[ -d "$minnal_home" ]]; then
     echo "Home contents:"
-    find "$jcode_home" -maxdepth 3 \( -type f -o -type d \) | sed "s#^$sandbox_root#.#" | sort
+    find "$minnal_home" -maxdepth 3 \( -type f -o -type d \) | sed "s#^$sandbox_root#.#" | sort
   fi
   echo
 
@@ -111,12 +111,12 @@ reset() {
 open_shell() {
   ensure_dirs
   echo "Opening sandbox shell"
-  echo "  JCODE_HOME=$jcode_home"
-  echo "  JCODE_RUNTIME_DIR=$runtime_dir"
-  env JCODE_HOME="$jcode_home" JCODE_RUNTIME_DIR="$runtime_dir" bash --noprofile --norc
+  echo "  MINNAL_HOME=$minnal_home"
+  echo "  MINNAL_RUNTIME_DIR=$runtime_dir"
+  env MINNAL_HOME="$minnal_home" MINNAL_RUNTIME_DIR="$runtime_dir" bash --noprofile --norc
 }
 
-run_jcode() {
+run_minnal() {
   local binary_path="$repo_root/target/debug/minnal"
   if [[ -x "$binary_path" ]]; then
     run_in_sandbox "$binary_path" "$@"
@@ -126,17 +126,17 @@ run_jcode() {
 }
 
 run_mobile_sim() {
-  local binary_path="$repo_root/target/debug/jcode-mobile-sim"
+  local binary_path="$repo_root/target/debug/minnal-mobile-sim"
   if [[ -x "$binary_path" ]]; then
     run_in_sandbox "$binary_path" "$@"
   else
-    run_in_sandbox cargo run -p jcode-mobile-sim -- "$@"
+    run_in_sandbox cargo run -p minnal-mobile-sim -- "$@"
   fi
 }
 
 run_auth_fixture() {
-  JCODE_ONBOARDING_SANDBOX="$sandbox_name" \
-    JCODE_ONBOARDING_DIR="$sandbox_root" \
+  MINNAL_ONBOARDING_SANDBOX="$sandbox_name" \
+    MINNAL_ONBOARDING_DIR="$sandbox_root" \
     "$repo_root/scripts/auth_fixture.sh" "$@"
 }
 
@@ -161,15 +161,15 @@ case "$command" in
   shell)
     open_shell
     ;;
-  minnal|jcode)
-    run_jcode "$@"
+  minnal|minnal)
+    run_minnal "$@"
     ;;
   auth-status)
-    run_jcode auth status
+    run_minnal auth status
     ;;
   fresh)
     reset
-    run_jcode "$@"
+    run_minnal "$@"
     ;;
   login)
     if [[ $# -lt 1 ]]; then
@@ -178,7 +178,7 @@ case "$command" in
     fi
     provider=$1
     shift
-    run_jcode --provider "$provider" login "$@"
+    run_minnal --provider "$provider" login "$@"
     ;;
   fixture-list)
     run_auth_fixture list

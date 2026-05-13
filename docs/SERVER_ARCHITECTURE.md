@@ -8,7 +8,7 @@ See also:
 
 ## Overview
 
-jcode uses a **single-server, multi-client** architecture. One server process
+minnal uses a **single-server, multi-client** architecture. One server process
 manages all sessions and state; TUI clients connect over a Unix socket and
 can reconnect transparently after disconnects or server reloads.
 
@@ -17,9 +17,9 @@ can reconnect transparently after disconnects or server reloads.
 │                              SERVER (🔥 blazing)                              │
 │                                                                             │
 │  minnal serve                                                                │
-│  ├── Unix socket:  /run/user/$UID/jcode.sock                                │
-│  ├── Debug socket: /run/user/$UID/jcode-debug.sock                          │
-│  ├── Registry:     ~/.jcode/servers.json                                    │
+│  ├── Unix socket:  /run/user/$UID/minnal.sock                                │
+│  ├── Debug socket: /run/user/$UID/minnal-debug.sock                          │
+│  ├── Registry:     ~/.minnal/servers.json                                    │
 │  ├── Provider (Claude/OpenAI/OpenRouter)                                    │
 │  ├── MCP pool (shared across sessions)                                      │
 │  └── Sessions:                                                              │
@@ -51,7 +51,7 @@ The server gets a random adjective/verb name on startup (e.g., "blazing").
 Each session gets an animal noun (e.g., "fox"). Together they form a natural
 phrase displayed in the UI: "🔥 blazing 🦊 fox".
 
-The server name persists across reloads via the registry (`~/.jcode/servers.json`).
+The server name persists across reloads via the registry (`~/.minnal/servers.json`).
 When the server execs into a new binary on `/reload`, the new process registers
 with a fresh name. Stale entries are cleaned up automatically.
 
@@ -110,13 +110,13 @@ reload, network issue, etc.):
 
 ```
 /run/user/$UID/
-├── jcode.sock          # Main communication socket
-└── jcode-debug.sock    # Debug/testing socket
+├── minnal.sock          # Main communication socket
+└── minnal-debug.sock    # Debug/testing socket
 ```
 
 ## Self-Dev Mode
 
-When running `minnal` inside the jcode repository:
+When running `minnal` inside the minnal repository:
 
 1. Auto-detects the repo and enables self-dev mode
 2. Connects to the normal shared minnal server

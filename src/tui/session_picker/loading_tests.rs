@@ -74,7 +74,7 @@ fn collect_recent_session_stems_expands_candidate_window_past_recent_empty_stubs
 fn load_sessions_includes_claude_code_sessions_from_external_home() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let project_dir = temp.path().join("external/.claude/projects/demo-project");
     std::fs::create_dir_all(&project_dir).expect("create project dir");
@@ -132,7 +132,7 @@ fn load_sessions_includes_claude_code_sessions_from_external_home() {
 fn load_claude_code_preview_reads_transcript_messages() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let project_dir = temp.path().join("external/.claude/projects/demo-project");
     std::fs::create_dir_all(&project_dir).expect("create project dir");
@@ -177,7 +177,7 @@ fn load_claude_code_preview_reads_transcript_messages() {
 fn load_sessions_includes_modern_codex_sessions() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let codex_dir = temp.path().join("external/.codex/sessions/2026/04/05");
     std::fs::create_dir_all(&codex_dir).expect("create codex dir");
@@ -241,7 +241,7 @@ fn load_codex_preview_preserves_blank_line_between_tool_transcript_and_followup_
 fn load_sessions_prefers_custom_title_over_generated_title() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let mut session = Session::create_with_id(
         "session_customtitle_1770000000000".to_string(),
@@ -278,8 +278,8 @@ fn load_sessions_prefers_custom_title_over_generated_title() {
 fn load_sessions_includes_saved_sessions_beyond_scan_limit() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
-    let _scan_limit = EnvVarGuard::set_str("JCODE_SESSION_PICKER_MAX_SESSIONS", "50");
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
+    let _scan_limit = EnvVarGuard::set_str("MINNAL_SESSION_PICKER_MAX_SESSIONS", "50");
 
     let mut saved_session = Session::create_with_id(
         "session_saved_beyond_scan_limit".to_string(),
@@ -371,10 +371,10 @@ fn raw_content_system_reminder_detection_handles_arrays_strings_and_unicode() {
 }
 
 #[test]
-fn session_matches_query_searches_jcode_transcript_contents() {
+fn session_matches_query_searches_minnal_transcript_contents() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let mut session = Session::create_with_id(
         "session_transcript_search".to_string(),
@@ -412,7 +412,7 @@ fn session_matches_query_searches_jcode_transcript_contents() {
 fn session_matches_query_searches_external_codex_transcript_contents() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let codex_dir = temp.path().join("external/.codex/sessions/2026/04/19");
     std::fs::create_dir_all(&codex_dir).expect("create codex dir");
@@ -443,8 +443,8 @@ fn session_matches_query_searches_external_codex_transcript_contents() {
 #[ignore = "developer benchmark: times real /resume loading phases"]
 fn benchmark_real_resume_loading_phases() {
     invalidate_session_list_cache();
-    let sessions_dir = crate::storage::jcode_dir()
-        .expect("jcode dir")
+    let sessions_dir = crate::storage::minnal_dir()
+        .expect("minnal dir")
         .join("sessions");
     let scan_limit = session_scan_limit();
     let candidate_limit = session_candidate_window(scan_limit);
@@ -518,7 +518,7 @@ fn benchmark_real_resume_loading_phases() {
 }
 
 #[test]
-#[ignore = "developer benchmark: scans the real JCODE_HOME session directory"]
+#[ignore = "developer benchmark: scans the real MINNAL_HOME session directory"]
 fn benchmark_real_resume_loading_reports_timings() {
     invalidate_session_list_cache();
 
@@ -552,7 +552,7 @@ fn benchmark_real_resume_loading_reports_timings() {
 fn benchmark_resume_loading_reports_timings() {
     let _env_lock = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("temp dir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let sessions_dir = temp.path().join("sessions");
     std::fs::create_dir_all(&sessions_dir).expect("create sessions dir");

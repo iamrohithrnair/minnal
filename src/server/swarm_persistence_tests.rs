@@ -8,17 +8,17 @@ struct EnvGuard {
 impl Drop for EnvGuard {
     fn drop(&mut self) {
         if let Some(value) = self.runtime.take() {
-            crate::env::set_var("JCODE_RUNTIME_DIR", value);
+            crate::env::set_var("MINNAL_RUNTIME_DIR", value);
         } else {
-            crate::env::remove_var("JCODE_RUNTIME_DIR");
+            crate::env::remove_var("MINNAL_RUNTIME_DIR");
         }
     }
 }
 
 fn test_env(dir: &tempfile::TempDir) -> EnvGuard {
     let _guard = storage::lock_test_env();
-    let previous = std::env::var_os("JCODE_RUNTIME_DIR");
-    crate::env::set_var("JCODE_RUNTIME_DIR", dir.path());
+    let previous = std::env::var_os("MINNAL_RUNTIME_DIR");
+    crate::env::set_var("MINNAL_RUNTIME_DIR", dir.path());
     EnvGuard { runtime: previous }
 }
 

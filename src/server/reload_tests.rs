@@ -3,7 +3,7 @@ use super::{
     persist_reload_recovery_intents, receive_reload_signal,
 };
 use crate::server::{ReloadSignal, SwarmEvent, SwarmEventType, SwarmMember};
-use jcode_agent_runtime::InterruptSignal;
+use minnal_agent_runtime::InterruptSignal;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -96,8 +96,8 @@ async fn receive_reload_signal_waits_for_future_value_when_initially_empty() {
 fn persist_reload_recovery_intents_records_running_peer_recovery() -> anyhow::Result<()> {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new()?;
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let runtime = tokio::runtime::Builder::new_current_thread()
         .enable_all()
@@ -137,9 +137,9 @@ fn persist_reload_recovery_intents_records_running_peer_recovery() -> anyhow::Re
     );
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
     Ok(())
 }

@@ -356,8 +356,8 @@ use theme_support::{
     system_message_color, tool_color, user_bg, user_color, user_text,
 };
 
-pub(crate) use jcode_tui_markdown::{CopyTargetKind, RawCopyTarget};
-pub(crate) use jcode_tui_messages::{
+pub(crate) use minnal_tui_markdown::{CopyTargetKind, RawCopyTarget};
+pub(crate) use minnal_tui_messages::{
     CopyTarget, EditToolRange, ImageRegion, PreparedChatFrame, PreparedMessages, PreparedSection,
     PreparedSectionKind, WrappedLineMap,
 };

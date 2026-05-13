@@ -6,7 +6,7 @@ use ratatui::{
 };
 use std::collections::HashMap;
 
-pub use jcode_tui_account_picker::{
+pub use minnal_tui_account_picker::{
     AccountPickerCommand, AccountPickerItem, AccountPickerSummary, AccountProviderKind,
 };
 
@@ -150,7 +150,7 @@ impl AccountPicker {
             .iter()
             .enumerate()
             .filter_map(|(idx, item)| {
-                jcode_tui_account_picker::item_matches_filter(item, &self.filter).then_some(idx)
+                minnal_tui_account_picker::item_matches_filter(item, &self.filter).then_some(idx)
             })
             .collect();
         let provider_order = self.provider_order();

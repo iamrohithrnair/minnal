@@ -109,10 +109,10 @@ pub fn auth_failure_recovery_hint(provider_id: &str, reason: AuthFailureReason) 
             "Retry the same flow and paste the full callback URL, authorization code, or required API key when prompted.".to_string()
         }
         AuthFailureReason::SaveFailed => {
-            "Check whether jcode can write its config directory, or retry inside an isolated sandbox with `bash scripts/onboarding_sandbox.sh fresh`.".to_string()
+            "Check whether minnal can write its config directory, or retry inside an isolated sandbox with `bash scripts/onboarding_sandbox.sh fresh`.".to_string()
         }
         AuthFailureReason::PostLoginValidationFailed => format!(
-            "Credentials were saved, but runtime verification failed. Run `minnal auth-test --provider {}` and `jcode auth doctor {}` for guided diagnosis.",
+            "Credentials were saved, but runtime verification failed. Run `minnal auth-test --provider {}` and `minnal auth doctor {}` for guided diagnosis.",
             provider, provider
         ),
         AuthFailureReason::ImportUnavailable => {
@@ -125,7 +125,7 @@ pub fn auth_failure_recovery_hint(provider_id: &str, reason: AuthFailureReason) 
             "Retry the device-code flow, or switch to another supported auth method if available.".to_string()
         }
         AuthFailureReason::RateLimited => format!(
-            "The provider accepted the browser callback but rate-limited the token exchange. Wait before retrying, avoid repeated immediate attempts, and keep using existing credentials if they still validate with `jcode auth doctor {} --validate`.",
+            "The provider accepted the browser callback but rate-limited the token exchange. Wait before retrying, avoid repeated immediate attempts, and keep using existing credentials if they still validate with `minnal auth doctor {} --validate`.",
             provider
         ),
         AuthFailureReason::OAuthExchangeFailed => format!(
@@ -133,7 +133,7 @@ pub fn auth_failure_recovery_hint(provider_id: &str, reason: AuthFailureReason) 
             provider
         ),
         AuthFailureReason::Unknown => {
-            "Run `jcode auth status`, then `jcode auth doctor` for a structured diagnosis.".to_string()
+            "Run `minnal auth status`, then `minnal auth doctor` for a structured diagnosis.".to_string()
         }
     };
 

@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::path::PathBuf;
 use std::sync::RwLock;
 
-const ALLOW_LEGACY_AUTH_ENV: &str = "JCODE_ALLOW_CODEX_LEGACY_AUTH";
+const ALLOW_LEGACY_AUTH_ENV: &str = "MINNAL_ALLOW_CODEX_LEGACY_AUTH";
 pub const LEGACY_CODEX_AUTH_SOURCE_ID: &str = "openai_codex_auth_json";
 
 #[derive(Debug, Clone)]
@@ -33,7 +33,7 @@ pub struct OpenAiAccount {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct JcodeOpenAiAuthFile {
+pub struct MinnalOpenAiAuthFile {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub openai_accounts: Vec<OpenAiAccount>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -95,7 +95,7 @@ pub fn login_target_label(requested: Option<&str>) -> Result<String> {
     ))
 }
 
-fn relabel_accounts(auth: &mut JcodeOpenAiAuthFile) -> bool {
+fn relabel_accounts(auth: &mut MinnalOpenAiAuthFile) -> bool {
     let outcome = crate::auth::account_store::relabel_accounts(
         ACCOUNT_LABEL_PREFIX,
         &mut auth.openai_accounts,
@@ -110,8 +110,8 @@ fn relabel_accounts(auth: &mut JcodeOpenAiAuthFile) -> bool {
     outcome.changed
 }
 
-fn jcode_auth_path() -> Result<PathBuf> {
-    Ok(crate::storage::jcode_dir()?.join("openai-auth.json"))
+fn minnal_auth_path() -> Result<PathBuf> {
+    Ok(crate::storage::minnal_dir()?.join("openai-auth.json"))
 }
 
 fn legacy_auth_path() -> Result<PathBuf> {
@@ -162,14 +162,14 @@ pub fn has_unconsented_legacy_credentials() -> bool {
     legacy_auth_source_exists() && !legacy_auth_allowed()
 }
 
-pub fn load_auth_file() -> Result<JcodeOpenAiAuthFile> {
-    let path = jcode_auth_path()?;
+pub fn load_auth_file() -> Result<MinnalOpenAiAuthFile> {
+    let path = minnal_auth_path()?;
     let mut auth = if path.exists() {
         crate::storage::harden_secret_file_permissions(&path);
         crate::storage::read_json(&path)
             .with_context(|| format!("Could not read OpenAI credentials from {:?}", path))?
     } else {
-        JcodeOpenAiAuthFile::default()
+        MinnalOpenAiAuthFile::default()
     };
 
     if relabel_accounts(&mut auth) {
@@ -182,9 +182,9 @@ pub fn load_auth_file() -> Result<JcodeOpenAiAuthFile> {
     Ok(auth)
 }
 
-pub fn save_auth_file(auth: &JcodeOpenAiAuthFile) -> Result<()> {
-    let auth_path = jcode_auth_path()?;
-    let clean = JcodeOpenAiAuthFile {
+pub fn save_auth_file(auth: &MinnalOpenAiAuthFile) -> Result<()> {
+    let auth_path = minnal_auth_path()?;
+    let clean = MinnalOpenAiAuthFile {
         openai_accounts: auth.openai_accounts.clone(),
         active_openai_account: auth.active_openai_account.clone(),
     };
@@ -313,7 +313,7 @@ pub fn load_credentials() -> Result<CodexCredentials> {
     let mut expired_candidates: Vec<(&str, CodexCredentials)> = Vec::new();
     let legacy_allowed = legacy_auth_allowed();
 
-    if let Ok(creds) = load_jcode_credentials() {
+    if let Ok(creds) = load_minnal_credentials() {
         if creds
             .expires_at
             .map(|expires_at| expires_at > now_ms)
@@ -321,7 +321,7 @@ pub fn load_credentials() -> Result<CodexCredentials> {
         {
             return Ok(creds);
         }
-        expired_candidates.push(("jcode", creds));
+        expired_candidates.push(("minnal", creds));
     }
 
     if legacy_allowed {
@@ -404,10 +404,10 @@ pub fn upsert_account_from_tokens(
     upsert_account(account_from_credentials(label, &creds, email))
 }
 
-fn load_jcode_credentials() -> Result<CodexCredentials> {
+fn load_minnal_credentials() -> Result<CodexCredentials> {
     let auth = load_auth_file()?;
     if auth.openai_accounts.is_empty() {
-        anyhow::bail!("No OpenAI accounts configured in jcode auth file")
+        anyhow::bail!("No OpenAI accounts configured in minnal auth file")
     }
 
     let active_label = get_active_account_override()
@@ -419,7 +419,7 @@ fn load_jcode_credentials() -> Result<CodexCredentials> {
         .iter()
         .find(|account| account.label == active_label)
         .or_else(|| auth.openai_accounts.first())
-        .context("No OpenAI accounts in jcode auth file")?;
+        .context("No OpenAI accounts in minnal auth file")?;
 
     Ok(credentials_from_account(account))
 }

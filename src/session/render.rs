@@ -1,6 +1,6 @@
 use super::{Session, StoredDisplayRole};
 use crate::message::{ContentBlock, Role, ToolCall};
-pub use jcode_session_types::{
+pub use minnal_session_types::{
     RenderedCompactedHistoryInfo, RenderedImage, RenderedImageSource, RenderedMessage,
 };
 use std::collections::HashMap;

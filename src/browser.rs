@@ -28,20 +28,20 @@ const REQUIRED_BRIDGE_ACTION_PROBES: &[(&str, &str)] = &[
     ("scroll", r#"{"position":"top"}"#),
     (
         "uploadFile",
-        r#"{"selector":"input[type=file]","path":"/tmp/jcode-browser-capability-probe"}"#,
+        r#"{"selector":"input[type=file]","path":"/tmp/minnal-browser-capability-probe"}"#,
     ),
 ];
 
-fn jcode_dir() -> PathBuf {
-    storage::jcode_dir().unwrap_or_else(|_| {
+fn minnal_dir() -> PathBuf {
+    storage::minnal_dir().unwrap_or_else(|_| {
         dirs::home_dir()
             .unwrap_or_else(|| PathBuf::from("."))
-            .join(".jcode")
+            .join(".minnal")
     })
 }
 
 fn browser_dir() -> PathBuf {
-    jcode_dir().join("browser")
+    minnal_dir().join("browser")
 }
 
 pub fn browser_binary_path() -> PathBuf {
@@ -204,7 +204,7 @@ pub async fn ensure_browser_setup() -> Result<String> {
     }
 
     if initial_status.responding && !initial_status.compatible {
-        log.push_str("Browser bridge is connected, but the live Firefox extension is out of date for this jcode build. Attempting repair steps...\n");
+        log.push_str("Browser bridge is connected, but the live Firefox extension is out of date for this minnal build. Attempting repair steps...\n");
         if !initial_status.missing_actions.is_empty() {
             log.push_str(&format!(
                 "Missing actions: {}\n",
@@ -341,7 +341,7 @@ pub async fn ensure_browser_setup() -> Result<String> {
     if final_status.ready {
         log.push_str("\nSetup complete. Browser bridge is ready.\n");
     } else if final_status.responding && !final_status.compatible {
-        log.push_str("\nSetup is not complete yet. The Firefox extension is connected, but it is still missing required actions for this jcode build.\n");
+        log.push_str("\nSetup is not complete yet. The Firefox extension is connected, but it is still missing required actions for this minnal build.\n");
         if !final_status.missing_actions.is_empty() {
             log.push_str(&format!(
                 "Missing actions: {}\n",
@@ -558,7 +558,7 @@ fn install_native_host_manifest() -> Result<bool> {
 
     let manifest = serde_json::json!({
         "name": NATIVE_HOST_NAME,
-        "description": "Native host for Firefox Agent Bridge (managed by jcode)",
+        "description": "Native host for Firefox Agent Bridge (managed by minnal)",
         "path": effective_host,
         "type": "stdio",
         "allowed_extensions": [

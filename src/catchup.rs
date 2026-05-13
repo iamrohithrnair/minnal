@@ -4,7 +4,7 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use std::collections::{BTreeMap, HashSet};
 
-pub use jcode_task_types::{CatchupBrief, PersistedCatchupState};
+pub use minnal_task_types::{CatchupBrief, PersistedCatchupState};
 
 const CATCHUP_STATE_FILE: &str = "catchup_seen.json";
 
@@ -218,7 +218,7 @@ pub fn render_markdown(
 }
 
 fn state_path() -> Result<std::path::PathBuf> {
-    Ok(crate::storage::jcode_dir()?.join(CATCHUP_STATE_FILE))
+    Ok(crate::storage::minnal_dir()?.join(CATCHUP_STATE_FILE))
 }
 
 fn load_seen_state() -> PersistedCatchupState {

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Test OAuth usage comparison between Claude Code CLI and jcode direct API.
+Test OAuth usage comparison between Claude Code CLI and minnal direct API.
 
 This script:
 1. Shells out to Claude Code CLI with a simple prompt
-2. Uses jcode's debug socket to send the same prompt via direct OAuth
+2. Uses minnal's debug socket to send the same prompt via direct OAuth
 3. Compares token usage between the two methods
 4. Verifies actual OAuth quota consumption via the usage API
 """
@@ -17,8 +17,8 @@ import sys
 import os
 import requests
 
-DEBUG_SOCKET = f"/run/user/{os.getuid()}/jcode-debug.sock"
-MAIN_SOCKET = f"/run/user/{os.getuid()}/jcode.sock"
+DEBUG_SOCKET = f"/run/user/{os.getuid()}/minnal-debug.sock"
+MAIN_SOCKET = f"/run/user/{os.getuid()}/minnal.sock"
 TEST_PROMPT = "What is 2+2? Reply with just the number."
 CREDENTIALS_PATH = os.path.expanduser("~/.claude/.credentials.json")
 USAGE_API_URL = "https://api.anthropic.com/api/oauth/usage"
@@ -129,10 +129,10 @@ def send_debug_cmd(sock, cmd: str, session_id: str = None, timeout: float = 60) 
     return resp.get('ok', False), resp.get('output', ''), resp.get('error', '')
 
 
-def run_jcode_oauth(prompt: str) -> dict:
-    """Run via jcode debug socket using direct OAuth."""
+def run_minnal_oauth(prompt: str) -> dict:
+    """Run via minnal debug socket using direct OAuth."""
     print(f"\n{'='*60}")
-    print("Testing jcode direct OAuth API...")
+    print("Testing minnal direct OAuth API...")
     print(f"{'='*60}")
 
     # Check if debug socket exists
@@ -230,15 +230,15 @@ def main():
     cli_quota_delta = five_hour_after_cli - five_hour_before
     print(f"\nQuota after Claude CLI: {five_hour_after_cli:.2f}% (delta: +{cli_quota_delta:.4f}%)")
 
-    # Test jcode OAuth
-    jcode_result = run_jcode_oauth(TEST_PROMPT)
+    # Test minnal OAuth
+    minnal_result = run_minnal_oauth(TEST_PROMPT)
 
-    # Check quota after jcode test
+    # Check quota after minnal test
     time.sleep(1)  # Wait for API to update
-    usage_after_jcode = get_oauth_usage()
-    five_hour_after_jcode = usage_after_jcode.get('five_hour', {}).get('utilization', 0)
-    jcode_quota_delta = five_hour_after_jcode - five_hour_after_cli
-    print(f"\nQuota after jcode: {five_hour_after_jcode:.2f}% (delta: +{jcode_quota_delta:.4f}%)")
+    usage_after_minnal = get_oauth_usage()
+    five_hour_after_minnal = usage_after_minnal.get('five_hour', {}).get('utilization', 0)
+    minnal_quota_delta = five_hour_after_minnal - five_hour_after_cli
+    print(f"\nQuota after minnal: {five_hour_after_minnal:.2f}% (delta: +{minnal_quota_delta:.4f}%)")
 
     # Summary
     print(f"\n{'='*60}")
@@ -259,12 +259,12 @@ def main():
             print(f"  Cache creation: {usage.get('cache_creation_input_tokens', 0)}")
             print(f"  Cost: ${cost:.6f}")
 
-    print("\njcode Direct OAuth:")
-    if "error" in jcode_result:
-        print(f"  Error: {jcode_result['error']}")
+    print("\nminnal Direct OAuth:")
+    if "error" in minnal_result:
+        print(f"  Error: {minnal_result['error']}")
     else:
-        print(f"  Time: {jcode_result.get('time', 'N/A'):.2f}s")
-        usage = jcode_result.get('usage', {})
+        print(f"  Time: {minnal_result.get('time', 'N/A'):.2f}s")
+        usage = minnal_result.get('usage', {})
         if usage:
             print(f"  Input tokens: {usage.get('input_tokens', 'N/A')}")
             print(f"  Output tokens: {usage.get('output_tokens', 'N/A')}")
@@ -278,36 +278,36 @@ def main():
 
     # Calculate totals for comparison
     cli_usage = cli_result.get('usage', {})
-    jcode_usage = jcode_result.get('usage', {})
+    minnal_usage = minnal_result.get('usage', {})
 
     cli_total = (cli_usage.get('input_tokens', 0) or 0) + \
                 (cli_usage.get('cache_creation_input_tokens', 0) or 0) + \
                 (cli_usage.get('cache_read_input_tokens', 0) or 0) + \
                 (cli_usage.get('output_tokens', 0) or 0)
 
-    jcode_total = (jcode_usage.get('input_tokens', 0) or 0) + \
-                  (jcode_usage.get('cache_creation_input_tokens', 0) or 0) + \
-                  (jcode_usage.get('cache_read_input_tokens', 0) or 0) + \
-                  (jcode_usage.get('output_tokens', 0) or 0)
+    minnal_total = (minnal_usage.get('input_tokens', 0) or 0) + \
+                  (minnal_usage.get('cache_creation_input_tokens', 0) or 0) + \
+                  (minnal_usage.get('cache_read_input_tokens', 0) or 0) + \
+                  (minnal_usage.get('output_tokens', 0) or 0)
 
     cli_time = cli_result.get('time', 0)
-    jcode_time = jcode_result.get('time', 0)
-    speedup = cli_time / jcode_time if jcode_time > 0 else 0
-    token_savings = 100 * (1 - jcode_total / cli_total) if cli_total > 0 else 0
+    minnal_time = minnal_result.get('time', 0)
+    speedup = cli_time / minnal_time if minnal_time > 0 else 0
+    token_savings = 100 * (1 - minnal_total / cli_total) if cli_total > 0 else 0
 
     print(f"""
 Both methods use the same OAuth token from ~/.claude/.credentials.json.
 
 PERFORMANCE COMPARISON:
-                    Claude CLI      jcode
-  Response time:    {cli_time:.2f}s           {jcode_time:.2f}s ({speedup:.1f}x faster)
-  Total tokens:     {cli_total:,}         {jcode_total:,} ({token_savings:.0f}% fewer)
+                    Claude CLI      minnal
+  Response time:    {cli_time:.2f}s           {minnal_time:.2f}s ({speedup:.1f}x faster)
+  Total tokens:     {cli_total:,}         {minnal_total:,} ({token_savings:.0f}% fewer)
   Estimated cost:   ${cli_result.get('cost', 0):.4f}         (not calculated)
 
 ACTUAL QUOTA CONSUMPTION (from OAuth API):
   Before tests:     {five_hour_before:.2f}%
   After Claude CLI: {five_hour_after_cli:.2f}%  (+{cli_quota_delta:.4f}%)
-  After jcode:      {five_hour_after_jcode:.2f}%  (+{jcode_quota_delta:.4f}%)
+  After minnal:      {five_hour_after_minnal:.2f}%  (+{minnal_quota_delta:.4f}%)
 
 NOTES:
 - The quota API shows percentage of a large 5-hour window (likely millions of tokens)

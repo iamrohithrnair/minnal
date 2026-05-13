@@ -39,9 +39,9 @@ case "$OS" in
 esac
 
 if [ "$IS_WINDOWS" = true ]; then
-  INSTALL_DIR="${JCODE_INSTALL_DIR:-$LOCALAPPDATA/jcode/bin}"
+  INSTALL_DIR="${MINNAL_INSTALL_DIR:-$LOCALAPPDATA/minnal/bin}"
 else
-  INSTALL_DIR="${JCODE_INSTALL_DIR:-$HOME/.local/bin}"
+  INSTALL_DIR="${MINNAL_INSTALL_DIR:-$HOME/.local/bin}"
 fi
 
 VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | cut -d'"' -f4)
@@ -52,10 +52,10 @@ URL_BIN="https://github.com/$REPO/releases/download/$VERSION/$ARTIFACT"
 
 if [ "$IS_WINDOWS" = true ]; then
   EXE=".exe"
-  builds_dir="$LOCALAPPDATA/jcode/builds"
+  builds_dir="$LOCALAPPDATA/minnal/builds"
 else
   EXE=""
-  builds_dir="$HOME/.jcode/builds"
+  builds_dir="$HOME/.minnal/builds"
 fi
 stable_dir="$builds_dir/stable"
 current_dir="$builds_dir/current"
@@ -82,9 +82,9 @@ tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
 
 download_mode=""
-if curl -fsSL "$URL_TGZ" -o "$tmpdir/jcode.download" 2>/dev/null; then
+if curl -fsSL "$URL_TGZ" -o "$tmpdir/minnal.download" 2>/dev/null; then
   download_mode="tar"
-elif curl -fsSL "$URL_BIN" -o "$tmpdir/jcode.download" 2>/dev/null; then
+elif curl -fsSL "$URL_BIN" -o "$tmpdir/minnal.download" 2>/dev/null; then
   download_mode="bin"
 fi
 
@@ -97,20 +97,20 @@ mkdir -p "$dest_version_dir"
 bin_name="minnal${EXE}"
 
 if [ "$download_mode" = "tar" ]; then
-  tar xzf "$tmpdir/jcode.download" -C "$tmpdir"
+  tar xzf "$tmpdir/minnal.download" -C "$tmpdir"
   src_bin="$tmpdir/${ARTIFACT}${EXE}"
   [ -f "$src_bin" ] || err "Downloaded archive did not contain expected binary: ${ARTIFACT}${EXE}"
   find "$tmpdir" -maxdepth 1 -type f \( -name "${ARTIFACT}${EXE}.bin" -o -name 'libssl.so*' -o -name 'libcrypto.so*' \) \
     -exec cp -f {} "$dest_version_dir/" \;
   mv "$src_bin" "$dest_version_dir/$bin_name"
 elif [ "$download_mode" = "bin" ]; then
-  mv "$tmpdir/jcode.download" "$dest_version_dir/$bin_name"
+  mv "$tmpdir/minnal.download" "$dest_version_dir/$bin_name"
 else
   info "No prebuilt asset found for $ARTIFACT in $VERSION; building from source..."
   command -v git >/dev/null 2>&1 || err "git is required to build from source"
   command -v cargo >/dev/null 2>&1 || err "cargo is required to build from source"
 
-  src_dir="$tmpdir/jcode-src"
+  src_dir="$tmpdir/minnal-src"
   git clone --depth 1 --branch "$VERSION" "https://github.com/$REPO.git" "$src_dir" \
     || err "Failed to clone $REPO at $VERSION"
   cargo build --release --manifest-path "$src_dir/Cargo.toml" \

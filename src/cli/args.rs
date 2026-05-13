@@ -28,10 +28,10 @@ pub(crate) enum ProviderAuthArg {
 
 #[derive(Parser, Debug)]
 #[command(name = "minnal")]
-#[command(version = env!("JCODE_VERSION"))]
+#[command(version = env!("MINNAL_VERSION"))]
 #[command(about = "Minnal: A coding agent using Claude Max or ChatGPT Pro subscriptions")]
 pub(crate) struct Args {
-    /// Provider to use (jcode, claude, openai, openai-api, openrouter, azure, opencode, opencode-go, zai, 302ai, baseten, cortecs, comtegra, deepseek, fpt, firmware, huggingface, moonshotai, nebius, scaleway, stackit, groq, mistral, perplexity, togetherai, deepinfra, xai, lmstudio, ollama, chutes, cerebras, alibaba-coding-plan, openai-compatible, cursor, copilot, gemini, antigravity, google, or auto-detect)
+    /// Provider to use (minnal, claude, openai, openai-api, openrouter, azure, opencode, opencode-go, zai, 302ai, baseten, cortecs, comtegra, deepseek, fpt, firmware, huggingface, moonshotai, nebius, scaleway, stackit, groq, mistral, perplexity, togetherai, deepinfra, xai, lmstudio, ollama, chutes, cerebras, alibaba-coding-plan, openai-compatible, cursor, copilot, gemini, antigravity, google, or auto-detect)
     #[arg(short, long, default_value = "auto", global = true)]
     pub(crate) provider: ProviderChoice,
 
@@ -63,7 +63,7 @@ pub(crate) struct Args {
     #[arg(long, global = true, hide = true)]
     pub(crate) fresh_spawn: bool,
 
-    /// Disable auto-detection of jcode repository and self-dev mode
+    /// Disable auto-detection of minnal repository and self-dev mode
     #[arg(long, global = true)]
     pub(crate) no_selfdev: bool,
 
@@ -165,7 +165,7 @@ pub(crate) enum Command {
         #[arg(long)]
         api_base: Option<String>,
 
-        /// OpenAI-compatible API key. If omitted, jcode prompts securely when needed.
+        /// OpenAI-compatible API key. If omitted, minnal prompts securely when needed.
         #[arg(long)]
         api_key: Option<String>,
 
@@ -177,7 +177,7 @@ pub(crate) enum Command {
     /// Run in simple REPL mode (no TUI)
     Repl,
 
-    /// Update jcode to the latest version
+    /// Update minnal to the latest version
     Update,
 
     /// Show build/version information in human or JSON form
@@ -259,12 +259,12 @@ pub(crate) enum Command {
     /// Review and respond to pending ambient permission requests
     Permissions,
 
-    /// Inject externally transcribed text into the active Jcode TUI
+    /// Inject externally transcribed text into the active Minnal TUI
     Transcript {
         /// Transcript text. If omitted, reads from stdin.
         text: Option<String>,
 
-        /// How to apply the transcript inside Jcode
+        /// How to apply the transcript inside Minnal
         #[arg(long, value_enum, default_value = "send")]
         mode: TranscriptModeArg,
 
@@ -275,19 +275,19 @@ pub(crate) enum Command {
 
     /// Run configured dictation: send to last-focused minnal client or type raw text
     Dictate {
-        /// Type the transcript into the focused app instead of sending to jcode
+        /// Type the transcript into the focused app instead of sending to minnal
         #[arg(long)]
         r#type: bool,
     },
 
-    /// Set up a global hotkey (Alt+;) to launch jcode
+    /// Set up a global hotkey (Alt+;) to launch minnal
     SetupHotkey {
         /// Internal: run as the macOS hotkey listener process.
         #[arg(long, hide = true)]
         listen_macos_hotkey: bool,
     },
 
-    /// Install a launcher so jcode appears in your app launcher
+    /// Install a launcher so minnal appears in your app launcher
     SetupLauncher,
 
     /// Browser automation setup and status
@@ -382,7 +382,7 @@ pub(crate) enum Command {
         output: Option<String>,
     },
 
-    /// Save or restore the current set of open jcode windows across a system reboot
+    /// Save or restore the current set of open minnal windows across a system reboot
     Restart {
         #[command(subcommand)]
         action: RestartCommand,
@@ -391,7 +391,7 @@ pub(crate) enum Command {
 
 #[derive(Subcommand, Debug)]
 pub(crate) enum RestartCommand {
-    /// Save a reboot snapshot of currently active jcode windows
+    /// Save a reboot snapshot of currently active minnal windows
     Save {
         /// Restore this reboot snapshot automatically the next time plain `minnal` starts
         #[arg(long)]
@@ -477,11 +477,11 @@ pub(crate) enum ProviderCommand {
         #[arg(long, conflicts_with = "no_api_key")]
         api_key_env: Option<String>,
 
-        /// API key value to store in jcode's private provider env file. Prefer --api-key-stdin for shell history safety.
+        /// API key value to store in minnal's private provider env file. Prefer --api-key-stdin for shell history safety.
         #[arg(long, conflicts_with_all = ["api_key_stdin", "no_api_key"])]
         api_key: Option<String>,
 
-        /// Read the API key from stdin and store it in jcode's private provider env file
+        /// Read the API key from stdin and store it in minnal's private provider env file
         #[arg(long, conflicts_with = "no_api_key")]
         api_key_stdin: bool,
 
@@ -497,7 +497,7 @@ pub(crate) enum ProviderCommand {
         #[arg(long)]
         auth_header: Option<String>,
 
-        /// Private env file name under jcode's app config directory for stored API keys
+        /// Private env file name under minnal's app config directory for stored API keys
         #[arg(long)]
         env_file: Option<String>,
 

@@ -2,7 +2,7 @@
 .SYNOPSIS
     Install minnal on Windows.
 .DESCRIPTION
-    Downloads the latest minnal release and installs it to %LOCALAPPDATA%\jcode\bin.
+    Downloads the latest minnal release and installs it to %LOCALAPPDATA%\minnal\bin.
 
     One-liner install:
       irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1 | iex
@@ -10,7 +10,7 @@
     Or download and run (allows parameters):
       & ([scriptblock]::Create((irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1)))
 .PARAMETER InstallDir
-    Override the installation directory (default: $env:LOCALAPPDATA\jcode\bin)
+    Override the installation directory (default: $env:LOCALAPPDATA\minnal\bin)
 .PARAMETER Version
     Override the version tag to install. Required when using a local artifact path.
 .PARAMETER ArtifactExePath
@@ -41,19 +41,19 @@ if ($PSVersionTable.PSVersion.Major -lt 5) {
 $Repo = "codeslord/minnal"
 
 if (-not $InstallDir) {
-    $InstallDir = Join-Path $env:LOCALAPPDATA "jcode\bin"
+    $InstallDir = Join-Path $env:LOCALAPPDATA "minnal\bin"
 }
 
-$JcodeHome = if ($env:JCODE_HOME) {
-    $env:JCODE_HOME
+$MinnalHome = if ($env:MINNAL_HOME) {
+    $env:MINNAL_HOME
 } elseif ($env:USERPROFILE) {
-    Join-Path $env:USERPROFILE ".jcode"
+    Join-Path $env:USERPROFILE ".minnal"
 } else {
-    Join-Path ([Environment]::GetFolderPath("UserProfile")) ".jcode"
+    Join-Path ([Environment]::GetFolderPath("UserProfile")) ".minnal"
 }
 
-$HotkeyDir = Join-Path $JcodeHome "hotkey"
-$SetupHintsPath = Join-Path $JcodeHome "setup_hints.json"
+$HotkeyDir = Join-Path $MinnalHome "hotkey"
+$SetupHintsPath = Join-Path $MinnalHome "setup_hints.json"
 
 function Write-Info($msg) { Write-Host $msg -ForegroundColor Blue }
 function Write-Err($msg) { Write-Host "error: $msg" -ForegroundColor Red; exit 1 }
@@ -218,16 +218,16 @@ function Install-Alacritty {
     return $true
 }
 
-function Stop-JcodeHotkeyListeners {
+function Stop-MinnalHotkeyListeners {
     try {
         Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe' OR Name = 'pwsh.exe'" -ErrorAction SilentlyContinue |
-            Where-Object { $_.CommandLine -like '*jcode-hotkey*' -or $_.CommandLine -like '*minnal-hotkey*' } |
+            Where-Object { $_.CommandLine -like '*minnal-hotkey*' -or $_.CommandLine -like '*minnal-hotkey*' } |
             ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
     } catch {}
 }
 
 function Set-SetupHintsState([bool]$AlacrittyConfigured, [bool]$HotkeyConfigured) {
-    New-Item -ItemType Directory -Path $JcodeHome -Force | Out-Null
+    New-Item -ItemType Directory -Path $MinnalHome -Force | Out-Null
 
     $state = @{
         launch_count = 0
@@ -264,7 +264,7 @@ function Set-SetupHintsState([bool]$AlacrittyConfigured, [bool]$HotkeyConfigured
     $state | ConvertTo-Json | Set-Content -Path $SetupHintsPath -Encoding UTF8
 }
 
-function Install-JcodeHotkey([string]$JcodeExePath) {
+function Install-MinnalHotkey([string]$MinnalExePath) {
     $alacrittyPath = Find-AlacrittyPath
     if (-not $alacrittyPath) {
         Write-Warn "Skipping Alt+; hotkey because Alacritty is not installed"
@@ -272,10 +272,10 @@ function Install-JcodeHotkey([string]$JcodeExePath) {
     }
 
     New-Item -ItemType Directory -Path $HotkeyDir -Force | Out-Null
-    Stop-JcodeHotkeyListeners
+    Stop-MinnalHotkeyListeners
 
     $escapedAlacritty = $alacrittyPath.Replace("'", "''")
-    $escapedJcodeExe = $JcodeExePath.Replace("'", "''")
+    $escapedMinnalExe = $MinnalExePath.Replace("'", "''")
 
     $ps1Path = Join-Path $HotkeyDir "minnal-hotkey.ps1"
     $ps1Lines = @(
@@ -320,7 +320,7 @@ function Install-JcodeHotkey([string]$JcodeExePath) {
         '    $msg = New-Object HotKeyHelper+MSG',
         '    while ([HotKeyHelper]::GetMessage([ref]$msg, [IntPtr]::Zero, $WM_HOTKEY, $WM_HOTKEY) -ne 0) {',
         '        if ($msg.message -eq $WM_HOTKEY -and $msg.wParam.ToInt32() -eq $HOTKEY_ID) {',
-        "            Start-Process '$escapedAlacritty' -ArgumentList '-e', '$escapedJcodeExe'",
+        "            Start-Process '$escapedAlacritty' -ArgumentList '-e', '$escapedMinnalExe'",
         '        }',
         '    }',
         '} finally {',
@@ -370,7 +370,7 @@ function Install-JcodeHotkey([string]$JcodeExePath) {
     return $true
 }
 
-function Get-JcodeWindowsArtifact {
+function Get-MinnalWindowsArtifact {
     $candidates = @()
 
     try {
@@ -393,7 +393,7 @@ function Get-JcodeWindowsArtifact {
     Write-Err "Unsupported architecture: $displayArch (supported: x86_64, ARM64)"
 }
 
-$Artifact = Get-JcodeWindowsArtifact
+$Artifact = Get-MinnalWindowsArtifact
 
 $ResolvedArtifactExePath = Resolve-OptionalPath $ArtifactExePath
 $ResolvedArtifactTgzPath = Resolve-OptionalPath $ArtifactTgzPath
@@ -422,7 +422,7 @@ $VersionNum = $Version.TrimStart('v')
 $TgzUrl = "https://github.com/$Repo/releases/download/$Version/$Artifact.tar.gz"
 $ExeUrl = "https://github.com/$Repo/releases/download/$Version/$Artifact.exe"
 
-$BuildsDir = Join-Path $env:LOCALAPPDATA "jcode\builds"
+$BuildsDir = Join-Path $env:LOCALAPPDATA "minnal\builds"
 $StableDir = Join-Path $BuildsDir "stable"
 $VersionDir = Join-Path $BuildsDir "versions\$VersionNum"
 $LauncherPath = Join-Path $InstallDir "minnal.exe"
@@ -559,7 +559,7 @@ if ($SkipAlacrittySetup) {
 if ($SkipHotkeySetup) {
     Write-Info "Skipping Alt+; hotkey setup"
 } elseif ($installedAlacritty) {
-    $configuredHotkey = Install-JcodeHotkey -JcodeExePath $LauncherPath
+    $configuredHotkey = Install-MinnalHotkey -MinnalExePath $LauncherPath
 }
 
 Set-SetupHintsState -AlacrittyConfigured:(Test-AlacrittyInstalled) -HotkeyConfigured:$configuredHotkey

@@ -1,6 +1,6 @@
 use super::*;
 use crate::provider_catalog::{LoginProviderDescriptor, LoginProviderTarget};
-pub(super) use jcode_provider_core::{ActiveProvider, ProviderAvailability};
+pub(super) use minnal_provider_core::{ActiveProvider, ProviderAvailability};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ConfigProviderSelection {
@@ -44,15 +44,15 @@ pub struct DefaultModelSelection {
 
 impl MultiProvider {
     pub(super) fn auto_default_provider(availability: ProviderAvailability) -> ActiveProvider {
-        jcode_provider_core::auto_default_provider(availability)
+        minnal_provider_core::auto_default_provider(availability)
     }
 
     pub(super) fn parse_provider_hint(value: &str) -> Option<ActiveProvider> {
-        jcode_provider_core::parse_provider_hint(value)
+        minnal_provider_core::parse_provider_hint(value)
     }
 
     pub(super) fn forced_provider_from_env() -> Option<ActiveProvider> {
-        let force = std::env::var("JCODE_FORCE_PROVIDER")
+        let force = std::env::var("MINNAL_FORCE_PROVIDER")
             .ok()
             .map(|v| matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes"))
             .unwrap_or(false);
@@ -60,17 +60,17 @@ impl MultiProvider {
             return None;
         }
 
-        std::env::var("JCODE_ACTIVE_PROVIDER")
+        std::env::var("MINNAL_ACTIVE_PROVIDER")
             .ok()
             .and_then(|value| Self::parse_provider_hint(&value))
     }
 
     pub(super) fn provider_label(provider: ActiveProvider) -> &'static str {
-        jcode_provider_core::provider_label(provider)
+        minnal_provider_core::provider_label(provider)
     }
 
     pub(super) fn provider_key(provider: ActiveProvider) -> &'static str {
-        jcode_provider_core::provider_key(provider)
+        minnal_provider_core::provider_key(provider)
     }
 
     pub(super) fn set_active_provider(&self, provider: ActiveProvider) {
@@ -94,7 +94,7 @@ impl MultiProvider {
             LoginProviderTarget::Gemini => Some("gemini"),
             LoginProviderTarget::Antigravity => Some("antigravity"),
             LoginProviderTarget::AutoImport
-            | LoginProviderTarget::Jcode
+            | LoginProviderTarget::Minnal
             | LoginProviderTarget::Azure
             | LoginProviderTarget::Google => None,
         }

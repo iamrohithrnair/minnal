@@ -1,5 +1,5 @@
 [package]
-name = "jcode"
+name = "minnal"
 version = "0.12.2"
 description = "Possibly the greatest coding agent ever built — blazing-fast TUI, multi-model, swarm coordination, 30+ tools"
 edition = "2024"
@@ -8,60 +8,60 @@ autobins = false
 [workspace]
 members = [
     ".",
-    "crates/jcode-agent-runtime",
-    "crates/jcode-ambient-types",
-    "crates/jcode-auth-types",
-    "crates/jcode-embedding",
-    "crates/jcode-gateway-types",
-    "crates/jcode-import-core",
-    "crates/jcode-pdf",
-    "crates/jcode-background-types",
-    "crates/jcode-batch-types",
-    "crates/jcode-build-support",
-    "crates/jcode-compaction-core",
-    "crates/jcode-config-types",
-    "crates/jcode-core",
-    "crates/jcode-memory-types",
-    "crates/jcode-message-types",
-    "crates/jcode-overnight-core",
-    "crates/jcode-plan",
-    "crates/jcode-swarm-core",
-    "crates/jcode-protocol",
-    "crates/jcode-selfdev-types",
-    "crates/jcode-session-types",
-    "crates/jcode-storage",
-    "crates/jcode-side-panel-types",
-    "crates/jcode-azure-auth",
-    "crates/jcode-notify-email",
-    "crates/jcode-provider-metadata",
-    "crates/jcode-provider-core",
-    "crates/jcode-provider-openrouter",
-    "crates/jcode-provider-openai",
-    "crates/jcode-provider-gemini",
-    "crates/jcode-tui-markdown",
-    "crates/jcode-tui-messages",
-    "crates/jcode-usage-types",
-    "crates/jcode-tui-core",
-    "crates/jcode-tui-mermaid",
-    "crates/jcode-task-types",
-    "crates/jcode-tool-core",
-    "crates/jcode-tool-types",
-    "crates/jcode-tui-account-picker",
-    "crates/jcode-tui-render",
-    "crates/jcode-tui-session-picker",
-    "crates/jcode-tui-style",
-    "crates/jcode-tui-tool-display",
-    "crates/jcode-tui-usage-overlay",
-    "crates/jcode-update-core",
-    "crates/jcode-terminal-launch",
-    "crates/jcode-tui-workspace",
-    "crates/jcode-mobile-core",
-    "crates/jcode-mobile-sim",
-    "crates/jcode-desktop",
+    "crates/minnal-agent-runtime",
+    "crates/minnal-ambient-types",
+    "crates/minnal-auth-types",
+    "crates/minnal-embedding",
+    "crates/minnal-gateway-types",
+    "crates/minnal-import-core",
+    "crates/minnal-pdf",
+    "crates/minnal-background-types",
+    "crates/minnal-batch-types",
+    "crates/minnal-build-support",
+    "crates/minnal-compaction-core",
+    "crates/minnal-config-types",
+    "crates/minnal-core",
+    "crates/minnal-memory-types",
+    "crates/minnal-message-types",
+    "crates/minnal-overnight-core",
+    "crates/minnal-plan",
+    "crates/minnal-swarm-core",
+    "crates/minnal-protocol",
+    "crates/minnal-selfdev-types",
+    "crates/minnal-session-types",
+    "crates/minnal-storage",
+    "crates/minnal-side-panel-types",
+    "crates/minnal-azure-auth",
+    "crates/minnal-notify-email",
+    "crates/minnal-provider-metadata",
+    "crates/minnal-provider-core",
+    "crates/minnal-provider-openrouter",
+    "crates/minnal-provider-openai",
+    "crates/minnal-provider-gemini",
+    "crates/minnal-tui-markdown",
+    "crates/minnal-tui-messages",
+    "crates/minnal-usage-types",
+    "crates/minnal-tui-core",
+    "crates/minnal-tui-mermaid",
+    "crates/minnal-task-types",
+    "crates/minnal-tool-core",
+    "crates/minnal-tool-types",
+    "crates/minnal-tui-account-picker",
+    "crates/minnal-tui-render",
+    "crates/minnal-tui-session-picker",
+    "crates/minnal-tui-style",
+    "crates/minnal-tui-tool-display",
+    "crates/minnal-tui-usage-overlay",
+    "crates/minnal-update-core",
+    "crates/minnal-terminal-launch",
+    "crates/minnal-tui-workspace",
+    "crates/minnal-mobile-core",
+    "crates/minnal-mobile-sim",
+    "crates/minnal-desktop",
 ]
 
 [lib]
-name = "jcode"
+name = "minnal"
 path = "src/lib.rs"
 
 [[bin]]
@@ -73,7 +73,7 @@ name = "test_api"
 path = "src/bin/test_api.rs"
 
 [[bin]]
-name = "jcode-harness"
+name = "minnal-harness"
 path = "src/bin/harness.rs"
 
 [[bin]]
@@ -134,9 +134,9 @@ uuid = { version = "1", features = ["v4", "v5"] }
 proctitle = "0.1"
 
 # Embeddings (local inference) - behind feature flag (163 crates, slow to compile)
-jcode-embedding = { path = "crates/jcode-embedding", optional = true }
-jcode-gateway-types = { path = "crates/jcode-gateway-types" }
-jcode-import-core = { path = "crates/jcode-import-core" }
+minnal-embedding = { path = "crates/minnal-embedding", optional = true }
+minnal-gateway-types = { path = "crates/minnal-gateway-types" }
+minnal-import-core = { path = "crates/minnal-import-core" }
 
 # OAuth
 base64 = "0.22"
@@ -145,30 +145,30 @@ rand = "0.9.3"
 hex = "0.4"
 url = "2"
 open = "5"               # Open URLs in browser
-jcode-auth-types = { path = "crates/jcode-auth-types" }
-jcode-azure-auth = { path = "crates/jcode-azure-auth" }
-jcode-agent-runtime = { path = "crates/jcode-agent-runtime" }
-jcode-ambient-types = { path = "crates/jcode-ambient-types" }
-jcode-notify-email = { path = "crates/jcode-notify-email" }
-jcode-provider-metadata = { path = "crates/jcode-provider-metadata" }
-jcode-provider-core = { path = "crates/jcode-provider-core" }
-jcode-provider-openai = { path = "crates/jcode-provider-openai" }
-jcode-provider-openrouter = { path = "crates/jcode-provider-openrouter" }
-jcode-provider-gemini = { path = "crates/jcode-provider-gemini" }
-jcode-tui-markdown = { path = "crates/jcode-tui-markdown" }
-jcode-tui-messages = { path = "crates/jcode-tui-messages" }
-jcode-tui-core = { path = "crates/jcode-tui-core" }
-jcode-tui-mermaid = { path = "crates/jcode-tui-mermaid" }
-jcode-tui-account-picker = { path = "crates/jcode-tui-account-picker" }
-jcode-tui-render = { path = "crates/jcode-tui-render" }
-jcode-tui-session-picker = { path = "crates/jcode-tui-session-picker" }
-jcode-tui-style = { path = "crates/jcode-tui-style" }
-jcode-tui-tool-display = { path = "crates/jcode-tui-tool-display" }
-jcode-tui-usage-overlay = { path = "crates/jcode-tui-usage-overlay" }
-jcode-update-core = { path = "crates/jcode-update-core" }
-jcode-terminal-launch = { path = "crates/jcode-terminal-launch" }
-jcode-tui-workspace = { path = "crates/jcode-tui-workspace" }
-jcode-usage-types = { path = "crates/jcode-usage-types" }
+minnal-auth-types = { path = "crates/minnal-auth-types" }
+minnal-azure-auth = { path = "crates/minnal-azure-auth" }
+minnal-agent-runtime = { path = "crates/minnal-agent-runtime" }
+minnal-ambient-types = { path = "crates/minnal-ambient-types" }
+minnal-notify-email = { path = "crates/minnal-notify-email" }
+minnal-provider-metadata = { path = "crates/minnal-provider-metadata" }
+minnal-provider-core = { path = "crates/minnal-provider-core" }
+minnal-provider-openai = { path = "crates/minnal-provider-openai" }
+minnal-provider-openrouter = { path = "crates/minnal-provider-openrouter" }
+minnal-provider-gemini = { path = "crates/minnal-provider-gemini" }
+minnal-tui-markdown = { path = "crates/minnal-tui-markdown" }
+minnal-tui-messages = { path = "crates/minnal-tui-messages" }
+minnal-tui-core = { path = "crates/minnal-tui-core" }
+minnal-tui-mermaid = { path = "crates/minnal-tui-mermaid" }
+minnal-tui-account-picker = { path = "crates/minnal-tui-account-picker" }
+minnal-tui-render = { path = "crates/minnal-tui-render" }
+minnal-tui-session-picker = { path = "crates/minnal-tui-session-picker" }
+minnal-tui-style = { path = "crates/minnal-tui-style" }
+minnal-tui-tool-display = { path = "crates/minnal-tui-tool-display" }
+minnal-tui-usage-overlay = { path = "crates/minnal-tui-usage-overlay" }
+minnal-update-core = { path = "crates/minnal-update-core" }
+minnal-terminal-launch = { path = "crates/minnal-terminal-launch" }
+minnal-tui-workspace = { path = "crates/minnal-tui-workspace" }
+minnal-usage-types = { path = "crates/minnal-usage-types" }
 
 # Streaming
 tokio-stream = "0.1"
@@ -184,26 +184,26 @@ image = { version = "0.25", default-features = false, features = ["png", "jpeg"]
 unicode-width = "0.2"   # Unicode character display width
 
 # PDF parsing (behind feature flag)
-jcode-pdf = { path = "crates/jcode-pdf", optional = true }
-jcode-background-types = { path = "crates/jcode-background-types" }
-jcode-batch-types = { path = "crates/jcode-batch-types" }
-jcode-build-support = { path = "crates/jcode-build-support" }
-jcode-compaction-core = { path = "crates/jcode-compaction-core" }
-jcode-config-types = { path = "crates/jcode-config-types" }
-jcode-core = { path = "crates/jcode-core" }
-jcode-memory-types = { path = "crates/jcode-memory-types" }
-jcode-message-types = { path = "crates/jcode-message-types" }
-jcode-overnight-core = { path = "crates/jcode-overnight-core" }
-jcode-plan = { path = "crates/jcode-plan" }
-jcode-swarm-core = { path = "crates/jcode-swarm-core" }
-jcode-protocol = { path = "crates/jcode-protocol" }
-jcode-selfdev-types = { path = "crates/jcode-selfdev-types" }
-jcode-session-types = { path = "crates/jcode-session-types" }
-jcode-storage = { path = "crates/jcode-storage" }
-jcode-task-types = { path = "crates/jcode-task-types" }
-jcode-tool-core = { path = "crates/jcode-tool-core" }
-jcode-tool-types = { path = "crates/jcode-tool-types" }
-jcode-side-panel-types = { path = "crates/jcode-side-panel-types" }
+minnal-pdf = { path = "crates/minnal-pdf", optional = true }
+minnal-background-types = { path = "crates/minnal-background-types" }
+minnal-batch-types = { path = "crates/minnal-batch-types" }
+minnal-build-support = { path = "crates/minnal-build-support" }
+minnal-compaction-core = { path = "crates/minnal-compaction-core" }
+minnal-config-types = { path = "crates/minnal-config-types" }
+minnal-core = { path = "crates/minnal-core" }
+minnal-memory-types = { path = "crates/minnal-memory-types" }
+minnal-message-types = { path = "crates/minnal-message-types" }
+minnal-overnight-core = { path = "crates/minnal-overnight-core" }
+minnal-plan = { path = "crates/minnal-plan" }
+minnal-swarm-core = { path = "crates/minnal-swarm-core" }
+minnal-protocol = { path = "crates/minnal-protocol" }
+minnal-selfdev-types = { path = "crates/minnal-selfdev-types" }
+minnal-session-types = { path = "crates/minnal-session-types" }
+minnal-storage = { path = "crates/minnal-storage" }
+minnal-task-types = { path = "crates/minnal-task-types" }
+minnal-tool-core = { path = "crates/minnal-tool-core" }
+minnal-tool-types = { path = "crates/minnal-tool-types" }
+minnal-side-panel-types = { path = "crates/minnal-side-panel-types" }
 
 # Archive extraction (for auto-update)
 flate2 = "1"
@@ -221,7 +221,7 @@ aws-sdk-sts = "1.103.0"
 
 [features]
 # Keep the heavyweight local ONNX/tokenizer embedding stack opt-in. It remains
-# available via `--features embeddings` or `JCODE_DEV_FEATURE_PROFILE=full`, but
+# available via `--features embeddings` or `MINNAL_DEV_FEATURE_PROFILE=full`, but
 # ordinary check/build loops should not compile the tract/tokenizers subtree.
 default = ["pdf"]
 dev-bins = []
@@ -237,9 +237,9 @@ jemalloc-prof = [
     "tikv-jemallocator/profiling",
     "tikv-jemalloc-ctl/profiling",
 ]
-embeddings = ["dep:jcode-embedding"]
-mmdr-size-api = ["jcode-tui-mermaid/mmdr-size-api"]
-pdf = ["dep:jcode-pdf"]
+embeddings = ["dep:minnal-embedding"]
+mmdr-size-api = ["minnal-tui-mermaid/mmdr-size-api"]
+pdf = ["dep:minnal-pdf"]
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_System_Threading"] }

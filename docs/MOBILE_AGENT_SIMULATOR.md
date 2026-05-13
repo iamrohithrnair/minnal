@@ -1,10 +1,10 @@
 # Agent-Native Mobile App Simulator
 
-This document defines the intended direction for the jcode mobile simulator.
+This document defines the intended direction for the minnal mobile simulator.
 
 ## Product definition
 
-The simulator is a **Linux-native simulator for the jcode mobile application itself**.
+The simulator is a **Linux-native simulator for the minnal mobile application itself**.
 
 It is not Apple iOS Simulator, not an iPhone mirror, and not a thin mock that only checks a few reducer states. Its purpose is to let humans and AI agents build, run, inspect, test, and iterate on the mobile application without a MacBook, Xcode, or a live iPhone.
 
@@ -27,7 +27,7 @@ The mobile application implementation should be **Rust-first**. The iOS app shou
 
 ## Terminology
 
-- **App simulator**: the Linux-native, agent-controllable simulator for the jcode mobile app.
+- **App simulator**: the Linux-native, agent-controllable simulator for the minnal mobile app.
 - **Apple iOS Simulator**: Apple's Xcode-hosted simulator, only for later platform validation.
 - **Mobile core**: shared Rust state, actions, effects, protocol adapters, business logic, and semantic UI.
 - **Platform shell**: thin iOS/Linux host that provides OS capabilities such as windowing, secure storage, notifications, microphone, camera, and haptics.
@@ -45,7 +45,7 @@ graph TB
         Actions["Typed actions"]
         Effects["Effects"]
         Reducer["Reducers/state machines"]
-        Protocol["jcode protocol adapters"]
+        Protocol["minnal protocol adapters"]
         SemUI["Semantic UI tree"]
         Layout["Layout/hit-test model"]
     end
@@ -53,7 +53,7 @@ graph TB
     subgraph Sim["Linux app simulator"]
         SimDaemon["Simulator daemon"]
         AutoAPI["Agent automation API"]
-        FakeServer["Fake jcode backend"]
+        FakeServer["Fake minnal backend"]
         Visual["Visual simulator shell"]
         Shots["Screenshot/layout export"]
         Replay["Replay/golden harness"]
@@ -139,7 +139,7 @@ Debug operations:
 
 ### M0: Product definition
 
-Lock the simulator definition as a Linux-native app simulator for jcode mobile, with Rust-first app implementation and AI-agent-first automation.
+Lock the simulator definition as a Linux-native app simulator for minnal mobile, with Rust-first app implementation and AI-agent-first automation.
 
 ### M1: Architecture documentation
 
@@ -151,11 +151,11 @@ Define which mobile behavior lives in Rust core versus platform shell.
 
 ### M3: Swift implementation audit
 
-Audit `ios/Sources/JCodeMobile` and `ios/Sources/JCodeKit` to extract concepts that must move into Rust.
+Audit `ios/Sources/MinnalMobile` and `ios/Sources/MinnalKit` to extract concepts that must move into Rust.
 
 ### M4: Real mobile core
 
-Expand `crates/jcode-mobile-core` from a small mock simulator into the actual shared mobile state machine.
+Expand `crates/minnal-mobile-core` from a small mock simulator into the actual shared mobile state machine.
 
 ### M5: Semantic UI schema
 
@@ -169,7 +169,7 @@ Expand the simulator socket protocol from basic dispatch/state/tree to complete 
 
 Build deterministic fixtures for onboarding, pairing success/failure, reconnects, chat streaming, tool approvals, errors, offline queues, and long-running tasks.
 
-### M8: Fake jcode backend
+### M8: Fake minnal backend
 
 Implement a simulated minnal server backend for health, pairing, token auth, WebSocket lifecycle, sessions, streaming deltas, text replacement, tool calls, errors, and reconnects.
 
@@ -221,8 +221,8 @@ Prove a fresh Linux checkout can run onboarding to connected chat with no Mac, X
 
 Current crates already provide the seed of this architecture:
 
-- `crates/jcode-mobile-core`: basic state, typed actions, reducer/store, semantic UI tree, transition/effect log, baseline scenarios
-- `crates/jcode-mobile-sim`: headless daemon, Unix socket automation protocol, CLI for state/tree/dispatch/tap/log/reset
+- `crates/minnal-mobile-core`: basic state, typed actions, reducer/store, semantic UI tree, transition/effect log, baseline scenarios
+- `crates/minnal-mobile-sim`: headless daemon, Unix socket automation protocol, CLI for state/tree/dispatch/tap/log/reset
 
 The next step is to evolve these from a small mock flow into the real mobile application core and complete simulator environment described above.
 

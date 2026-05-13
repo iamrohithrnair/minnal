@@ -3259,605 +3259,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
 
 [[package]]
-name = "jcode"
-version = "0.12.2"
-dependencies = [
- "agentgrep",
- "anyhow",
- "arboard",
- "async-stream",
- "async-trait",
- "aws-config",
- "aws-credential-types",
- "aws-sdk-bedrock",
- "aws-sdk-bedrockruntime",
- "aws-sdk-sts",
- "aws-smithy-types",
- "aws-types",
- "base64 0.22.1",
- "bytes",
- "chrono",
- "clap",
- "crossterm",
- "dirs",
- "flate2",
- "futures",
- "glob",
- "global-hotkey",
- "hex",
- "ignore",
- "image",
- "jcode-agent-runtime",
- "jcode-ambient-types",
- "jcode-auth-types",
- "jcode-azure-auth",
- "jcode-background-types",
- "jcode-batch-types",
- "jcode-build-support",
- "jcode-compaction-core",
- "jcode-config-types",
- "jcode-core",
- "jcode-embedding",
- "jcode-gateway-types",
- "jcode-import-core",
- "jcode-memory-types",
- "jcode-message-types",
- "jcode-notify-email",
- "jcode-overnight-core",
- "jcode-pdf",
- "jcode-plan",
- "jcode-protocol",
- "jcode-provider-core",
- "jcode-provider-gemini",
- "jcode-provider-metadata",
- "jcode-provider-openai",
- "jcode-provider-openrouter",
- "jcode-selfdev-types",
- "jcode-session-types",
- "jcode-side-panel-types",
- "jcode-storage",
- "jcode-swarm-core",
- "jcode-task-types",
- "jcode-terminal-launch",
- "jcode-tool-core",
- "jcode-tool-types",
- "jcode-tui-account-picker",
- "jcode-tui-core",
- "jcode-tui-markdown",
- "jcode-tui-mermaid",
- "jcode-tui-messages",
- "jcode-tui-render",
- "jcode-tui-session-picker",
- "jcode-tui-style",
- "jcode-tui-tool-display",
- "jcode-tui-usage-overlay",
- "jcode-tui-workspace",
- "jcode-update-core",
- "jcode-usage-types",
- "libc",
- "open",
- "proctitle",
- "qrcode",
- "rand 0.9.3",
- "ratatui",
- "regex",
- "reqwest",
- "rustls 0.23.37",
- "serde",
- "serde_json",
- "serde_yaml",
- "sha2 0.10.9",
- "similar",
- "tar",
- "tempfile",
- "thiserror 1.0.69",
- "tikv-jemalloc-ctl",
- "tikv-jemalloc-sys",
- "tikv-jemallocator",
- "tokio",
- "tokio-stream",
- "tokio-tungstenite",
- "toml",
- "unicode-width 0.2.0",
- "url",
- "urlencoding",
- "uuid",
- "walkdir",
- "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "jcode-agent-runtime"
-version = "0.1.0"
-dependencies = [
- "thiserror 1.0.69",
- "tokio",
-]
-
-[[package]]
-name = "jcode-ambient-types"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
-]
-
-[[package]]
-name = "jcode-auth-types"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "jcode-azure-auth"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "azure_core",
- "azure_identity",
-]
-
-[[package]]
-name = "jcode-background-types"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "jcode-batch-types"
-version = "0.1.0"
-dependencies = [
- "jcode-message-types",
- "serde",
-]
-
-[[package]]
-name = "jcode-build-support"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "jcode-core",
- "jcode-selfdev-types",
- "jcode-storage",
- "serde",
- "serde_json",
- "tempfile",
-]
-
-[[package]]
-name = "jcode-compaction-core"
-version = "0.1.0"
-dependencies = [
- "jcode-message-types",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-config-types"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "jcode-core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "libc",
- "rand 0.9.3",
- "serde",
-]
-
-[[package]]
-name = "jcode-desktop"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "arboard",
- "base64 0.22.1",
- "bytemuck",
- "glyphon",
- "image",
- "libc",
- "pollster",
- "pulldown-cmark",
- "serde_json",
- "wgpu",
- "whoami",
- "winit",
-]
-
-[[package]]
-name = "jcode-embedding"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "reqwest",
- "tokenizers",
- "tract-hir",
- "tract-onnx",
-]
-
-[[package]]
-name = "jcode-gateway-types"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "jcode-import-core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "hex",
- "serde",
- "serde_json",
- "sha2 0.10.9",
-]
-
-[[package]]
-name = "jcode-memory-types"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "jcode-core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-message-types"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-mobile-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-mobile-sim"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "bytemuck",
- "clap",
- "jcode-mobile-core",
- "libc",
- "pollster",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "wgpu",
- "winit",
-]
-
-[[package]]
-name = "jcode-notify-email"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "imap",
- "lettre",
- "mail-parser",
- "native-tls",
- "pulldown-cmark",
- "urlencoding",
-]
-
-[[package]]
-name = "jcode-overnight-core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-pdf"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "pdf-extract",
-]
-
-[[package]]
-name = "jcode-plan"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "jcode-protocol"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "jcode-batch-types",
- "jcode-config-types",
- "jcode-message-types",
- "jcode-plan",
- "jcode-provider-core",
- "jcode-selfdev-types",
- "jcode-session-types",
- "jcode-side-panel-types",
- "rand 0.9.3",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-provider-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "futures",
- "jcode-message-types",
- "reqwest",
- "serde",
- "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "jcode-provider-gemini"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-provider-metadata"
-version = "0.1.0"
-dependencies = [
- "url",
-]
-
-[[package]]
-name = "jcode-provider-openai"
-version = "0.1.0"
-dependencies = [
- "jcode-message-types",
- "jcode-provider-core",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-provider-openrouter"
-version = "0.1.0"
-dependencies = [
- "dirs",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-selfdev-types"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "serde",
-]
-
-[[package]]
-name = "jcode-session-types"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "jcode-message-types",
- "serde",
-]
-
-[[package]]
-name = "jcode-side-panel-types"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "jcode-storage"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dirs",
- "jcode-core",
- "libc",
- "rand 0.9.3",
- "serde",
- "serde_json",
- "tempfile",
-]
-
-[[package]]
-name = "jcode-swarm-core"
-version = "0.1.0"
-dependencies = [
- "jcode-plan",
- "serde",
-]
-
-[[package]]
-name = "jcode-task-types"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
-]
-
-[[package]]
-name = "jcode-terminal-launch"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dirs",
-]
-
-[[package]]
-name = "jcode-tool-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "jcode-agent-runtime",
- "jcode-message-types",
- "jcode-tool-types",
- "serde_json",
- "tokio",
-]
-
-[[package]]
-name = "jcode-tool-types"
-version = "0.1.0"
-dependencies = [
- "serde_json",
-]
-
-[[package]]
-name = "jcode-tui-account-picker"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "jcode-tui-core"
-version = "0.1.0"
-dependencies = [
- "crossterm",
- "jcode-memory-types",
- "serde",
-]
-
-[[package]]
-name = "jcode-tui-markdown"
-version = "0.1.0"
-dependencies = [
- "jcode-tui-mermaid",
- "jcode-tui-workspace",
- "pulldown-cmark",
- "ratatui",
- "serde",
- "serde_json",
- "syntect",
- "unicode-width 0.2.0",
-]
-
-[[package]]
-name = "jcode-tui-mermaid"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "crossterm",
- "dirs",
- "image",
- "jcode-tui-workspace",
- "mermaid-rs-renderer",
- "ratatui",
- "ratatui-image",
- "resvg",
- "serde",
- "serde_json",
- "usvg",
-]
-
-[[package]]
-name = "jcode-tui-messages"
-version = "0.1.0"
-dependencies = [
- "jcode-config-types",
- "jcode-message-types",
- "jcode-tui-markdown",
- "ratatui",
- "serde_json",
-]
-
-[[package]]
-name = "jcode-tui-render"
-version = "0.1.0"
-dependencies = [
- "ratatui",
- "unicode-width 0.2.0",
-]
-
-[[package]]
-name = "jcode-tui-session-picker"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "jcode-message-types",
- "jcode-session-types",
- "serde",
-]
-
-[[package]]
-name = "jcode-tui-style"
-version = "0.1.0"
-dependencies = [
- "ratatui",
-]
-
-[[package]]
-name = "jcode-tui-tool-display"
-version = "0.1.0"
-dependencies = [
- "unicode-width 0.2.0",
-]
-
-[[package]]
-name = "jcode-tui-usage-overlay"
-version = "0.1.0"
-dependencies = [
- "ratatui",
- "serde",
-]
-
-[[package]]
-name = "jcode-tui-workspace"
-version = "0.1.0"
-dependencies = [
- "ratatui",
-]
-
-[[package]]
-name = "jcode-update-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "serde",
- "sha2 0.10.9",
-]
-
-[[package]]
-name = "jcode-usage-types"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "jni"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4384,6 +3785,605 @@ checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
 dependencies = [
  "adler2",
  "simd-adler32",
+]
+
+[[package]]
+name = "minnal"
+version = "0.12.2"
+dependencies = [
+ "agentgrep",
+ "anyhow",
+ "arboard",
+ "async-stream",
+ "async-trait",
+ "aws-config",
+ "aws-credential-types",
+ "aws-sdk-bedrock",
+ "aws-sdk-bedrockruntime",
+ "aws-sdk-sts",
+ "aws-smithy-types",
+ "aws-types",
+ "base64 0.22.1",
+ "bytes",
+ "chrono",
+ "clap",
+ "crossterm",
+ "dirs",
+ "flate2",
+ "futures",
+ "glob",
+ "global-hotkey",
+ "hex",
+ "ignore",
+ "image",
+ "libc",
+ "minnal-agent-runtime",
+ "minnal-ambient-types",
+ "minnal-auth-types",
+ "minnal-azure-auth",
+ "minnal-background-types",
+ "minnal-batch-types",
+ "minnal-build-support",
+ "minnal-compaction-core",
+ "minnal-config-types",
+ "minnal-core",
+ "minnal-embedding",
+ "minnal-gateway-types",
+ "minnal-import-core",
+ "minnal-memory-types",
+ "minnal-message-types",
+ "minnal-notify-email",
+ "minnal-overnight-core",
+ "minnal-pdf",
+ "minnal-plan",
+ "minnal-protocol",
+ "minnal-provider-core",
+ "minnal-provider-gemini",
+ "minnal-provider-metadata",
+ "minnal-provider-openai",
+ "minnal-provider-openrouter",
+ "minnal-selfdev-types",
+ "minnal-session-types",
+ "minnal-side-panel-types",
+ "minnal-storage",
+ "minnal-swarm-core",
+ "minnal-task-types",
+ "minnal-terminal-launch",
+ "minnal-tool-core",
+ "minnal-tool-types",
+ "minnal-tui-account-picker",
+ "minnal-tui-core",
+ "minnal-tui-markdown",
+ "minnal-tui-mermaid",
+ "minnal-tui-messages",
+ "minnal-tui-render",
+ "minnal-tui-session-picker",
+ "minnal-tui-style",
+ "minnal-tui-tool-display",
+ "minnal-tui-usage-overlay",
+ "minnal-tui-workspace",
+ "minnal-update-core",
+ "minnal-usage-types",
+ "open",
+ "proctitle",
+ "qrcode",
+ "rand 0.9.3",
+ "ratatui",
+ "regex",
+ "reqwest",
+ "rustls 0.23.37",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "sha2 0.10.9",
+ "similar",
+ "tar",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tikv-jemalloc-ctl",
+ "tikv-jemalloc-sys",
+ "tikv-jemallocator",
+ "tokio",
+ "tokio-stream",
+ "tokio-tungstenite",
+ "toml",
+ "unicode-width 0.2.0",
+ "url",
+ "urlencoding",
+ "uuid",
+ "walkdir",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "minnal-agent-runtime"
+version = "0.1.0"
+dependencies = [
+ "thiserror 1.0.69",
+ "tokio",
+]
+
+[[package]]
+name = "minnal-ambient-types"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+]
+
+[[package]]
+name = "minnal-auth-types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "minnal-azure-auth"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "azure_core",
+ "azure_identity",
+]
+
+[[package]]
+name = "minnal-background-types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "minnal-batch-types"
+version = "0.1.0"
+dependencies = [
+ "minnal-message-types",
+ "serde",
+]
+
+[[package]]
+name = "minnal-build-support"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "minnal-core",
+ "minnal-selfdev-types",
+ "minnal-storage",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
+name = "minnal-compaction-core"
+version = "0.1.0"
+dependencies = [
+ "minnal-message-types",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-config-types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "minnal-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "libc",
+ "rand 0.9.3",
+ "serde",
+]
+
+[[package]]
+name = "minnal-desktop"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "arboard",
+ "base64 0.22.1",
+ "bytemuck",
+ "glyphon",
+ "image",
+ "libc",
+ "pollster",
+ "pulldown-cmark",
+ "serde_json",
+ "wgpu",
+ "whoami",
+ "winit",
+]
+
+[[package]]
+name = "minnal-embedding"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "tokenizers",
+ "tract-hir",
+ "tract-onnx",
+]
+
+[[package]]
+name = "minnal-gateway-types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "minnal-import-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "minnal-memory-types"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "minnal-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-message-types"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-mobile-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-mobile-sim"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bytemuck",
+ "clap",
+ "libc",
+ "minnal-mobile-core",
+ "pollster",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "wgpu",
+ "winit",
+]
+
+[[package]]
+name = "minnal-notify-email"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "imap",
+ "lettre",
+ "mail-parser",
+ "native-tls",
+ "pulldown-cmark",
+ "urlencoding",
+]
+
+[[package]]
+name = "minnal-overnight-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-pdf"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "pdf-extract",
+]
+
+[[package]]
+name = "minnal-plan"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "minnal-protocol"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "minnal-batch-types",
+ "minnal-config-types",
+ "minnal-message-types",
+ "minnal-plan",
+ "minnal-provider-core",
+ "minnal-selfdev-types",
+ "minnal-session-types",
+ "minnal-side-panel-types",
+ "rand 0.9.3",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-provider-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "futures",
+ "minnal-message-types",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "minnal-provider-gemini"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-provider-metadata"
+version = "0.1.0"
+dependencies = [
+ "url",
+]
+
+[[package]]
+name = "minnal-provider-openai"
+version = "0.1.0"
+dependencies = [
+ "minnal-message-types",
+ "minnal-provider-core",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-provider-openrouter"
+version = "0.1.0"
+dependencies = [
+ "dirs",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-selfdev-types"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "serde",
+]
+
+[[package]]
+name = "minnal-session-types"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "minnal-message-types",
+ "serde",
+]
+
+[[package]]
+name = "minnal-side-panel-types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "minnal-storage"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "libc",
+ "minnal-core",
+ "rand 0.9.3",
+ "serde",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
+name = "minnal-swarm-core"
+version = "0.1.0"
+dependencies = [
+ "minnal-plan",
+ "serde",
+]
+
+[[package]]
+name = "minnal-task-types"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+]
+
+[[package]]
+name = "minnal-terminal-launch"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dirs",
+]
+
+[[package]]
+name = "minnal-tool-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "minnal-agent-runtime",
+ "minnal-message-types",
+ "minnal-tool-types",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "minnal-tool-types"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-tui-account-picker"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "minnal-tui-core"
+version = "0.1.0"
+dependencies = [
+ "crossterm",
+ "minnal-memory-types",
+ "serde",
+]
+
+[[package]]
+name = "minnal-tui-markdown"
+version = "0.1.0"
+dependencies = [
+ "minnal-tui-mermaid",
+ "minnal-tui-workspace",
+ "pulldown-cmark",
+ "ratatui",
+ "serde",
+ "serde_json",
+ "syntect",
+ "unicode-width 0.2.0",
+]
+
+[[package]]
+name = "minnal-tui-mermaid"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "crossterm",
+ "dirs",
+ "image",
+ "mermaid-rs-renderer",
+ "minnal-tui-workspace",
+ "ratatui",
+ "ratatui-image",
+ "resvg",
+ "serde",
+ "serde_json",
+ "usvg",
+]
+
+[[package]]
+name = "minnal-tui-messages"
+version = "0.1.0"
+dependencies = [
+ "minnal-config-types",
+ "minnal-message-types",
+ "minnal-tui-markdown",
+ "ratatui",
+ "serde_json",
+]
+
+[[package]]
+name = "minnal-tui-render"
+version = "0.1.0"
+dependencies = [
+ "ratatui",
+ "unicode-width 0.2.0",
+]
+
+[[package]]
+name = "minnal-tui-session-picker"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "minnal-message-types",
+ "minnal-session-types",
+ "serde",
+]
+
+[[package]]
+name = "minnal-tui-style"
+version = "0.1.0"
+dependencies = [
+ "ratatui",
+]
+
+[[package]]
+name = "minnal-tui-tool-display"
+version = "0.1.0"
+dependencies = [
+ "unicode-width 0.2.0",
+]
+
+[[package]]
+name = "minnal-tui-usage-overlay"
+version = "0.1.0"
+dependencies = [
+ "ratatui",
+ "serde",
+]
+
+[[package]]
+name = "minnal-tui-workspace"
+version = "0.1.0"
+dependencies = [
+ "ratatui",
+]
+
+[[package]]
+name = "minnal-update-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "serde",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "minnal-usage-types"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

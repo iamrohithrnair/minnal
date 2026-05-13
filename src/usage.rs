@@ -11,7 +11,7 @@ mod openai_helpers;
 mod provider_fetch;
 pub use accessors::*;
 use cache::*;
-pub use jcode_usage_types::{ProviderUsage, ProviderUsageProgress, UsageLimit};
+pub use minnal_usage_types::{ProviderUsage, ProviderUsageProgress, UsageLimit};
 pub use model::*;
 use provider_fetch::*;
 

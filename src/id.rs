@@ -1,1 +1,1 @@
-pub use jcode_core::id::*;
+pub use minnal_core::id::*;

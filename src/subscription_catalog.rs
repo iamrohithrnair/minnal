@@ -1,21 +1,21 @@
 use crate::provider_catalog;
 
-pub const JCODE_API_KEY_ENV: &str = "JCODE_API_KEY";
-pub const JCODE_API_BASE_ENV: &str = "JCODE_API_BASE";
-pub const JCODE_ENV_FILE: &str = "jcode-subscription.env";
-pub const JCODE_CACHE_NAMESPACE: &str = "jcode-subscription";
-pub const JCODE_SUBSCRIPTION_ACTIVE_ENV: &str = "JCODE_SUBSCRIPTION_ACTIVE";
-pub const DEFAULT_JCODE_API_BASE: &str = "https://subscription.jcode.invalid/v1";
+pub const MINNAL_API_KEY_ENV: &str = "MINNAL_API_KEY";
+pub const MINNAL_API_BASE_ENV: &str = "MINNAL_API_BASE";
+pub const MINNAL_ENV_FILE: &str = "minnal-subscription.env";
+pub const MINNAL_CACHE_NAMESPACE: &str = "minnal-subscription";
+pub const MINNAL_SUBSCRIPTION_ACTIVE_ENV: &str = "MINNAL_SUBSCRIPTION_ACTIVE";
+pub const DEFAULT_MINNAL_API_BASE: &str = "https://subscription.minnal.invalid/v1";
 
 const HEALER_ALPHA_PROVIDERS: &[&str] = &["Stealth"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum JcodeTier {
+pub enum MinnalTier {
     Starter20,
     Pro100,
 }
 
-impl JcodeTier {
+impl MinnalTier {
     pub fn retail_price_usd(self) -> u32 {
         match self {
             Self::Starter20 => 20,
@@ -134,21 +134,21 @@ pub fn is_curated_model(model: &str) -> bool {
 pub fn routing_policy_detail(model: &CuratedModel) -> String {
     match model.routing_policy {
         UpstreamRoutingPolicy::CacheCapableOnly => {
-            "jcode subscription routing · cache-capable upstreams only".to_string()
+            "minnal subscription routing · cache-capable upstreams only".to_string()
         }
         UpstreamRoutingPolicy::ProviderAllowlist(providers) => format!(
-            "jcode subscription routing · curated upstream: {}",
+            "minnal subscription routing · curated upstream: {}",
             providers.join(", ")
         ),
     }
 }
 
 pub fn configured_api_key() -> Option<String> {
-    provider_catalog::load_env_value_from_env_or_config(JCODE_API_KEY_ENV, JCODE_ENV_FILE)
+    provider_catalog::load_env_value_from_env_or_config(MINNAL_API_KEY_ENV, MINNAL_ENV_FILE)
 }
 
 pub fn configured_api_base() -> Option<String> {
-    provider_catalog::load_env_value_from_env_or_config(JCODE_API_BASE_ENV, JCODE_ENV_FILE)
+    provider_catalog::load_env_value_from_env_or_config(MINNAL_API_BASE_ENV, MINNAL_ENV_FILE)
 }
 
 pub fn has_credentials() -> bool {
@@ -160,7 +160,7 @@ pub fn has_router_base() -> bool {
 }
 
 pub fn is_runtime_mode_enabled() -> bool {
-    std::env::var(JCODE_SUBSCRIPTION_ACTIVE_ENV)
+    std::env::var(MINNAL_SUBSCRIPTION_ACTIVE_ENV)
         .ok()
         .map(|value| {
             matches!(
@@ -172,30 +172,30 @@ pub fn is_runtime_mode_enabled() -> bool {
 }
 
 pub fn apply_runtime_env() {
-    crate::env::set_var(JCODE_SUBSCRIPTION_ACTIVE_ENV, "1");
+    crate::env::set_var(MINNAL_SUBSCRIPTION_ACTIVE_ENV, "1");
     crate::env::set_var(
-        "JCODE_OPENROUTER_API_BASE",
-        configured_api_base().unwrap_or_else(|| DEFAULT_JCODE_API_BASE.to_string()),
+        "MINNAL_OPENROUTER_API_BASE",
+        configured_api_base().unwrap_or_else(|| DEFAULT_MINNAL_API_BASE.to_string()),
     );
-    crate::env::set_var("JCODE_OPENROUTER_API_KEY_NAME", JCODE_API_KEY_ENV);
-    crate::env::set_var("JCODE_OPENROUTER_ENV_FILE", JCODE_ENV_FILE);
-    crate::env::set_var("JCODE_OPENROUTER_CACHE_NAMESPACE", JCODE_CACHE_NAMESPACE);
-    crate::env::set_var("JCODE_OPENROUTER_PROVIDER_FEATURES", "0");
-    crate::env::remove_var("JCODE_OPENROUTER_ALLOW_NO_AUTH");
-    crate::env::remove_var("JCODE_OPENROUTER_PROVIDER");
-    crate::env::remove_var("JCODE_OPENROUTER_NO_FALLBACK");
+    crate::env::set_var("MINNAL_OPENROUTER_API_KEY_NAME", MINNAL_API_KEY_ENV);
+    crate::env::set_var("MINNAL_OPENROUTER_ENV_FILE", MINNAL_ENV_FILE);
+    crate::env::set_var("MINNAL_OPENROUTER_CACHE_NAMESPACE", MINNAL_CACHE_NAMESPACE);
+    crate::env::set_var("MINNAL_OPENROUTER_PROVIDER_FEATURES", "0");
+    crate::env::remove_var("MINNAL_OPENROUTER_ALLOW_NO_AUTH");
+    crate::env::remove_var("MINNAL_OPENROUTER_PROVIDER");
+    crate::env::remove_var("MINNAL_OPENROUTER_NO_FALLBACK");
 }
 
 pub fn clear_runtime_env() {
-    crate::env::remove_var(JCODE_SUBSCRIPTION_ACTIVE_ENV);
-    crate::env::remove_var("JCODE_OPENROUTER_API_BASE");
-    crate::env::remove_var("JCODE_OPENROUTER_API_KEY_NAME");
-    crate::env::remove_var("JCODE_OPENROUTER_ENV_FILE");
-    crate::env::remove_var("JCODE_OPENROUTER_CACHE_NAMESPACE");
-    crate::env::remove_var("JCODE_OPENROUTER_PROVIDER_FEATURES");
-    crate::env::remove_var("JCODE_OPENROUTER_ALLOW_NO_AUTH");
-    crate::env::remove_var("JCODE_OPENROUTER_PROVIDER");
-    crate::env::remove_var("JCODE_OPENROUTER_NO_FALLBACK");
+    crate::env::remove_var(MINNAL_SUBSCRIPTION_ACTIVE_ENV);
+    crate::env::remove_var("MINNAL_OPENROUTER_API_BASE");
+    crate::env::remove_var("MINNAL_OPENROUTER_API_KEY_NAME");
+    crate::env::remove_var("MINNAL_OPENROUTER_ENV_FILE");
+    crate::env::remove_var("MINNAL_OPENROUTER_CACHE_NAMESPACE");
+    crate::env::remove_var("MINNAL_OPENROUTER_PROVIDER_FEATURES");
+    crate::env::remove_var("MINNAL_OPENROUTER_ALLOW_NO_AUTH");
+    crate::env::remove_var("MINNAL_OPENROUTER_PROVIDER");
+    crate::env::remove_var("MINNAL_OPENROUTER_NO_FALLBACK");
 }
 
 #[cfg(test)]

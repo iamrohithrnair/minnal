@@ -31,7 +31,7 @@ use crate::storage;
 // ---------------------------------------------------------------------------
 
 /// Context passed from the ambient runner to a visible TUI cycle.
-/// Saved to `~/.jcode/ambient/visible_cycle.json`.
+/// Saved to `~/.minnal/ambient/visible_cycle.json`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VisibleCycleContext {
     pub system_prompt: String,
@@ -40,7 +40,7 @@ pub struct VisibleCycleContext {
 
 impl VisibleCycleContext {
     pub fn context_path() -> Result<PathBuf> {
-        Ok(storage::jcode_dir()?
+        Ok(storage::minnal_dir()?
             .join("ambient")
             .join("visible_cycle.json"))
     }
@@ -59,7 +59,7 @@ impl VisibleCycleContext {
     }
 
     pub fn result_path() -> Result<PathBuf> {
-        Ok(storage::jcode_dir()?
+        Ok(storage::minnal_dir()?
             .join("ambient")
             .join("cycle_result.json"))
     }

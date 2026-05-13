@@ -1,6 +1,6 @@
 # Compile Performance Plan
 
-This document tracks the plan to make jcode's self-dev / refactor loop much faster
+This document tracks the plan to make minnal's self-dev / refactor loop much faster
 without sacrificing full-feature builds.
 
 See also:
@@ -20,7 +20,7 @@ See also:
 Measured locally on the current tree:
 
 - Warm `cargo check --quiet`: **~8.5s**
-- Warm `scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet`: **~47.3s**
+- Warm `scripts/dev_cargo.sh build --release -p minnal --bin minnal --quiet`: **~47.3s**
 
 Additional observations from this audit:
 
@@ -68,7 +68,7 @@ even if they cannot reach the same fast path.
   - enables `sccache` automatically if installed
   - prefers `clang + lld` on Linux x86_64
   - uses the dedicated Cargo `selfdev` profile for `minnal` self-dev build/reload paths
-  - can still opt into `mold` via `JCODE_FAST_LINKER=mold`
+  - can still opt into `mold` via `MINNAL_FAST_LINKER=mold`
 - Route refactor-shadow builds through that wrapper.
 
 ### Phase 2 — Measurement and repeatability
@@ -91,21 +91,21 @@ Use it when capturing comparable before/after numbers for refactors.
 - 2026-03-25: upgraded `scripts/dev_cargo.sh` with `--print-setup` plus clearer cache/linker
   diagnostics so developers can confirm whether `sccache` / fast-linker paths are actually active.
 - 2026-03-30: removed the per-build `build.rs` timestamp/build-number churn from local source
-  builds. `JCODE_VERSION` for source builds is now stable per `Cargo.toml` version + git hash,
+  builds. `MINNAL_VERSION` for source builds is now stable per `Cargo.toml` version + git hash,
   while UI/version build-time display comes from the binary mtime at runtime. Validation on this
   machine: two no-op release-minnal runs measured **221.688s then 0.559s**, confirming the main
   crate no longer recompiles just because build metadata changed.
 - 2026-04-09: introduced a dedicated Cargo `selfdev` profile for self-dev iteration. On this
   machine, the warm local `minnal` self-dev build path dropped from about **56.1s** for
-  `scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet` to about **16.0s** for
-  `scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet`, while keeping the
+  `scripts/dev_cargo.sh build --release -p minnal --bin minnal --quiet` to about **16.0s** for
+  `scripts/dev_cargo.sh build --profile selfdev -p minnal --bin minnal --quiet`, while keeping the
   normal release/distribution profile unchanged.
 - 2026-04-18: added `scripts/bench_selfdev_checkpoints.sh` to standardize cold/warm self-dev
   checkpoints. First local checkpoint attempt on this machine surfaced two environment blockers:
   - cold checkpoints failed because `cargo clean` could not remove part of `target/release`
     (`Permission denied` on a fingerprint timestamp file)
-  - warm `selfdev-jcode` touched-file measurement on `src/tool/read.rs` failed because the
-    `sccache`-wrapped rustc process terminated with signal 15 during the `jcode` crate build
+  - warm `selfdev-minnal` touched-file measurement on `src/tool/read.rs` failed because the
+    `sccache`-wrapped rustc process terminated with signal 15 during the `minnal` crate build
   - warm touched-file `cargo check` on `src/tool/read.rs` completed in **93.115s** then **9.430s**,
     which is useful as a rough upper/lower bound but not yet stable enough to treat as an
     authoritative checkpoint
@@ -115,92 +115,92 @@ Use it when capturing comparable before/after numbers for refactors.
   checkpoint failures and report them in JSON/text output instead of aborting early. Verified local
   output on this machine with `--touch src/tool/read.rs --runs 1`:
   - warm touched-file `cargo check`: **9.582s**
-  - warm touched-file `selfdev-jcode` build: **59.898s**
+  - warm touched-file `selfdev-minnal` build: **59.898s**
   - failed checkpoints reported cleanly: `cold_check`, `cold_selfdev_build`
 - 2026-04-18: added `--skip-cold` to `scripts/bench_selfdev_checkpoints.sh` so warm-only
   checkpoints remain usable while cold-path cleanup is blocked locally. Verified local output on this
   machine with `--skip-cold --touch src/tool/read.rs --runs 1`:
   - warm touched-file `cargo check`: **9.339s**
-  - warm touched-file `selfdev-jcode` build: **18.844s**
+  - warm touched-file `selfdev-minnal` build: **18.844s**
   - skipped checkpoints reported explicitly: `cold_check`, `cold_selfdev_build`
 - 2026-04-18: additional warm-only checkpoint on a broader shared edit target with
   `--skip-cold --touch src/server.rs --runs 1`:
   - warm touched-file `cargo check`: **8.711s**
-  - warm touched-file `selfdev-jcode` build: **18.969s**
+  - warm touched-file `selfdev-minnal` build: **18.969s**
 - 2026-04-18: additional warm-only checkpoint on a heavy tool-path file with
   `--skip-cold --touch src/tool/communicate.rs --runs 1`:
   - warm touched-file `cargo check`: **8.496s**
-  - warm touched-file `selfdev-jcode` build: **21.400s**
+  - warm touched-file `selfdev-minnal` build: **21.400s**
 - 2026-04-18: additional warm-only checkpoint on a provider-heavy file with
   `--skip-cold --touch src/provider/openai.rs --runs 1`:
   - warm touched-file `cargo check`: **8.750s**
-  - warm touched-file `selfdev-jcode` build: **21.386s**
+  - warm touched-file `selfdev-minnal` build: **21.386s**
 - 2026-04-18: additional warm-only checkpoint on the shared provider module with
   `--skip-cold --touch src/provider/mod.rs --runs 1`:
   - warm touched-file `cargo check`: **9.772s**
-  - warm touched-file `selfdev-jcode` build: **17.917s**
+  - warm touched-file `selfdev-minnal` build: **17.917s**
 - 2026-04-18: additional warm-only checkpoint on the agent entry module with
   `--skip-cold --touch src/agent.rs --runs 1`:
   - warm touched-file `cargo check`: **7.318s**
-  - warm touched-file `selfdev-jcode` build: **30.928s**
+  - warm touched-file `selfdev-minnal` build: **30.928s**
 - 2026-04-18: additional warm-only checkpoint on the memory tool with
   `--skip-cold --touch src/tool/memory.rs --runs 1`:
   - warm touched-file `cargo check`: **7.787s**
-  - warm touched-file `selfdev-jcode` build: **12.798s**
+  - warm touched-file `selfdev-minnal` build: **12.798s**
 - 2026-04-18: additional warm-only checkpoint on session search with
   `--skip-cold --touch src/tool/session_search.rs --runs 1`:
   - warm touched-file `cargo check`: **7.009s**
-  - warm touched-file `selfdev-jcode` build: **12.874s**
+  - warm touched-file `selfdev-minnal` build: **12.874s**
 - 2026-04-18: additional warm-only checkpoint on the browser tool with
   `--skip-cold --touch src/tool/browser.rs --runs 1`:
   - warm touched-file `cargo check`: **13.693s**
-  - warm touched-file `selfdev-jcode` build: **18.874s**
-- 2026-04-28: diagnosed the repeated self-dev `jcode` lib build `SIGTERM` on this 16 GiB,
+  - warm touched-file `selfdev-minnal` build: **18.874s**
+- 2026-04-28: diagnosed the repeated self-dev `minnal` lib build `SIGTERM` on this 16 GiB,
   no-swap workstation. `journalctl -u earlyoom` showed earlyoom sending `SIGTERM` to the root
   `rustc` at about **1.09 GiB RSS** when available memory crossed the 10% threshold. A direct
   no-`sccache` build reproduced the same signal, so `sccache` was only reporting the termination.
   `scripts/dev_cargo.sh` now enables adaptive low-memory overrides for `--profile selfdev` when
   Linux + earlyoom + no swap + <24 GiB RAM + <8 GiB currently available RAM are detected:
   `CARGO_INCREMENTAL=0`, `CARGO_PROFILE_SELFDEV_INCREMENTAL=false`, and
-  `CARGO_PROFILE_SELFDEV_CODEGEN_UNITS=16`. Use `JCODE_SELFDEV_LOW_MEMORY=off` to disable, or
-  `JCODE_SELFDEV_LOW_MEMORY=on` to force. Validation: the original root build completed under
+  `CARGO_PROFILE_SELFDEV_CODEGEN_UNITS=16`. Use `MINNAL_SELFDEV_LOW_MEMORY=off` to disable, or
+  `MINNAL_SELFDEV_LOW_MEMORY=on` to force. Validation: the original root build completed under
   those settings in **2m34s** after the interrupted partial build reused artifacts; a later
   benchmark with 9.4 GiB available showed that preserving the inherited selfdev profile can reduce
   warm edit builds from about **60s** to about **14s** when there is enough headroom.
 - 2026-05-05: trimmed root compile surface by replacing broad `tokio/full` with explicit used
-  features, aligning Jcode-owned `crossterm` dependencies on 0.29, and replacing `qr2term` with
-  direct `qrcode` rendering. This removed the duplicate `crossterm 0.28` path from the `jcode`
-  tree while preserving login QR output. Validation: `cargo check --profile selfdev -p jcode --bin
+  features, aligning Minnal-owned `crossterm` dependencies on 0.29, and replacing `qr2term` with
+  direct `qrcode` rendering. This removed the duplicate `crossterm 0.28` path from the `minnal`
+  tree while preserving login QR output. Validation: `cargo check --profile selfdev -p minnal --bin
   minnal`, `cargo test --profile selfdev login_qr --lib -- --nocapture`, and coordinated
   `selfdev build` passed.
-- 2026-05-05: removed unused `reqwest/blocking` from `jcode-provider-core`; static search showed
+- 2026-05-05: removed unused `reqwest/blocking` from `minnal-provider-core`; static search showed
   no blocking API usage in that crate. Validation: `cargo check --profile selfdev -p
-  jcode-provider-core` and full `cargo check --profile selfdev -p jcode --bin minnal` passed.
-- 2026-05-03: added `JCODE_DEV_FEATURE_PROFILE` to `scripts/dev_cargo.sh` so compile-speed probes and
+  minnal-provider-core` and full `cargo check --profile selfdev -p minnal --bin minnal` passed.
+- 2026-05-03: added `MINNAL_DEV_FEATURE_PROFILE` to `scripts/dev_cargo.sh` so compile-speed probes and
   narrow inner-loop builds can consistently select feature sets without repeating Cargo flags. Profiles:
   `default`, `minimal`/`none` (`--no-default-features`), `pdf` (`--no-default-features --features pdf`),
   `embeddings` (`--no-default-features --features embeddings`), and `full` (`--features embeddings,pdf`).
   The wrapper leaves explicit `--features` / `--no-default-features` cargo args untouched. Validation on
-  this machine: `JCODE_DEV_FEATURE_PROFILE=minimal scripts/dev_cargo.sh check -p jcode --lib --quiet` passed.
+  this machine: `MINNAL_DEV_FEATURE_PROFILE=minimal scripts/dev_cargo.sh check -p minnal --lib --quiet` passed.
 - 2026-05-03: disabled Cargo auto-discovery for root binary targets and moved developer-only helper
   binaries (`tui_bench`, `session_memory_bench`, `mermaid_side_panel_probe`) behind the opt-in
   `dev-bins` feature. This keeps broad normal checks focused on production/test targets while preserving
-  explicit probe coverage via `cargo check --all-targets -p jcode --features dev-bins`. Validation showed
-  `cargo check --all-targets -p jcode` skips those three bins, while adding `--features dev-bins` includes them.
+  explicit probe coverage via `cargo check --all-targets -p minnal --features dev-bins`. Validation showed
+  `cargo check --all-targets -p minnal` skips those three bins, while adding `--features dev-bins` includes them.
 - 2026-05-03: moved the self-dev build/version/channel support implementation out of the root crate and
-  into `crates/jcode-build-support`, leaving `src/build.rs` as a re-export facade. This cuts another
+  into `crates/minnal-build-support`, leaving `src/build.rs` as a re-export facade. This cuts another
   stable, high-fanout support subsystem out of the root compile unit while preserving existing call sites
-  (`crate::build::*`). Validation: `cargo check -p jcode-build-support`, `cargo test -p jcode-build-support`,
-  and `cargo check -p jcode --lib` passed during the split.
+  (`crate::build::*`). Validation: `cargo check -p minnal-build-support`, `cargo test -p minnal-build-support`,
+  and `cargo check -p minnal --lib` passed during the split.
 - 2026-05-03: moved the pure keybinding parser/matcher/types from `src/tui/keybind.rs` into
-  `jcode-tui-core::keybind`, leaving root TUI config-loading wrappers in place. This creates a reusable
+  `minnal-tui-core::keybind`, leaving root TUI config-loading wrappers in place. This creates a reusable
   cache boundary for a low-coupling TUI helper module while preserving the existing `crate::tui::keybind::*`
-  API. Validation: `cargo check -p jcode-tui-core`, `cargo test -p jcode-tui-core`, and
-  `cargo check -p jcode --lib` passed.
+  API. Validation: `cargo check -p minnal-tui-core`, `cargo test -p minnal-tui-core`, and
+  `cargo check -p minnal --lib` passed.
 
 Warm-only touched-file checkpoints captured so far on this machine:
 
-| Touched file | Warm `cargo check` | Warm `selfdev-jcode` build |
+| Touched file | Warm `cargo check` | Warm `selfdev-minnal` build |
 | --- | ---: | ---: |
 | `src/tool/session_search.rs` | 7.009s | 12.874s |
 | `src/agent.rs` | 7.318s | 30.928s |
@@ -214,7 +214,7 @@ Warm-only touched-file checkpoints captured so far on this machine:
 
 Observed spread from these warm-only checkpoints:
 - warm touched-file `cargo check`: **7.009s to 13.693s**
-- warm touched-file `selfdev-jcode` build: **12.798s to 30.928s**
+- warm touched-file `selfdev-minnal` build: **12.798s to 30.928s**
 - fastest measured warm self-dev rebuilds so far are on smaller tool-path edits
 - `src/agent.rs` currently stands out as the most expensive warm self-dev rebuild in this sample set
 - `src/tool/browser.rs` currently stands out as the slowest warm `cargo check` in this sample set
@@ -228,30 +228,30 @@ as compatible with that RFC, not as the only acceptable final packaging.
 
 Proposed destination layout:
 
-- `jcode-core`
+- `minnal-core`
   - protocol, ids, message types, config primitives, shared utility types
-- `jcode-server`
+- `minnal-server`
   - server lifecycle, reload, socket, swarm, daemon behaviors
-- `jcode-agent`
+- `minnal-agent`
   - agent turn loop, tool orchestration, stream handling
-- `jcode-provider`
+- `minnal-provider`
   - provider traits, shared provider types, routing/catalog support
-- `jcode-embedding`
+- `minnal-embedding`
   - embedding model integration and related heavy inference dependencies
-- `jcode-tui`
+- `minnal-tui`
   - TUI rendering, widgets, state reduction, terminal UI support
-- `jcode-tui-core`
+- `minnal-tui-core`
   - low-level TUI helpers with minimal root coupling, including stream buffers and keybinding parsing
-- `jcode-selfdev`
+- `minnal-selfdev`
   - customization records, migration logic, self-dev productization
-- `jcode-build-support`
+- `minnal-build-support`
   - self-dev build commands, source-state fingerprints, binary channel paths/manifests
 
 ### Phase 4 — First crate splits
 
 Start with the highest-leverage cache boundaries:
 
-1. `jcode-embedding`
+1. `minnal-embedding`
 2. provider support / provider implementation splits
 3. self-dev/customization system once the new extension-point work lands
 4. server / agent split along the seams already being extracted
@@ -259,7 +259,7 @@ Start with the highest-leverage cache boundaries:
 ### Phase 4a — First workspace boundary landed
 
 - 2026-03-24: moved the heavy ONNX/tokenizer implementation into the new
-  `crates/jcode-embedding` workspace crate.
+  `crates/minnal-embedding` workspace crate.
 - The main `src/embedding.rs` module now acts as a facade for process-local
   cache/stats/path/logging integration.
 - This preserves the public `crate::embedding` API while creating a real Cargo
@@ -271,24 +271,24 @@ Start with the highest-leverage cache boundaries:
   / `cargo build` still compiled the `tract` / `tokenizers` subtree unless
   developers remembered `--no-default-features`. Default builds now keep `pdf`
   enabled but skip local embedding inference; full local inference remains
-  available via `--features embeddings` or `JCODE_DEV_FEATURE_PROFILE=full`.
-  Validation: `cargo tree -p jcode --edges normal --depth 1` includes
-  `jcode-pdf` but not `jcode-embedding`; adding `--features embeddings` includes
-  both; `cargo check -p jcode --quiet` passes.
+  available via `--features embeddings` or `MINNAL_DEV_FEATURE_PROFILE=full`.
+  Validation: `cargo tree -p minnal --edges normal --depth 1` includes
+  `minnal-pdf` but not `minnal-embedding`; adding `--features embeddings` includes
+  both; `cargo check -p minnal --quiet` passes.
 
-- 2026-03-24: moved PDF extraction behind the new `crates/jcode-pdf` workspace
+- 2026-03-24: moved PDF extraction behind the new `crates/minnal-pdf` workspace
   crate and fixed the `--no-default-features` build path by making PDF support
   degrade gracefully when the feature is disabled.
 
 - 2026-03-24: moved Azure bearer-token retrieval behind the new
-  `crates/jcode-azure-auth` workspace crate so the Azure SDK no longer lives
+  `crates/minnal-azure-auth` workspace crate so the Azure SDK no longer lives
   directly in the main crate.
 - Note: touched-file timing for `src/auth/azure.rs` needs more instrumentation
   cleanup; one post-split sample was anomalous and should not be treated as a
   trustworthy ROI datapoint yet.
 
 - 2026-03-24: moved email notification / IMAP reply transport behind the new
-  `crates/jcode-notify-email` workspace crate.
+  `crates/minnal-notify-email` workspace crate.
 - The main `src/notifications.rs` module now keeps the higher-level ambient,
   safety, and channel integration while SMTP/IMAP/mail parsing lives behind a
   dedicated crate boundary.
@@ -297,7 +297,7 @@ Start with the highest-leverage cache boundaries:
   itself still invalidate the main crate and are not the right sole ROI metric.
 
 - 2026-03-25: landed the first provider boundary slice with
-  `crates/jcode-provider-metadata`.
+  `crates/minnal-provider-metadata`.
 - Boundary decision: provider **metadata / profile catalogs / pure selection helpers** move into
   their own crate first, while env mutation, config-file I/O, and runtime integration remain in
   `src/provider_catalog.rs` as a facade.
@@ -305,14 +305,14 @@ Start with the highest-leverage cache boundaries:
   compile boundary without prematurely dragging streaming/message/runtime dependencies into a shared
   crate that would likely stay high-churn.
 
-- 2026-03-25: landed the next provider-core slice with `crates/jcode-provider-core`.
+- 2026-03-25: landed the next provider-core slice with `crates/minnal-provider-core`.
 - Boundary decision: move **shared HTTP client + route/cost/core provider value types** first,
   but keep the `Provider` trait itself in `src/provider/mod.rs` for now.
 - Reason: the trait currently still mixes in `message.rs`, runtime/auth behavior, and provider-specific
   streaming/compaction concerns; moving it too early would likely create a noisy, still-high-churn core crate.
 
 - 2026-03-25: landed the first provider-implementation support crate with
-  `crates/jcode-provider-openrouter`.
+  `crates/minnal-provider-openrouter`.
 - Boundary decision: move **OpenRouter-specific model catalog / endpoint cache / provider ranking /
   model-spec parsing support** into a dedicated crate, while keeping the actual `Provider` trait impl,
   auth wiring, and message/stream translation in `src/provider/openrouter.rs`.
@@ -320,7 +320,7 @@ Start with the highest-leverage cache boundaries:
   cycle through `Provider`, `EventStream`, or `message.rs`.
 
 - 2026-03-25: landed the next provider-implementation support crate with
-  `crates/jcode-provider-gemini`.
+  `crates/minnal-provider-gemini`.
 - Boundary decision: move **Gemini Code Assist schema/types, model-list constants, and pure support helpers**
   into a dedicated crate, while keeping the actual `Provider` trait impl, auth calls, and runtime/network orchestration
   in `src/provider/gemini.rs`.
@@ -328,7 +328,7 @@ Start with the highest-leverage cache boundaries:
   seam prematurely.
 
 - 2026-03-30: moved the pure OpenAI tool-schema normalization helpers into
-  `crates/jcode-provider-core/src/openai_schema.rs`.
+  `crates/minnal-provider-core/src/openai_schema.rs`.
 - Boundary decision: move **pure schema adaptation / strict-normalization helpers** first, while keeping
   `build_tools(...)` and request-history rewriting in `src/provider/openai_request.rs` because those still depend on
   local tool/message types.
@@ -336,103 +336,103 @@ Start with the highest-leverage cache boundaries:
   or the `Provider` trait into a shared crate.
 
 - 2026-05-05: moved provider catalog-refresh diffing into
-  `jcode-provider-core::catalog_refresh` and re-exported it from the root provider facade.
+  `minnal-provider-core::catalog_refresh` and re-exported it from the root provider facade.
 - Boundary decision: move the pure `ModelRoute` summary/diff logic first because it has no root-crate
   auth/runtime/config dependencies.
 - 2026-05-05: split the stable provider pricing tables/helpers into
-  `jcode-provider-core::pricing`, leaving `src/provider/pricing.rs` as a thin facade for root-only
+  `minnal-provider-core::pricing`, leaving `src/provider/pricing.rs` as a thin facade for root-only
   auth/env/OpenRouter-cache lookups.
 - Reason: provider pricing is relatively stable table/math code, but it previously lived in the main crate
   beside high-churn provider runtime code. This creates a reusable cache boundary without moving the
   `Provider` trait or network implementations prematurely.
-- Validation: `cargo test -p jcode-provider-core --quiet`, `cargo test -p jcode pricing:: --quiet`,
-  `cargo check -p jcode --quiet`, and `cargo check -p jcode --features embeddings --quiet` pass.
+- Validation: `cargo test -p minnal-provider-core --quiet`, `cargo test -p minnal pricing:: --quiet`,
+  `cargo check -p minnal --quiet`, and `cargo check -p minnal --features embeddings --quiet` pass.
 - 2026-05-05: moved provider failover prompt/decision/classifier contracts and provider
-  selection/fallback-order contracts into `jcode-provider-core`, leaving root provider modules as
+  selection/fallback-order contracts into `minnal-provider-core`, leaving root provider modules as
   facades for env/runtime/account state. This continues shrinking `src/provider/mod.rs` support
-  surfaces toward an eventual `jcode-provider` runtime crate.
-- Validation: `cargo test -p jcode-provider-core --quiet`, focused root provider selection/failover
-  tests, and `cargo check -p jcode --quiet` pass.
-- 2026-05-05: moved the Copilot `PremiumMode` provider-control enum into `jcode-provider-core`
+  surfaces toward an eventual `minnal-provider` runtime crate.
+- Validation: `cargo test -p minnal-provider-core --quiet`, focused root provider selection/failover
+  tests, and `cargo check -p minnal --quiet` pass.
+- 2026-05-05: moved the Copilot `PremiumMode` provider-control enum into `minnal-provider-core`
   and re-exported it from the root/Copilot facades. The `Provider` trait no longer needs to name
   the root `copilot` module for this control surface.
-- Validation: `cargo check -p jcode-provider-core --quiet` and `cargo check -p jcode --quiet` pass.
-- 2026-05-05: moved provider-native tool result DTOs/sender aliases into `jcode-provider-core`.
+- Validation: `cargo check -p minnal-provider-core --quiet` and `cargo check -p minnal --quiet` pass.
+- 2026-05-05: moved provider-native tool result DTOs/sender aliases into `minnal-provider-core`.
   The global `Provider` trait no longer has to expose types owned by the root Claude module.
-- Validation: `cargo check -p jcode-provider-core --quiet` and `cargo check -p jcode --quiet` pass.
+- Validation: `cargo check -p minnal-provider-core --quiet` and `cargo check -p minnal --quiet` pass.
 - 2026-05-05: moved stable provider model constants, static provider/model classification,
   Copilot model-name normalization, and fallback context-window heuristics into
-  `jcode-provider-core::models`. Root `src/provider/models.rs` now layers dynamic account catalogs,
+  `minnal-provider-core::models`. Root `src/provider/models.rs` now layers dynamic account catalogs,
   runtime availability, and cache hydration on top of those core helpers.
-- Validation: `cargo test -p jcode-provider-core models:: --quiet`,
-  `cargo check -p jcode-provider-core --quiet`, and `cargo check -p jcode --quiet` pass.
-- 2026-05-05: moved the global `Provider` trait and `EventStream` alias into `jcode-provider-core`.
+- Validation: `cargo test -p minnal-provider-core models:: --quiet`,
+  `cargo check -p minnal-provider-core --quiet`, and `cargo check -p minnal --quiet` pass.
+- 2026-05-05: moved the global `Provider` trait and `EventStream` alias into `minnal-provider-core`.
   Root `src/provider/mod.rs` now re-exports the contract while continuing to own concrete provider
   implementations and `MultiProvider` composition. This is the main provider seam needed before a
-  future `jcode-provider` runtime crate can be introduced safely.
-- Validation: `cargo check -p jcode-provider-core --quiet` and `cargo check -p jcode --quiet` pass.
+  future `minnal-provider` runtime crate can be introduced safely.
+- Validation: `cargo check -p minnal-provider-core --quiet` and `cargo check -p minnal --quiet` pass.
 - Warm-only touched-file benchmark on `src/provider/mod.rs` after the provider-core seam: first
   self-dev build was a noisy artifact-producing **140.739s**, then the immediate rerun measured
   **12.101s** warm `cargo check` and **27.433s** warm self-dev build. Treat the rerun as the
   comparable steady-state datapoint.
 
 - 2026-05-05: moved the stable provider-facing `ToolDefinition` contract from `src/message.rs` into
-  `jcode-message-types` and re-exported it from the root message facade. This is a prerequisite for
+  `minnal-message-types` and re-exported it from the root message facade. This is a prerequisite for
   shrinking the provider trait and tool registry surfaces away from root-crate-only message types.
-- Validation: `cargo test -p jcode-message-types --quiet` and `cargo check -p jcode --quiet` pass.
-- 2026-05-05: introduced `jcode-tool-types` for stable tool execution output DTOs and moved
+- Validation: `cargo test -p minnal-message-types --quiet` and `cargo check -p minnal --quiet` pass.
+- 2026-05-05: introduced `minnal-tool-types` for stable tool execution output DTOs and moved
   `ToolOutput` / `ToolImage` out of `src/tool/mod.rs`. Root tool modules continue using the same
   names via a facade re-export, but provider/agent/server seams can now depend on a narrow tool
   result contract without depending on the root tool registry.
-- Validation: `cargo check -p jcode-tool-types --quiet`, `cargo test -p jcode-tool-types --quiet`,
-  and `cargo check -p jcode --quiet` pass.
-- 2026-05-05: added `jcode-tool-core` for runtime tool contracts and moved `Tool`, `ToolContext`,
-  `ToolExecutionMode`, and `StdinInputRequest` out of `src/tool/mod.rs`. `jcode-tool-types` stays
+- Validation: `cargo check -p minnal-tool-types --quiet`, `cargo test -p minnal-tool-types --quiet`,
+  and `cargo check -p minnal --quiet` pass.
+- 2026-05-05: added `minnal-tool-core` for runtime tool contracts and moved `Tool`, `ToolContext`,
+  `ToolExecutionMode`, and `StdinInputRequest` out of `src/tool/mod.rs`. `minnal-tool-types` stays
   DTO-only, while channel/runtime-bearing context lives in the runtime-contract crate instead of
   contaminating pure type crates.
-- 2026-05-05: also moved the shared tool intent schema helper into `jcode-tool-core`, keeping the
+- 2026-05-05: also moved the shared tool intent schema helper into `minnal-tool-core`, keeping the
   root `src/tool/mod.rs` module focused on registry composition rather than shared schema contracts.
-- Validation: `cargo check -p jcode-tool-core --quiet`, `cargo check -p jcode-tool-types --quiet`,
-  and `cargo check -p jcode --quiet` pass.
+- Validation: `cargo check -p minnal-tool-core --quiet`, `cargo check -p minnal-tool-types --quiet`,
+  and `cargo check -p minnal --quiet` pass.
 - 2026-05-05: moved provider streaming contracts `StreamEvent` and `ConnectionPhase` from
-  `src/message.rs` into `jcode-message-types`, again preserving root facade re-exports. Together
+  `src/message.rs` into `minnal-message-types`, again preserving root facade re-exports. Together
   with `ToolDefinition`, this materially reduces the root-only surface of the provider trait and
-  prepares a future `jcode-provider` crate.
-- Validation: `cargo check -p jcode-message-types --quiet`, `cargo test -p jcode-message-types --quiet`,
-  and `cargo check -p jcode --quiet` pass.
+  prepares a future `minnal-provider` crate.
+- Validation: `cargo check -p minnal-message-types --quiet`, `cargo test -p minnal-message-types --quiet`,
+  and `cargo check -p minnal --quiet` pass.
 - 2026-05-05: moved core conversation DTOs `Message`, `ContentBlock`, `Role`, and `CacheControl`
-  into `jcode-message-types`, while keeping root-only redaction/generated-image/session helpers in
+  into `minnal-message-types`, while keeping root-only redaction/generated-image/session helpers in
   `src/message.rs`. Provider and agent contracts can now refer to message data through the lower
   type crate rather than the root crate facade.
-- Validation: `cargo check -p jcode-message-types --quiet`, `cargo test -p jcode-message-types --quiet`,
-  and `cargo check -p jcode --quiet` pass.
+- Validation: `cargo check -p minnal-message-types --quiet`, `cargo test -p minnal-message-types --quiet`,
+  and `cargo check -p minnal --quiet` pass.
 - 2026-05-05: moved pure message helpers for fresh-user-turn detection, stable message hashing,
-  tool ID sanitization, and the missing-tool-output constant into `jcode-message-types`. Root keeps
+  tool ID sanitization, and the missing-tool-output constant into `minnal-message-types`. Root keeps
   secret redaction and generated-image visual context because those still depend on regex/env/fs/base64
   integration details.
-- Validation: `cargo check -p jcode-message-types --quiet`, focused root message helper tests, and
-  `cargo check -p jcode --quiet` pass.
+- Validation: `cargo check -p minnal-message-types --quiet`, focused root message helper tests, and
+  `cargo check -p minnal --quiet` pass.
 - 2026-05-05: moved the provider split-system dynamic-context insertion helper and its tests into
-  `jcode-message-types`. This removes another pure message transformation from `src/provider/mod.rs`
+  `minnal-message-types`. This removes another pure message transformation from `src/provider/mod.rs`
   and keeps preparing the provider trait for an eventual runtime crate split.
-- Validation: `cargo test -p jcode-message-types dynamic_context --quiet`,
-  `cargo check -p jcode-message-types --quiet`, and `cargo check -p jcode --quiet` pass.
+- Validation: `cargo test -p minnal-message-types dynamic_context --quiet`,
+  `cargo check -p minnal-message-types --quiet`, and `cargo check -p minnal --quiet` pass.
 
 - 2026-05-05: moved the server lightweight-control request classifier from
-  `src/server/client_lifecycle.rs` into `jcode-protocol::Request::is_lightweight_control_request`.
+  `src/server/client_lifecycle.rs` into `minnal-protocol::Request::is_lightweight_control_request`.
   This is a small but directionally important server seam: protocol-shape policy belongs with the
   protocol contract, while the large client lifecycle module keeps runtime dispatch.
-- Validation: `cargo check -p jcode-protocol --quiet` and `cargo check -p jcode --quiet` pass.
+- Validation: `cargo check -p minnal-protocol --quiet` and `cargo check -p minnal --quiet` pass.
 - 2026-05-05: moved swarm task-control action parsing, assignment-message formatting, and status
-  eligibility/error policy from `src/server/comm_control.rs` into `jcode-plan`. This keeps plan/task
+  eligibility/error policy from `src/server/comm_control.rs` into `minnal-plan`. This keeps plan/task
   policy next to the plan graph/status helpers and leaves server comm control focused on runtime I/O
   and mutation orchestration.
-- Validation: `cargo test -p jcode-plan --quiet` and `cargo check -p jcode --quiet` pass.
+- Validation: `cargo test -p minnal-plan --quiet` and `cargo check -p minnal --quiet` pass.
 
-- 2026-03-30: moved the workspace-map subsystem into the new `crates/jcode-tui-workspace` crate.
+- 2026-03-30: moved the workspace-map subsystem into the new `crates/minnal-tui-workspace` crate.
 - Boundary decision: move **workspace map data/model + widget rendering** first, while keeping the surrounding
   `info_widget`, app state, and higher-level TUI composition in the main crate.
-- Reason: this is a safe first `jcode-tui` foothold because the workspace map code is already mostly self-contained and
+- Reason: this is a safe first `minnal-tui` foothold because the workspace map code is already mostly self-contained and
   avoids the much riskier `App` / renderer / markdown / mermaid seams.
 
 ### Phase 5 — Reduce invalidation pressure
@@ -452,7 +452,7 @@ Start with the highest-leverage cache boundaries:
   - routing/theme/layout data
 - Prefer those over direct Rust source edits whenever possible.
 - 2026-03-30: landed the first prompt-overlay seam for system-prompt customization without a rebuild.
-  jcode now loads `~/.jcode/prompt-overlay.md` and `./.jcode/prompt-overlay.md` into the
+  minnal now loads `~/.minnal/prompt-overlay.md` and `./.minnal/prompt-overlay.md` into the
   static prompt, which is a low-risk first step toward the broader issue #32 customization plan.
 
 ## Scenario Measurements (2026-03-24)
@@ -504,17 +504,17 @@ The next obvious heavy dependency boundaries are less clearly safe/local than th
 
 - provider support remains high-value, but `src/provider/mod.rs` and related implementations are
   broad enough that the next split should be designed carefully instead of rushed.
-- a future `jcode-provider-core` / provider-implementation split is still the most promising next
+- a future `minnal-provider-core` / provider-implementation split is still the most promising next
   compile-speed move, but it needs boundary design first so high-churn shared types do not create
   a new invalidation hotspot.
 
 Current provider-boundary stance:
 
-- **Done:** `jcode-provider-metadata` for stable login/profile catalog data and pure selection logic.
-- **Done:** `jcode-provider-core` for shared HTTP client plus route/cost/core provider value types.
-- **Done:** `jcode-provider-openrouter` for OpenRouter-specific catalog/cache/ranking/model-spec support.
-- **Done:** `jcode-provider-gemini` for Gemini Code Assist schema/types and pure model support helpers.
-- **Done:** `jcode-provider-core::openai_schema` for pure OpenAI schema adaptation / strict-normalization helpers.
+- **Done:** `minnal-provider-metadata` for stable login/profile catalog data and pure selection logic.
+- **Done:** `minnal-provider-core` for shared HTTP client plus route/cost/core provider value types.
+- **Done:** `minnal-provider-openrouter` for OpenRouter-specific catalog/cache/ranking/model-spec support.
+- **Done:** `minnal-provider-gemini` for Gemini Code Assist schema/types and pure model support helpers.
+- **Done:** `minnal-provider-core::openai_schema` for pure OpenAI schema adaptation / strict-normalization helpers.
 - **Not done yet:** `Provider` trait / `EventStream` extraction and fully independent provider impl crates.
 - **Reason:** the trait side still depends on `message.rs`, auth flows, runtime behavior, and provider-specific
   streaming logic; the current staged split avoids turning that unstable seam into a low-value high-churn crate.
@@ -525,8 +525,8 @@ That means the best next batch should likely target either:
 
 Current TUI-boundary stance:
 
-- **Done:** `jcode-tui-workspace` for workspace-map model + widget rendering.
-- **Not done yet:** broader `jcode-tui` extraction for markdown, mermaid, info widgets, and the shared renderer.
+- **Done:** `minnal-tui-workspace` for workspace-map model + widget rendering.
+- **Not done yet:** broader `minnal-tui` extraction for markdown, mermaid, info widgets, and the shared renderer.
 - **Reason:** the remaining high-value TUI files are larger but still more tightly coupled to `App`, config, images,
   side-panel state, and rendering orchestration, so they need staged extraction rather than a rushed top-level split.
 
@@ -538,20 +538,20 @@ Use:
 
 ```bash
 scripts/dev_cargo.sh check --quiet
-scripts/dev_cargo.sh build --release -p jcode --bin minnal --quiet
-scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet
+scripts/dev_cargo.sh build --release -p minnal --bin minnal --quiet
+scripts/dev_cargo.sh build --profile selfdev -p minnal --bin minnal --quiet
 scripts/dev_cargo.sh --print-setup
 ```
 
-For narrower feature-set probes, set `JCODE_DEV_FEATURE_PROFILE` instead of spelling out Cargo flags:
+For narrower feature-set probes, set `MINNAL_DEV_FEATURE_PROFILE` instead of spelling out Cargo flags:
 
 ```bash
-JCODE_DEV_FEATURE_PROFILE=minimal scripts/dev_cargo.sh check -p jcode --lib --quiet
-JCODE_DEV_FEATURE_PROFILE=pdf scripts/dev_cargo.sh build --profile selfdev -p jcode --bin minnal --quiet
-JCODE_DEV_FEATURE_PROFILE=full scripts/dev_cargo.sh check -p jcode --lib --quiet
+MINNAL_DEV_FEATURE_PROFILE=minimal scripts/dev_cargo.sh check -p minnal --lib --quiet
+MINNAL_DEV_FEATURE_PROFILE=pdf scripts/dev_cargo.sh build --profile selfdev -p minnal --bin minnal --quiet
+MINNAL_DEV_FEATURE_PROFILE=full scripts/dev_cargo.sh check -p minnal --lib --quiet
 ```
 
-This is especially useful because default `jcode` enables both `embeddings` and `pdf`; in the current
+This is especially useful because default `minnal` enables both `embeddings` and `pdf`; in the current
 dependency graph, the root tree is about **3740** lines with defaults, **1133** with PDF-only, and **1106**
 with no default features. Use these profiles for measurements and local probes, while keeping full/default
 builds in CI and release paths where feature coverage matters.
@@ -563,7 +563,7 @@ entrypoints by default:
 cargo run --features dev-bins --bin tui_bench -- --help
 cargo run --features dev-bins --bin session_memory_bench -- --help
 cargo run --features dev-bins --bin mermaid_side_panel_probe -- --help
-cargo check --all-targets -p jcode --features dev-bins --quiet
+cargo check --all-targets -p minnal --features dev-bins --quiet
 ```
 
 The wrapper:
@@ -571,16 +571,16 @@ The wrapper:
 - uses `sccache` automatically when available
 - prefers `lld` locally on Linux x86_64
 - uses the fast `selfdev` Cargo profile for self-dev build/reload workflows
-- can inject a named feature profile via `JCODE_DEV_FEATURE_PROFILE` unless explicit feature args are present
+- can inject a named feature profile via `MINNAL_DEV_FEATURE_PROFILE` unless explicit feature args are present
 - avoids hard-forcing a linker mode that may be broken on a given machine
 - can print the currently selected cache/linker setup with `--print-setup`
 
 Override linker mode explicitly when needed:
 
 ```bash
-JCODE_FAST_LINKER=lld scripts/dev_cargo.sh build --release -p jcode --bin minnal
-JCODE_FAST_LINKER=mold scripts/dev_cargo.sh build --release -p jcode --bin minnal
-JCODE_FAST_LINKER=system scripts/dev_cargo.sh build --release -p jcode --bin minnal
+MINNAL_FAST_LINKER=lld scripts/dev_cargo.sh build --release -p minnal --bin minnal
+MINNAL_FAST_LINKER=mold scripts/dev_cargo.sh build --release -p minnal --bin minnal
+MINNAL_FAST_LINKER=system scripts/dev_cargo.sh build --release -p minnal --bin minnal
 ```
 
 For compile timing, prefer repeatable touched-file measurements over no-op hot-cache reruns:
@@ -588,9 +588,9 @@ For compile timing, prefer repeatable touched-file measurements over no-op hot-c
 ```bash
 scripts/bench_compile.sh check --runs 3 --touch src/server.rs
 scripts/bench_compile.sh check --runs 3 --touch src/tool/read.rs
-scripts/bench_compile.sh release-jcode --runs 3
-scripts/bench_compile.sh selfdev-jcode --runs 3
-scripts/bench_compile.sh build -- --package jcode --bin test_api
+scripts/bench_compile.sh release-minnal --runs 3
+scripts/bench_compile.sh selfdev-minnal --runs 3
+scripts/bench_compile.sh build -- --package minnal --bin test_api
 scripts/bench_selfdev_checkpoints.sh --touch src/server.rs --runs 3
 ```
 

@@ -6,19 +6,19 @@ This document explains how authentication works in J-Code.
 
 J-Code can detect existing local credentials and can also run built-in OAuth and API-key login flows.
 
-For auth files managed by other tools/CLIs, jcode asks before reading them. If you
-approve a source, jcode remembers that approval for that external auth file path
+For auth files managed by other tools/CLIs, minnal asks before reading them. If you
+approve a source, minnal remembers that approval for that external auth file path
 for future sessions and still leaves the original file untouched (no move,
 rewrite, or permission mutation). Symlinked external auth files are rejected.
 
 Credentials are stored locally:
-- J-Code Claude OAuth (if logged in via `minnal login --provider claude`): `~/.jcode/auth.json`
+- J-Code Claude OAuth (if logged in via `minnal login --provider claude`): `~/.minnal/auth.json`
 - Claude Code CLI: `~/.claude/.credentials.json`
 - OpenCode (optional provider/OAuth import source): `~/.local/share/opencode/auth.json`
 - pi (optional provider/OAuth import source): `~/.pi/agent/auth.json`
-- J-Code OpenAI/Codex OAuth: `~/.jcode/openai-auth.json`
+- J-Code OpenAI/Codex OAuth: `~/.minnal/openai-auth.json`
 - Codex CLI auth source (read in place only after confirmation): `~/.codex/auth.json`
-- Gemini native OAuth: `~/.jcode/gemini_oauth.json`
+- Gemini native OAuth: `~/.minnal/gemini_oauth.json`
 - Gemini CLI import fallback: `~/.gemini/oauth_creds.json`
 - Copilot CLI plaintext fallback: `~/.copilot/config.json`
 - Legacy Copilot JSON sources: `~/.config/github-copilot/hosts.json`, `~/.config/github-copilot/apps.json`
@@ -32,7 +32,7 @@ Relevant code:
 - Azure OpenAI transport: `src/provider/openrouter.rs`
 - Gemini login + refresh: `src/auth/gemini.rs`
 - Gemini Code Assist provider: `src/provider/gemini.rs`
-- OpenAI-compatible provider metadata/login descriptors: `crates/jcode-provider-metadata/src/lib.rs`
+- OpenAI-compatible provider metadata/login descriptors: `crates/minnal-provider-metadata/src/lib.rs`
 
 ## Claude (Claude Max)
 
@@ -40,23 +40,23 @@ Relevant code:
 1. Run `minnal login --provider claude` (recommended), or `minnal login` and choose Claude.
    - For headless / SSH use: `minnal login --provider claude --no-browser`
    - For scriptable remote flows: `minnal login --provider claude --print-auth-url`, then later complete with `--callback-url` or `--auth-code`
-2. Alternative: run `claude` (or `claude setup-token`). jcode can detect `~/.claude/.credentials.json`, ask before reading it, and remember that approval for future sessions.
-3. Verify with `minnal --provider claude run "Say hello from jcode"`.
+2. Alternative: run `claude` (or `claude setup-token`). minnal can detect `~/.claude/.credentials.json`, ask before reading it, and remember that approval for future sessions.
+3. Verify with `minnal --provider claude run "Say hello from minnal"`.
 
 Credential discovery order is:
-1. `~/.jcode/auth.json`
+1. `~/.minnal/auth.json`
 2. `~/.claude/.credentials.json`
 3. `~/.local/share/opencode/auth.json`
 4. `~/.pi/agent/auth.json`
 
 ### Direct Anthropic API (default)
 `--provider claude` uses the direct Anthropic Messages API by default.
-jcode owns the full runtime path itself: auth, refresh, request shaping, tool
+minnal owns the full runtime path itself: auth, refresh, request shaping, tool
 compatibility, and transport.
 
 #### Claude OAuth direct API compatibility
 Claude Code OAuth tokens can be used directly against the Messages API, but only
-if the request matches the Claude Code "OAuth contract". jcode applies this
+if the request matches the Claude Code "OAuth contract". minnal applies this
 automatically for the default Claude runtime path.
 
 Required behaviors (applied by the Anthropic provider):
@@ -68,7 +68,7 @@ Required behaviors (applied by the Anthropic provider):
   - `You are Claude Code, Anthropic's official CLI for Claude.`
 
 Tool name allow-list:
-Claude OAuth requests reject certain tool names. jcode remaps tool names on the
+Claude OAuth requests reject certain tool names. minnal remaps tool names on the
 wire and maps them back on responses so native tools continue to work. The
 mapping is:
 - `bash` → `shell_exec`
@@ -91,14 +91,14 @@ The old Claude CLI shell-out path is deprecated and should only be used for
 legacy compatibility.
 
 You can still force it temporarily with:
-- `JCODE_USE_CLAUDE_CLI=1`
+- `MINNAL_USE_CLAUDE_CLI=1`
 - or `--provider claude-subprocess` (deprecated hidden compatibility value)
 
 These environment variables control the deprecated Claude Code CLI transport:
-- `JCODE_CLAUDE_CLI_PATH` (default: `claude`)
-- `JCODE_CLAUDE_CLI_MODEL` (default: `claude-opus-4-5-20251101`)
-- `JCODE_CLAUDE_CLI_PERMISSION_MODE` (default: `bypassPermissions`)
-- `JCODE_CLAUDE_CLI_PARTIAL` (set to `0` to disable partial streaming)
+- `MINNAL_CLAUDE_CLI_PATH` (default: `claude`)
+- `MINNAL_CLAUDE_CLI_MODEL` (default: `claude-opus-4-5-20251101`)
+- `MINNAL_CLAUDE_CLI_PERMISSION_MODE` (default: `bypassPermissions`)
+- `MINNAL_CLAUDE_CLI_PARTIAL` (set to `0` to disable partial streaming)
 
 ## OpenAI / Codex OAuth
 
@@ -108,18 +108,18 @@ These environment variables control the deprecated Claude Code CLI transport:
    - For scriptable remote flows: `minnal login --provider openai --print-auth-url`, then later complete with `--callback-url`
 2. Your browser opens to the OpenAI OAuth page unless you use `--no-browser`. The local callback listens on
    `http://localhost:1455/auth/callback` by default.
-   If port `1455` is unavailable, jcode falls back to a manual paste flow where
+   If port `1455` is unavailable, minnal falls back to a manual paste flow where
    you can paste the full callback URL or query string.
-3. After login, tokens are saved to `~/.jcode/openai-auth.json`.
+3. After login, tokens are saved to `~/.minnal/openai-auth.json`.
 
 Credential discovery order is:
-1. `~/.jcode/openai-auth.json`
+1. `~/.minnal/openai-auth.json`
 2. `~/.codex/auth.json`
 3. trusted OpenCode/pi OAuth in `~/.local/share/opencode/auth.json` / `~/.pi/agent/auth.json`
 4. `OPENAI_API_KEY`
 
-If jcode finds existing credentials in `~/.codex/auth.json`, it asks before
-reading them. When approved, it remembers that trust decision for future jcode
+If minnal finds existing credentials in `~/.codex/auth.json`, it asks before
+reading them. When approved, it remembers that trust decision for future minnal
 sessions and still does not move, delete, or rewrite the Codex file.
 
 ### Request details
@@ -154,7 +154,7 @@ was not another browser OAuth flow, but support for **Azure OpenAI** using eithe
 4. Choose one auth mode:
    - **Entra ID** (recommended)
    - **API key**
-5. jcode saves settings to `~/.config/jcode/azure-openai.env`.
+5. minnal saves settings to `~/.config/minnal/azure-openai.env`.
 
 ### Stored configuration
 The Azure env file may contain:
@@ -164,10 +164,10 @@ The Azure env file may contain:
 - `AZURE_OPENAI_API_KEY` (only when using key auth)
 
 ### Runtime behavior
-- jcode normalizes the endpoint to the newer Azure OpenAI `/openai/v1` base.
-- In **Entra ID** mode, jcode obtains bearer tokens using `azure_identity::DefaultAzureCredential` with scope:
+- minnal normalizes the endpoint to the newer Azure OpenAI `/openai/v1` base.
+- In **Entra ID** mode, minnal obtains bearer tokens using `azure_identity::DefaultAzureCredential` with scope:
   - `https://cognitiveservices.azure.com/.default`
-- In **API key** mode, jcode sends the credential in the Azure-style `api-key` header.
+- In **API key** mode, minnal sends the credential in the Azure-style `api-key` header.
 - The Azure provider currently reuses J-Code's OpenAI-compatible transport layer under the hood.
 - Model catalog fetching is disabled for Azure by default, so you should configure a deployment/model explicitly.
 
@@ -189,17 +189,17 @@ The Azure env file may contain:
 1. Run `minnal login --provider gemini` or `/login gemini` inside the TUI.
    - For headless / SSH use: `minnal login --provider gemini --no-browser`
    - For scriptable remote flows: `minnal login --provider gemini --print-auth-url`, then later complete with `--auth-code`
-2. jcode opens a browser to the Google OAuth flow used for Gemini Code Assist unless you use `--no-browser`.
-3. If local callback binding is unavailable, jcode falls back to a manual paste flow using `https://codeassist.google.com/authcode`.
-4. Tokens are saved to `~/.jcode/gemini_oauth.json`.
+2. minnal opens a browser to the Google OAuth flow used for Gemini Code Assist unless you use `--no-browser`.
+3. If local callback binding is unavailable, minnal falls back to a manual paste flow using `https://codeassist.google.com/authcode`.
+4. Tokens are saved to `~/.minnal/gemini_oauth.json`.
 
 ### Credential discovery order
-1. Native jcode Gemini tokens: `~/.jcode/gemini_oauth.json`
+1. Native minnal Gemini tokens: `~/.minnal/gemini_oauth.json`
 2. Gemini CLI OAuth source (read only after approval): `~/.gemini/oauth_creds.json`
 3. trusted OpenCode/pi OAuth in `~/.local/share/opencode/auth.json` / `~/.pi/agent/auth.json`
 
 ### Runtime notes
-- jcode uses native Google OAuth and talks to the Google Code Assist backend directly.
+- minnal uses native Google OAuth and talks to the Google Code Assist backend directly.
 - Expired tokens are refreshed automatically using the Google refresh token.
 - Some school / Workspace accounts may require `GOOGLE_CLOUD_PROJECT` or `GOOGLE_CLOUD_PROJECT_ID` for Code Assist entitlement checks.
 
@@ -250,13 +250,13 @@ printf '%s' "$MY_API_KEY" | minnal provider add my-api \
 minnal --provider-profile my-api auth-test --no-tool-smoke
 ```
 
-This writes `[providers.my-api]` in `~/.jcode/config.toml` and stores the key in jcode's private app config dir, for example `~/.config/jcode/provider-my-api.env`. For localhost servers, use `--no-api-key`.
+This writes `[providers.my-api]` in `~/.minnal/config.toml` and stores the key in minnal's private app config dir, for example `~/.config/minnal/provider-my-api.env`. For localhost servers, use `--no-api-key`.
 
 Two notable presets are:
 
 ### Fireworks
 - Login: `minnal login --provider fireworks`
-- Stored env file: `~/.config/jcode/fireworks.env`
+- Stored env file: `~/.config/minnal/fireworks.env`
 - API key env var: `FIREWORKS_API_KEY`
 - Base URL: `https://api.fireworks.ai/inference/v1`
 - Default model hint: `accounts/fireworks/routers/kimi-k2p5-turbo`
@@ -264,16 +264,16 @@ Two notable presets are:
 
 ### MiniMax
 - Login: `minnal login --provider minimax`
-- Stored env file: `~/.config/jcode/minimax.env`
+- Stored env file: `~/.config/minnal/minimax.env`
 - API key env var: `OPENAI_API_KEY`
 - Base URL: `https://api.minimax.io/v1`
 - Default model hint: `MiniMax-M2.7`
 - Docs: <https://platform.minimax.io/docs/guides/text-generation>
 
-These are first-class jcode provider presets, not just manual custom endpoint examples.
+These are first-class minnal provider presets, not just manual custom endpoint examples.
 You can still use `openai-compatible` for arbitrary custom providers when there is not a built-in preset.
 
-If jcode finds matching API keys in trusted OpenCode/pi auth files, it can reuse them for the corresponding provider preset without asking you to paste the key again.
+If minnal finds matching API keys in trusted OpenCode/pi auth files, it can reuse them for the corresponding provider preset without asking you to paste the key again.
 
 ## Experimental CLI Providers
 
@@ -282,23 +282,23 @@ J-Code also supports experimental CLI-backed providers, plus Antigravity with na
 - `--provider copilot`
 - `--provider antigravity`
 
-Cursor uses jcode's native HTTPS transport. Copilot uses GitHub device-flow auth. Antigravity login/auth storage is handled natively by jcode.
+Cursor uses minnal's native HTTPS transport. Copilot uses GitHub device-flow auth. Antigravity login/auth storage is handled natively by minnal.
 
 ### Cursor
 - Login: `minnal login --provider cursor`
-  - saves `CURSOR_API_KEY` to `~/.config/jcode/cursor.env`
+  - saves `CURSOR_API_KEY` to `~/.config/minnal/cursor.env`
 - Runtime:
-  - jcode uses native HTTPS requests
-  - if a Cursor API key is configured, jcode exchanges/uses it directly
+  - minnal uses native HTTPS requests
+  - if a Cursor API key is configured, minnal exchanges/uses it directly
 - Env vars:
-  - `JCODE_CURSOR_MODEL` (default: `composer-1.5`)
+  - `MINNAL_CURSOR_MODEL` (default: `composer-1.5`)
   - `CURSOR_API_KEY` (optional; overrides saved key)
 
 ### GitHub Copilot
 - Login: `minnal login --provider copilot`
   - Headless / SSH: `minnal login --provider copilot --no-browser`
   - Scriptable remote flow: `minnal login --provider copilot --print-auth-url`, then later `minnal login --provider copilot --complete`
-  - jcode uses GitHub device code flow and can print the verification URL/QR without opening a local browser.
+  - minnal uses GitHub device code flow and can print the verification URL/QR without opening a local browser.
 - Credential discovery order:
   1. `COPILOT_GITHUB_TOKEN`
   2. `GH_TOKEN`
@@ -309,28 +309,28 @@ Cursor uses jcode's native HTTPS transport. Copilot uses GitHub device-flow auth
   7. trusted OpenCode/pi OAuth entries
   8. `gh auth token`
 - Env vars:
-  - `JCODE_COPILOT_CLI_PATH` (optional override for CLI path)
-  - `JCODE_COPILOT_MODEL` (default: `claude-sonnet-4`)
+  - `MINNAL_COPILOT_CLI_PATH` (optional override for CLI path)
+  - `MINNAL_COPILOT_MODEL` (default: `claude-sonnet-4`)
 
 ### Antigravity
 - Login: `minnal login --provider antigravity` (native Google OAuth flow; does **not** require Antigravity to be installed)
   - Headless / SSH: `minnal login --provider antigravity --no-browser`
   - Scriptable remote flow: `minnal login --provider antigravity --print-auth-url`, then later complete with `--callback-url`
-- Tokens: `~/.jcode/antigravity_oauth.json`
+- Tokens: `~/.minnal/antigravity_oauth.json`
 - Credential discovery order:
-  1. native jcode tokens at `~/.jcode/antigravity_oauth.json`
+  1. native minnal tokens at `~/.minnal/antigravity_oauth.json`
   2. trusted OpenCode/pi OAuth entries when present
 - Runtime:
-  - jcode authenticates directly and stores/refreshes Antigravity OAuth tokens itself
+  - minnal authenticates directly and stores/refreshes Antigravity OAuth tokens itself
   - the provider transport still shells out to the Antigravity CLI for completions if you choose `--provider antigravity`
 - Env vars:
-  - `JCODE_ANTIGRAVITY_CLIENT_ID` (optional override for OAuth client id)
-  - `JCODE_ANTIGRAVITY_CLIENT_SECRET` (optional override for OAuth client secret)
-  - `JCODE_ANTIGRAVITY_VERSION` (optional override for Antigravity request fingerprint/version)
-  - `JCODE_ANTIGRAVITY_CLI_PATH` (default: `antigravity`, runtime only)
-  - `JCODE_ANTIGRAVITY_MODEL` (default: `default`)
-  - `JCODE_ANTIGRAVITY_PROMPT_FLAG` (default: `-p`)
-  - `JCODE_ANTIGRAVITY_MODEL_FLAG` (default: `--model`)
+  - `MINNAL_ANTIGRAVITY_CLIENT_ID` (optional override for OAuth client id)
+  - `MINNAL_ANTIGRAVITY_CLIENT_SECRET` (optional override for OAuth client secret)
+  - `MINNAL_ANTIGRAVITY_VERSION` (optional override for Antigravity request fingerprint/version)
+  - `MINNAL_ANTIGRAVITY_CLI_PATH` (default: `antigravity`, runtime only)
+  - `MINNAL_ANTIGRAVITY_MODEL` (default: `default`)
+  - `MINNAL_ANTIGRAVITY_PROMPT_FLAG` (default: `-p`)
+  - `MINNAL_ANTIGRAVITY_MODEL_FLAG` (default: `--model`)
 
 ## Google / Gmail OAuth
 
@@ -338,17 +338,17 @@ Cursor uses jcode's native HTTPS transport. Copilot uses GitHub device-flow auth
 1. Run `minnal login --provider google`.
    - For headless / SSH use: `minnal login --provider google --no-browser`
    - For scriptable remote flows after credentials are already configured: `minnal login --provider google --print-auth-url`
-2. If Google credentials are not configured yet, jcode first walks you through saving your client ID/client secret or importing the JSON credentials file.
+2. If Google credentials are not configured yet, minnal first walks you through saving your client ID/client secret or importing the JSON credentials file.
 3. For scriptable Google flows, choose the Gmail scope with `--google-access-tier full|readonly` if you do not want the default full access tier.
 4. Complete the printed flow later with `minnal login --provider google --callback-url '<full callback url or query>'`.
 
 ### Notes
 - Google/Gmail scriptable auth requires saved OAuth client credentials first.
-- The callback URL can come from a remote browser session that fails on the loopback redirect. Copy the final URL from the address bar and paste or pass it back to jcode.
+- The callback URL can come from a remote browser session that fails on the loopback redirect. Copy the final URL from the address bar and paste or pass it back to minnal.
 
 ## Scriptable auth state lifecycle
 
-- jcode stores temporary scriptable login state in `~/.jcode/pending-login/*.json`
+- minnal stores temporary scriptable login state in `~/.minnal/pending-login/*.json`
 - pending state expires automatically
 - stale pending entries are cleaned up when scriptable login flows start or resume
 - Copilot `--print-auth-url` stores the GitHub device code session and `--complete` resumes polling later

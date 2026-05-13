@@ -179,7 +179,7 @@ User-defined or automatically inferred labels.
 - Extracted by sidecar during end-of-session processing
 
 **Examples:**
-- `#project:jcode` - Project-specific
+- `#project:minnal` - Project-specific
 - `#rust`, `#python` - Language-specific
 - `#auth`, `#database` - Domain-specific
 - `#preference`, `#correction` - Category tags
@@ -670,7 +670,7 @@ sequenceDiagram
 ## Storage Layout
 
 ```
-~/.jcode/memory/
+~/.minnal/memory/
 ├── graph.json                    # Serialized petgraph
 ├── projects/
 │   └── <project_hash>.json       # Per-directory memories
@@ -801,7 +801,7 @@ Before storing any memory, scan for:
 
 > **Status:** TODO - Design pending
 
-Similar to how humans consolidate memories during sleep, jcode can run background consolidation to optimize the memory graph:
+Similar to how humans consolidate memories during sleep, minnal can run background consolidation to optimize the memory graph:
 
 ### Concept
 

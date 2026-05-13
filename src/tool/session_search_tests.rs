@@ -8,16 +8,16 @@ use std::path::Path;
 fn with_temp_home<T>(f: impl FnOnce(&Path) -> T) -> T {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().expect("create temp dir");
-    let previous_home = std::env::var("JCODE_HOME").ok();
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let previous_home = std::env::var("MINNAL_HOME").ok();
+    crate::env::set_var("MINNAL_HOME", temp.path());
     std::fs::create_dir_all(temp.path().join("sessions")).expect("create sessions dir");
 
     let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(temp.path())));
 
     if let Some(previous_home) = previous_home {
-        crate::env::set_var("JCODE_HOME", previous_home);
+        crate::env::set_var("MINNAL_HOME", previous_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 
     result.unwrap_or_else(|payload| std::panic::resume_unwind(payload))
@@ -389,7 +389,7 @@ fn context_expansion_returns_neighboring_messages_without_matching_hit() {
 }
 
 #[test]
-fn external_codex_sessions_are_searchable_without_jcode_session_dir() {
+fn external_codex_sessions_are_searchable_without_minnal_session_dir() {
     with_temp_home(|home| {
         let codex_dir = home.join("external/.codex/sessions/2026/05/01");
         std::fs::create_dir_all(&codex_dir).expect("create codex dir");
@@ -430,7 +430,7 @@ fn external_codex_sessions_are_searchable_without_jcode_session_dir() {
             .collect::<Vec<_>>()
             .join("\n");
         std::fs::write(codex_dir.join("codex-test.jsonl"), body).expect("write codex jsonl");
-        std::fs::remove_dir_all(home.join("sessions")).expect("remove jcode sessions dir");
+        std::fs::remove_dir_all(home.join("sessions")).expect("remove minnal sessions dir");
 
         let mut options = SearchOptions::for_test("current-session");
         options.source_filter = Some("codex".to_string());
@@ -438,7 +438,7 @@ fn external_codex_sessions_are_searchable_without_jcode_session_dir() {
         options.context_after = 1;
         let report = run_report(home, "external-codex-needle", &options);
 
-        assert_eq!(report.scanned_jcode_sessions, 0);
+        assert_eq!(report.scanned_minnal_sessions, 0);
         assert!(report.scanned_external_sessions >= 1);
         assert_eq!(report.external_sources, vec!["codex"]);
         assert_eq!(report.results.len(), 1);

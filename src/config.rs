@@ -1,9 +1,9 @@
-//! Configuration file support for jcode
+//! Configuration file support for minnal
 //!
-//! Config is loaded from `~/.jcode/config.toml` (or `$JCODE_HOME/config.toml`)
+//! Config is loaded from `~/.minnal/config.toml` (or `$MINNAL_HOME/config.toml`)
 //! Environment variables override config file settings.
 
-pub use jcode_config_types::{
+pub use minnal_config_types::{
     AgentsConfig, AmbientConfig, AuthConfig, AutoJudgeConfig, AutoReviewConfig, CompactionConfig,
     CompactionMode, CrossProviderFailoverMode, DiagramDisplayMode, DiagramPanePosition,
     DiffDisplayMode, DisplayConfig, FeatureConfig, GatewayConfig, KeybindingsConfig,
@@ -101,10 +101,10 @@ fn config_env_fingerprint() -> Vec<(String, String)> {
     let mut values = std::env::vars_os()
         .filter_map(|(key, value)| {
             let key = key.to_string_lossy().to_string();
-            if key == "JCODE_HOME"
+            if key == "MINNAL_HOME"
                 || key == "HOME"
                 || key == "XDG_CONFIG_HOME"
-                || key.starts_with("JCODE_")
+                || key.starts_with("MINNAL_")
             {
                 Some((key, value.to_string_lossy().to_string()))
             } else {

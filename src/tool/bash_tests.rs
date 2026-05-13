@@ -16,7 +16,7 @@ fn make_ctx(stdin_tx: Option<mpsc::UnboundedSender<StdinInputRequest>>) -> ToolC
     }
 }
 
-fn make_agent_ctx(signal: jcode_agent_runtime::InterruptSignal) -> ToolContext {
+fn make_agent_ctx(signal: minnal_agent_runtime::InterruptSignal) -> ToolContext {
     ToolContext {
         session_id: "test-session".to_string(),
         message_id: "test-msg".to_string(),
@@ -180,7 +180,7 @@ async fn test_command_timeout_with_stdin_channel() {
 #[tokio::test]
 async fn test_reload_persistable_bash_continues_in_background() {
     let tool = BashTool::new();
-    let signal = jcode_agent_runtime::InterruptSignal::new();
+    let signal = minnal_agent_runtime::InterruptSignal::new();
     let ctx = make_agent_ctx(signal.clone());
 
     let signal_task = tokio::spawn(async move {
@@ -251,7 +251,7 @@ async fn test_stderr_captured_with_stdin() {
 #[test]
 fn test_parse_progress_marker_handles_percent_payloads() {
     let progress = parse_progress_marker(
-        r#"JCODE_PROGRESS {"percent":25,"message":"Downloading dependencies"}"#,
+        r#"MINNAL_PROGRESS {"percent":25,"message":"Downloading dependencies"}"#,
     )
     .expect("marker should parse");
 
@@ -293,13 +293,16 @@ fn test_parse_heuristic_progress_handles_percent_output() {
 
 #[test]
 fn test_parse_heuristic_progress_handles_phase_output() {
-    let progress = parse_heuristic_progress("Compiling jcode v0.10.2")
+    let progress = parse_heuristic_progress("Compiling minnal v0.10.2")
         .expect("heuristic parser should not fail")
         .expect("phase progress should parse");
 
     assert_eq!(progress.kind, BackgroundTaskProgressKind::Indeterminate);
     assert_eq!(progress.percent, None);
-    assert_eq!(progress.message.as_deref(), Some("Compiling jcode v0.10.2"));
+    assert_eq!(
+        progress.message.as_deref(),
+        Some("Compiling minnal v0.10.2")
+    );
     assert_eq!(progress.source, BackgroundTaskProgressSource::ParsedOutput);
 }
 
@@ -334,7 +337,7 @@ async fn test_background_command_progress_marker_updates_status_and_stays_out_of
     let result = tool
             .execute(
                 json!({
-                    "command": "printf '%s\n' 'JCODE_PROGRESS {\"current\":3,\"total\":10,\"unit\":\"steps\",\"message\":\"Building\"}'; sleep 0.1; echo done",
+                    "command": "printf '%s\n' 'MINNAL_PROGRESS {\"current\":3,\"total\":10,\"unit\":\"steps\",\"message\":\"Building\"}'; sleep 0.1; echo done",
                     "run_in_background": true,
                     "notify": false,
                     "wake": false,
@@ -379,7 +382,7 @@ async fn test_background_command_progress_marker_updates_status_and_stays_out_of
         .expect("output should exist");
     assert!(output.contains("done"), "output was: {output}");
     assert!(
-        !output.contains("JCODE_PROGRESS"),
+        !output.contains("MINNAL_PROGRESS"),
         "progress marker should be hidden from output: {output}"
     );
 }
@@ -552,11 +555,11 @@ fn test_bash_tool_schema_advertises_background_progress_guidance() {
         .expect("run_in_background description should be a string");
 
     assert!(
-        BashTool::new().description().contains("JCODE_PROGRESS"),
+        BashTool::new().description().contains("MINNAL_PROGRESS"),
         "tool description should teach cooperative progress output"
     );
     assert!(
-        command_description.contains("JCODE_PROGRESS"),
+        command_description.contains("MINNAL_PROGRESS"),
         "command description should mention progress marker format"
     );
     assert!(

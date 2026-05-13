@@ -1,5 +1,5 @@
 use super::*;
-use jcode_provider_core::{FailoverDecision, ProviderFailoverPrompt};
+use minnal_provider_core::{FailoverDecision, ProviderFailoverPrompt};
 
 impl MultiProvider {
     pub(super) fn provider_is_configured(&self, provider: ActiveProvider) -> bool {
@@ -49,7 +49,7 @@ impl MultiProvider {
     }
 
     pub(super) fn fallback_sequence(active: ActiveProvider) -> Vec<ActiveProvider> {
-        jcode_provider_core::fallback_sequence(active)
+        minnal_provider_core::fallback_sequence(active)
     }
 
     pub(super) fn summarize_error(err: &anyhow::Error) -> String {
@@ -62,7 +62,7 @@ impl MultiProvider {
     }
 
     pub(super) fn classify_failover_error(err: &anyhow::Error) -> FailoverDecision {
-        jcode_provider_core::classify_failover_error_message(&err.to_string())
+        minnal_provider_core::classify_failover_error_message(&err.to_string())
     }
 
     pub(super) fn additional_no_provider_guidance(&self) -> Vec<String> {

@@ -1,0 +1,21 @@
+[package]
+name = "minnal-protocol"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+minnal-batch-types = { path = "../minnal-batch-types" }
+minnal-config-types = { path = "../minnal-config-types" }
+minnal-message-types = { path = "../minnal-message-types" }
+minnal-plan = { path = "../minnal-plan" }
+minnal-provider-core = { path = "../minnal-provider-core" }
+minnal-selfdev-types = { path = "../minnal-selfdev-types" }
+minnal-session-types = { path = "../minnal-session-types" }
+minnal-side-panel-types = { path = "../minnal-side-panel-types" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+anyhow = "1"
+rand = "0.9"

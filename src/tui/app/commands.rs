@@ -407,7 +407,7 @@ pub(super) fn poll_local_transfer_prepare(app: &mut App) -> bool {
                         .filter(|path| path.is_dir())
                         .or_else(|| std::env::current_dir().ok())
                         .unwrap_or_else(|| std::path::PathBuf::from("."));
-                    let socket = std::env::var("JCODE_SOCKET").ok();
+                    let socket = std::env::var("MINNAL_SOCKET").ok();
                     match super::spawn_in_new_terminal(
                         &exe,
                         &prepared.session_id,
@@ -1597,7 +1597,7 @@ fn handle_selfdev_command(app: &mut App, trimmed: &str) -> bool {
 
     if rest == "help" {
         app.push_display_message(DisplayMessage::system(
-            "`/selfdev`\nSpawn a new self-dev jcode session in a separate terminal.\n\n`/selfdev <prompt>`\nSpawn a new self-dev session and auto-deliver the prompt to it.\n\n`/selfdev status`\nShow current self-dev/build status."
+            "`/selfdev`\nSpawn a new self-dev minnal session in a separate terminal.\n\n`/selfdev <prompt>`\nSpawn a new self-dev session and auto-deliver the prompt to it.\n\n`/selfdev status`\nShow current self-dev/build status."
                 .to_string(),
         ));
         return true;
@@ -1805,7 +1805,7 @@ pub(super) fn handle_dictation_command(app: &mut App, trimmed: &str) -> bool {
 
     if trimmed.starts_with("/dictate ") || trimmed.starts_with("/dictation ") {
         app.push_display_message(DisplayMessage::error(
-            "Usage: `/dictate`\nConfigure `[dictation]` in `~/.jcode/config.toml` to customize command, mode, hotkey, and timeout."
+            "Usage: `/dictate`\nConfigure `[dictation]` in `~/.minnal/config.toml` to customize command, mode, hotkey, and timeout."
                 .to_string(),
         ));
         return true;
@@ -2061,7 +2061,7 @@ pub(super) fn handle_config_command(app: &mut App, trimmed: &str) -> bool {
     }
 
     if trimmed == "/subscription" || trimmed == "/subscription status" {
-        app.show_jcode_subscription_status();
+        app.show_minnal_subscription_status();
         return true;
     }
 
@@ -2129,7 +2129,7 @@ pub(super) fn handle_config_command(app: &mut App, trimmed: &str) -> bool {
             app.push_display_message(DisplayMessage {
                 role: "system".to_string(),
                 content: format!(
-                    "Opening config in editor...\n`{} {}`\n\n*Restart jcode after editing for changes to take effect.*",
+                    "Opening config in editor...\n`{} {}`\n\n*Restart minnal after editing for changes to take effect.*",
                     editor,
                     path.display()
                 ),

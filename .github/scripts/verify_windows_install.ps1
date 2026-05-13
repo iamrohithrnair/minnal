@@ -8,19 +8,19 @@ Set-StrictMode -Version Latest
 
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $resolvedArtifact = (Resolve-Path -LiteralPath $ArtifactExePath).Path
-$tempRoot = Join-Path $env:RUNNER_TEMP ("jcode-windows-install-verify-" + [guid]::NewGuid().ToString('N'))
+$tempRoot = Join-Path $env:RUNNER_TEMP ("minnal-windows-install-verify-" + [guid]::NewGuid().ToString('N'))
 $localAppData = Join-Path $tempRoot 'localappdata'
 $appData = Join-Path $tempRoot 'appdata'
 $userProfile = Join-Path $tempRoot 'userprofile'
-$jcodeHome = Join-Path $tempRoot '.jcode'
-$installDir = Join-Path $localAppData 'jcode\bin'
+$minnalHome = Join-Path $tempRoot '.minnal'
+$installDir = Join-Path $localAppData 'minnal\bin'
 
-New-Item -ItemType Directory -Force -Path $localAppData, $appData, $userProfile, $jcodeHome | Out-Null
+New-Item -ItemType Directory -Force -Path $localAppData, $appData, $userProfile, $minnalHome | Out-Null
 
 $env:LOCALAPPDATA = $localAppData
 $env:APPDATA = $appData
 $env:USERPROFILE = $userProfile
-$env:JCODE_HOME = $jcodeHome
+$env:MINNAL_HOME = $minnalHome
 
 $installScript = Join-Path $repoRoot 'scripts\install.ps1'
 
@@ -32,8 +32,8 @@ $installScript = Join-Path $repoRoot 'scripts\install.ps1'
     -SkipHotkeySetup
 
 $launcherPath = Join-Path $installDir 'minnal.exe'
-$versionDir = Join-Path $localAppData ('jcode\builds\versions\' + $Version.TrimStart('v') + '\minnal.exe')
-$stablePath = Join-Path $localAppData 'jcode\builds\stable\minnal.exe'
+$versionDir = Join-Path $localAppData ('minnal\builds\versions\' + $Version.TrimStart('v') + '\minnal.exe')
+$stablePath = Join-Path $localAppData 'minnal\builds\stable\minnal.exe'
 
 foreach ($path in @($launcherPath, $versionDir, $stablePath)) {
     if (-not (Test-Path -LiteralPath $path)) {

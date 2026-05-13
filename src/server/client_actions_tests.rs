@@ -90,15 +90,15 @@ impl Provider for StreamingMockProvider {
 fn clone_split_session_uses_persisted_session_state() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let mut parent = crate::session::Session::create_with_id(
         "session_parent_split_test".to_string(),
         None,
         None,
     );
-    parent.working_dir = Some("/tmp/jcode-split-test".to_string());
+    parent.working_dir = Some("/tmp/minnal-split-test".to_string());
     parent.model = Some("gpt-test".to_string());
     parent.add_message(
         Role::User,
@@ -132,9 +132,9 @@ fn clone_split_session_uses_persisted_session_state() {
     assert_ne!(child.id, parent.id);
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -152,7 +152,7 @@ async fn enabling_swarm_does_not_auto_elect_coordinator() {
             session_id: session_id.to_string(),
             event_tx: member_event_tx,
             event_txs: HashMap::new(),
-            working_dir: Some(PathBuf::from("/tmp/jcode-passive-swarm")),
+            working_dir: Some(PathBuf::from("/tmp/minnal-passive-swarm")),
             swarm_id: None,
             swarm_enabled: false,
             status: "ready".to_string(),
@@ -207,7 +207,7 @@ async fn enabling_swarm_does_not_auto_elect_coordinator() {
             .get(session_id)
             .and_then(|member| member.swarm_id.clone())
             .as_deref(),
-        Some("/tmp/jcode-passive-swarm")
+        Some("/tmp/minnal-passive-swarm")
     );
     assert_eq!(
         swarm_members
@@ -238,8 +238,8 @@ async fn enabling_swarm_does_not_auto_elect_coordinator() {
 async fn rename_session_event_uses_agent_session_id_even_when_client_id_is_stale() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let provider: Arc<dyn Provider> = Arc::new(MockProvider);
     let registry = Registry::new(provider.clone()).await;
@@ -307,9 +307,9 @@ async fn rename_session_event_uses_agent_session_id_even_when_client_id_is_stale
     assert_eq!(loaded.custom_title.as_deref(), Some("Release planning"));
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 

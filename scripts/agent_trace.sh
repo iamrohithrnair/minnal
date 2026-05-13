@@ -3,7 +3,7 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 prompt=${1:-"Use the bash tool to run 'pwd', then use the ls tool to list the current directory, then respond with DONE."}
-provider=${JCODE_PROVIDER:-auto}
+provider=${MINNAL_PROVIDER:-auto}
 cargo_exec="$repo_root/scripts/cargo_exec.sh"
 
 if [[ ! -x "$repo_root/target/release/minnal" ]]; then
@@ -13,5 +13,5 @@ fi
 workdir=$(mktemp -d)
 trap 'rm -rf "$workdir"' EXIT
 
-JCODE_HOME="$workdir" PATH="$repo_root/target/release:$PATH" \
+MINNAL_HOME="$workdir" PATH="$repo_root/target/release:$PATH" \
   minnal run --no-update --trace --provider "$provider" "$prompt"
