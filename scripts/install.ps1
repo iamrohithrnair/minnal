@@ -514,8 +514,49 @@ if ($DownloadMode -eq "tar") {
         Write-Err "Failed to clone $Repo at $Version (exit code: $($gitCloneResult.ExitCode))"
     }
 
+    $CargoTomlPath = Join-Path $SrcDir "Cargo.toml"
+    if (-not (Select-String -Path $CargoTomlPath -Pattern 'name = "minnal"' -Quiet)) {
+        Write-Info "Release source for $Version predates the minnal package; building current main source instead..."
+        Remove-Item -Path $SrcDir -Recurse -Force
+        $gitCloneResult = Invoke-ProcessWithTimeout -FilePath "git" -ArgumentList @(
+            "clone",
+            "--depth", "1",
+            "--branch", "main",
+            "https://github.com/$Repo.git",
+            $SrcDir
+        ) -TimeoutSeconds 600 -FriendlyName "git-clone-main" -CaptureOutput
+        if ($gitCloneResult.TimedOut) {
+            Write-LogTail -Path $gitCloneResult.StdoutPath -Label "git stdout"
+            Write-LogTail -Path $gitCloneResult.StderrPath -Label "git stderr"
+            Write-Err "git clone main timed out after 600 seconds"
+        }
+        if ($gitCloneResult.ExitCode -ne 0) {
+            Write-LogTail -Path $gitCloneResult.StdoutPath -Label "git stdout"
+            Write-LogTail -Path $gitCloneResult.StderrPath -Label "git stderr"
+            Write-Err "Failed to clone $Repo main (exit code: $($gitCloneResult.ExitCode))"
+        }
+
+        $sourceVersion = (Select-String -Path $CargoTomlPath -Pattern '^version = "([^"]+)"' | Select-Object -First 1).Matches.Groups[1].Value
+        if ($sourceVersion) {
+            $Version = "v$sourceVersion"
+            $VersionNum = $sourceVersion
+            $VersionDir = Join-Path $BuildsDir "versions\$VersionNum"
+            New-Item -ItemType Directory -Path $VersionDir -Force | Out-Null
+            $DestBin = Join-Path $VersionDir "minnal.exe"
+        }
+    }
+
     Write-Info "Building minnal from source (this can take several minutes)..."
-    $cargoResult = Invoke-ProcessWithTimeout -FilePath "cargo" -ArgumentList @("build", "--release", "--manifest-path", (Join-Path $SrcDir "Cargo.toml")) -TimeoutSeconds 1800 -FriendlyName "cargo-build" -CaptureOutput
+    $env:MINNAL_RELEASE_BUILD = "1"
+    $env:MINNAL_BUILD_SEMVER = $Version
+    $env:JCODE_RELEASE_BUILD = "1"
+    $env:JCODE_BUILD_SEMVER = $Version
+    $cargoResult = Invoke-ProcessWithTimeout -FilePath "cargo" -ArgumentList @("build", "--release", "--manifest-path", (Join-Path $SrcDir "Cargo.toml"), "--bin", "minnal") -TimeoutSeconds 1800 -FriendlyName "cargo-build" -CaptureOutput
+    $BuiltBin = Join-Path $SrcDir "target\release\minnal.exe"
+    if (($cargoResult.ExitCode -ne 0) -and (-not $cargoResult.TimedOut)) {
+        $cargoResult = Invoke-ProcessWithTimeout -FilePath "cargo" -ArgumentList @("build", "--release", "--manifest-path", (Join-Path $SrcDir "Cargo.toml"), "--bin", "jcode") -TimeoutSeconds 1800 -FriendlyName "cargo-build-legacy" -CaptureOutput
+        $BuiltBin = Join-Path $SrcDir "target\release\jcode.exe"
+    }
     if ($cargoResult.TimedOut) {
         Write-LogTail -Path $cargoResult.StdoutPath -Label "cargo stdout"
         Write-LogTail -Path $cargoResult.StderrPath -Label "cargo stderr"
@@ -527,7 +568,6 @@ if ($DownloadMode -eq "tar") {
         Write-Err "cargo build failed (exit code: $($cargoResult.ExitCode))"
     }
 
-    $BuiltBin = Join-Path $SrcDir "target\release\minnal.exe"
     if (-not (Test-Path $BuiltBin)) { Write-Err "Built binary not found at $BuiltBin" }
     Copy-Item -Path $BuiltBin -Destination $DestBin -Force
 }

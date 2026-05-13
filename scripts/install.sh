@@ -113,10 +113,32 @@ else
   src_dir="$tmpdir/minnal-src"
   git clone --depth 1 --branch "$VERSION" "https://github.com/$REPO.git" "$src_dir" \
     || err "Failed to clone $REPO at $VERSION"
-  cargo build --release --manifest-path "$src_dir/Cargo.toml" \
-    || err "cargo build failed while building $REPO from source"
 
-  src_bin="$src_dir/target/release/$bin_name"
+  if ! grep -q 'name = "minnal"' "$src_dir/Cargo.toml"; then
+    info "Release source for $VERSION predates the minnal package; building current main source instead..."
+    rm -rf "$src_dir"
+    git clone --depth 1 --branch main "https://github.com/$REPO.git" "$src_dir" \
+      || err "Failed to clone $REPO main"
+    source_version=$(awk -F'"' '/^version = "/ { print $2; exit }' "$src_dir/Cargo.toml")
+    if [ -n "$source_version" ]; then
+      VERSION="v$source_version"
+      version="$source_version"
+      dest_version_dir="$version_dir/$version"
+      mkdir -p "$dest_version_dir"
+    fi
+  fi
+
+  if MINNAL_RELEASE_BUILD=1 MINNAL_BUILD_SEMVER="$VERSION" JCODE_RELEASE_BUILD=1 JCODE_BUILD_SEMVER="$VERSION" \
+    cargo build --release --manifest-path "$src_dir/Cargo.toml" --bin minnal; then
+    built_bin_name="minnal${EXE}"
+  elif MINNAL_RELEASE_BUILD=1 MINNAL_BUILD_SEMVER="$VERSION" JCODE_RELEASE_BUILD=1 JCODE_BUILD_SEMVER="$VERSION" \
+    cargo build --release --manifest-path "$src_dir/Cargo.toml" --bin jcode; then
+    built_bin_name="jcode${EXE}"
+  else
+    err "cargo build failed while building $REPO from source"
+  fi
+
+  src_bin="$src_dir/target/release/$built_bin_name"
   [ -f "$src_bin" ] || err "Built binary not found at $src_bin"
   cp "$src_bin" "$dest_version_dir/$bin_name"
 fi
