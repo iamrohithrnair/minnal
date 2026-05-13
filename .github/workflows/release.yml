@@ -31,17 +31,17 @@ jobs:
             # Debian/Ubuntu containers used by many TB tasks.
             os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            artifact: jcode-linux-x86_64
+            artifact: minnal-linux-x86_64
             compat_container: true
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
-            artifact: jcode-linux-aarch64
+            artifact: minnal-linux-aarch64
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact: jcode-macos-aarch64
+            artifact: minnal-macos-aarch64
           - os: macos-15-intel
             target: x86_64-apple-darwin
-            artifact: jcode-macos-x86_64
+            artifact: minnal-macos-x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -131,10 +131,10 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: jcode-windows-x86_64
+            artifact: minnal-windows-x86_64
           - os: windows-11-arm
             target: aarch64-pc-windows-msvc
-            artifact: jcode-windows-aarch64
+            artifact: minnal-windows-aarch64
             cargo_args: "--no-default-features --features pdf"
 
     steps:
@@ -248,7 +248,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: jcode-*
+          pattern: minnal-*
 
       - name: Generate checksums
         shell: bash
@@ -277,12 +277,13 @@ jobs:
           generate_release_notes: true
           files: |
             SHA256SUMS
-            artifacts/jcode-linux-x86_64/*.tar.gz
-            artifacts/jcode-linux-aarch64/*.tar.gz
-            artifacts/jcode-macos-aarch64/*.tar.gz
-            artifacts/jcode-macos-x86_64/*.tar.gz
-            artifacts/jcode-windows-*/**/*.tar.gz
-            artifacts/jcode-windows-*/**/*.exe
+            artifacts/minnal-linux-x86_64/*.tar.gz
+            artifacts/minnal-linux-aarch64/*.tar.gz
+            artifacts/minnal-macos-aarch64/*.tar.gz
+            artifacts/minnal-macos-x86_64/*.tar.gz
+            artifacts/minnal-windows-*/**/*.tar.gz
+            artifacts/minnal-windows-*/**/*.exe
+          name: minnal ${{ github.ref_name }}
 
       - name: Update Homebrew formula
         env:
@@ -292,10 +293,10 @@ jobs:
           VERSION="${GITHUB_REF_NAME}"
           VERSION_NUM="${VERSION#v}"
 
-          LINUX_SHA=$(sha256sum artifacts/jcode-linux-x86_64/jcode-linux-x86_64.tar.gz | cut -d' ' -f1)
-          LINUX_ARM_SHA=$(sha256sum artifacts/jcode-linux-aarch64/jcode-linux-aarch64.tar.gz | cut -d' ' -f1)
-          MACOS_ARM_SHA=$(sha256sum artifacts/jcode-macos-aarch64/jcode-macos-aarch64.tar.gz | cut -d' ' -f1)
-          MACOS_INTEL_SHA=$(sha256sum artifacts/jcode-macos-x86_64/jcode-macos-x86_64.tar.gz | cut -d' ' -f1)
+          LINUX_SHA=$(sha256sum artifacts/minnal-linux-x86_64/minnal-linux-x86_64.tar.gz | cut -d' ' -f1)
+          LINUX_ARM_SHA=$(sha256sum artifacts/minnal-linux-aarch64/minnal-linux-aarch64.tar.gz | cut -d' ' -f1)
+          MACOS_ARM_SHA=$(sha256sum artifacts/minnal-macos-aarch64/minnal-macos-aarch64.tar.gz | cut -d' ' -f1)
+          MACOS_INTEL_SHA=$(sha256sum artifacts/minnal-macos-x86_64/minnal-macos-x86_64.tar.gz | cut -d' ' -f1)
 
           mkdir -p ~/.ssh
           echo "$HOMEBREW_DEPLOY_KEY" > ~/.ssh/deploy_key
@@ -307,51 +308,51 @@ jobs:
           cat > /tmp/homebrew-jcode/Formula/jcode.rb << FORMULA
           class Jcode < Formula
             desc "AI coding agent powered by Claude and ChatGPT"
-            homepage "https://github.com/1jehuang/jcode"
+            homepage "https://github.com/codeslord/minnal"
             version "${VERSION_NUM}"
             license "MIT"
 
             on_macos do
               on_arm do
-                url "https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-macos-aarch64.tar.gz"
+                url "https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-aarch64.tar.gz"
                 sha256 "${MACOS_ARM_SHA}"
 
                 def install
-                  bin.install "jcode-macos-aarch64" => "jcode"
+                  bin.install "minnal-macos-aarch64" => "jcode"
                 end
               end
 
               on_intel do
-                url "https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-macos-x86_64.tar.gz"
+                url "https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-x86_64.tar.gz"
                 sha256 "${MACOS_INTEL_SHA}"
 
                 def install
-                  bin.install "jcode-macos-x86_64" => "jcode"
+                  bin.install "minnal-macos-x86_64" => "jcode"
                 end
               end
             end
 
             on_linux do
               on_intel do
-                url "https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-linux-x86_64.tar.gz"
+                url "https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
                 sha256 "${LINUX_SHA}"
 
                 def install
-                  libexec.install "jcode-linux-x86_64", "jcode-linux-x86_64.bin"
+                  libexec.install "minnal-linux-x86_64", "minnal-linux-x86_64.bin"
                   libexec.install Dir["libssl.so*"], Dir["libcrypto.so*"]
                   (bin/"jcode").write <<~SH
                     #!/bin/sh
-                    exec "#{libexec}/jcode-linux-x86_64" "$@"
+                    exec "#{libexec}/minnal-linux-x86_64" "$@"
                   SH
                 end
               end
 
               on_arm do
-                url "https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-linux-aarch64.tar.gz"
+                url "https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-aarch64.tar.gz"
                 sha256 "${LINUX_ARM_SHA}"
 
                 def install
-                  bin.install "jcode-linux-aarch64" => "jcode"
+                  bin.install "minnal-linux-aarch64" => "jcode"
                 end
               end
             end
@@ -398,8 +399,8 @@ jobs:
           VERSION="${GITHUB_REF_NAME}"
           VERSION_NUM="${VERSION#v}"
 
-          LINUX_SHA=$(sha256sum artifacts/jcode-linux-x86_64/jcode-linux-x86_64.tar.gz | cut -d' ' -f1)
-          LINUX_URL="https://github.com/1jehuang/jcode/releases/download/${VERSION}/jcode-linux-x86_64.tar.gz"
+          LINUX_SHA=$(sha256sum artifacts/minnal-linux-x86_64/minnal-linux-x86_64.tar.gz | cut -d' ' -f1)
+          LINUX_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
 
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
@@ -422,7 +423,7 @@ jobs:
           pkgrel=1
           pkgdesc="AI coding agent powered by Claude and ChatGPT"
           arch=('x86_64')
-          url="https://github.com/1jehuang/jcode"
+          url="https://github.com/codeslord/minnal"
           license=('MIT')
           provides=('jcode')
           conflicts=('jcode')
@@ -430,12 +431,12 @@ jobs:
           sha256sums=('SHA_PLACEHOLDER')
 
           package() {
-              install -Dm755 "${srcdir}/jcode-linux-x86_64" "${pkgdir}/usr/lib/jcode/jcode-linux-x86_64"
-              install -Dm755 "${srcdir}/jcode-linux-x86_64.bin" "${pkgdir}/usr/lib/jcode/jcode-linux-x86_64.bin"
+              install -Dm755 "${srcdir}/minnal-linux-x86_64" "${pkgdir}/usr/lib/jcode/minnal-linux-x86_64"
+              install -Dm755 "${srcdir}/minnal-linux-x86_64.bin" "${pkgdir}/usr/lib/jcode/minnal-linux-x86_64.bin"
               install -Dm644 "${srcdir}"/libssl.so* "${pkgdir}/usr/lib/jcode/"
               install -Dm644 "${srcdir}"/libcrypto.so* "${pkgdir}/usr/lib/jcode/"
               mkdir -p "${pkgdir}/usr/bin"
-              ln -s /usr/lib/jcode/jcode-linux-x86_64 "${pkgdir}/usr/bin/jcode"
+              ln -s /usr/lib/jcode/minnal-linux-x86_64 "${pkgdir}/usr/bin/jcode"
           }
           PKGBUILD_END
 
@@ -449,7 +450,7 @@ jobs:
           printf '\tpkgdesc = AI coding agent powered by Claude and ChatGPT\n' >> .SRCINFO
           printf '\tpkgver = %s\n' "${VERSION_NUM}" >> .SRCINFO
           printf '\tpkgrel = 1\n' >> .SRCINFO
-          printf '\turl = https://github.com/1jehuang/jcode\n' >> .SRCINFO
+          printf '\turl = https://github.com/codeslord/minnal\n' >> .SRCINFO
           printf '\tarch = x86_64\n' >> .SRCINFO
           printf '\tlicense = MIT\n' >> .SRCINFO
           printf '\tprovides = jcode\n' >> .SRCINFO

@@ -134,27 +134,27 @@ pub fn update_estimate(summary: String, duration: Duration) -> UpdateEstimate {
 pub fn get_asset_name() -> &'static str {
     #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
     {
-        "jcode-linux-x86_64"
+        "minnal-linux-x86_64"
     }
     #[cfg(all(target_os = "linux", target_arch = "aarch64"))]
     {
-        "jcode-linux-aarch64"
+        "minnal-linux-aarch64"
     }
     #[cfg(all(target_os = "macos", target_arch = "x86_64"))]
     {
-        "jcode-macos-x86_64"
+        "minnal-macos-x86_64"
     }
     #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
     {
-        "jcode-macos-aarch64"
+        "minnal-macos-aarch64"
     }
     #[cfg(all(target_os = "windows", target_arch = "x86_64"))]
     {
-        "jcode-windows-x86_64.exe"
+        "minnal-windows-x86_64.exe"
     }
     #[cfg(all(target_os = "windows", target_arch = "aarch64"))]
     {
-        "jcode-windows-aarch64.exe"
+        "minnal-windows-aarch64.exe"
     }
     #[cfg(not(any(
         all(target_os = "linux", target_arch = "x86_64"),
@@ -165,7 +165,7 @@ pub fn get_asset_name() -> &'static str {
         all(target_os = "windows", target_arch = "aarch64"),
     )))]
     {
-        "jcode-unknown"
+        "minnal-unknown"
     }
 }
 
@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn asset_name_is_supported() {
-        assert_ne!(get_asset_name(), "jcode-unknown");
+        assert_ne!(get_asset_name(), "minnal-unknown");
     }
 
     #[test]
@@ -348,16 +348,16 @@ mod tests {
     #[test]
     fn sha256sums_accepts_standard_and_binary_lines() {
         let checksums = parse_sha256sums(
-            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  jcode-linux-x86_64\n\
-             bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb *jcode-macos-aarch64\n",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  minnal-linux-x86_64\n\
+             bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb *minnal-macos-aarch64\n",
         )
         .unwrap();
         assert_eq!(
-            checksums.get("jcode-linux-x86_64").map(String::as_str),
+            checksums.get("minnal-linux-x86_64").map(String::as_str),
             Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         );
         assert_eq!(
-            checksums.get("jcode-macos-aarch64").map(String::as_str),
+            checksums.get("minnal-macos-aarch64").map(String::as_str),
             Some("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
         );
     }
@@ -366,14 +366,14 @@ mod tests {
     fn checksum_verification_accepts_matching_digest() {
         let bytes = b"hello world";
         let digest = format!("{:x}", Sha256::digest(bytes));
-        let sums = format!("{}  jcode-linux-x86_64\n", digest);
-        verify_asset_checksum_text(&sums, "jcode-linux-x86_64", bytes).unwrap();
+        let sums = format!("{}  minnal-linux-x86_64\n", digest);
+        verify_asset_checksum_text(&sums, "minnal-linux-x86_64", bytes).unwrap();
     }
 
     #[test]
     fn checksum_verification_rejects_mismatch() {
-        let sums = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  jcode-linux-x86_64\n";
-        let err = verify_asset_checksum_text(sums, "jcode-linux-x86_64", b"hello")
+        let sums = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  minnal-linux-x86_64\n";
+        let err = verify_asset_checksum_text(sums, "minnal-linux-x86_64", b"hello")
             .unwrap_err()
             .to_string();
         assert!(err.contains("Checksum mismatch"));
@@ -382,7 +382,7 @@ mod tests {
     #[test]
     fn checksum_verification_requires_asset_entry() {
         let sums = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  other\n";
-        let err = verify_asset_checksum_text(sums, "jcode-linux-x86_64", b"hello")
+        let err = verify_asset_checksum_text(sums, "minnal-linux-x86_64", b"hello")
             .unwrap_err()
             .to_string();
         assert!(err.contains("does not list"));
