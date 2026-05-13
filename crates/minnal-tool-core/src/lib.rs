@@ -6,6 +6,30 @@ use minnal_tool_types::ToolOutput;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandPermissionScope {
+    Once,
+    Session,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CommandPermissionDecision {
+    Approved { scope: CommandPermissionScope },
+    Denied { reason: Option<String> },
+}
+
+/// A request for user approval before running a sensitive command.
+pub struct CommandPermissionRequest {
+    pub request_id: String,
+    pub tool_call_id: String,
+    pub tool_name: String,
+    pub command: String,
+    pub cwd: Option<String>,
+    pub risk: String,
+    pub reasons: Vec<String>,
+    pub response_tx: tokio::sync::oneshot::Sender<CommandPermissionDecision>,
+}
+
 pub const TOOL_INTENT_DESCRIPTION: &str = concat!(
     "Short natural-language label explaining why this tool call is being made. ",
     "Used for compact UI display only. Optional; do not use this instead of required tool parameters."
@@ -33,6 +57,8 @@ pub struct ToolContext {
     pub tool_call_id: String,
     pub working_dir: Option<PathBuf>,
     pub stdin_request_tx: Option<tokio::sync::mpsc::UnboundedSender<StdinInputRequest>>,
+    pub command_permission_request_tx:
+        Option<tokio::sync::mpsc::UnboundedSender<CommandPermissionRequest>>,
     pub graceful_shutdown_signal: Option<InterruptSignal>,
     pub execution_mode: ToolExecutionMode,
 }
@@ -51,6 +77,7 @@ impl ToolContext {
             tool_call_id,
             working_dir: self.working_dir.clone(),
             stdin_request_tx: self.stdin_request_tx.clone(),
+            command_permission_request_tx: self.command_permission_request_tx.clone(),
             graceful_shutdown_signal: self.graceful_shutdown_signal.clone(),
             execution_mode: self.execution_mode,
         }

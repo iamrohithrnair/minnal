@@ -274,6 +274,14 @@ impl Agent {
         self.stdin_request_tx = Some(tx);
     }
 
+    /// Set the command permission request channel for interactive approvals.
+    pub fn set_command_permission_request_tx(
+        &mut self,
+        tx: tokio::sync::mpsc::UnboundedSender<crate::tool::CommandPermissionRequest>,
+    ) {
+        self.command_permission_request_tx = Some(tx);
+    }
+
     pub(super) async fn tool_definitions(&mut self) -> Vec<ToolDefinition> {
         if self.session.is_canary {
             self.registry.register_selfdev_tools().await;
@@ -333,6 +341,7 @@ impl Agent {
             tool_call_id: call_id,
             working_dir: self.working_dir().map(PathBuf::from),
             stdin_request_tx: self.stdin_request_tx.clone(),
+            command_permission_request_tx: self.command_permission_request_tx.clone(),
             graceful_shutdown_signal: Some(self.graceful_shutdown.clone()),
             execution_mode: ToolExecutionMode::Direct,
         };

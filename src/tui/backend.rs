@@ -6,7 +6,7 @@
 //! Also provides debug socket events for exposing full TUI state.
 
 use crate::message::ToolCall;
-use crate::protocol::{AuthChanged, FeatureToggle, Request, ServerEvent};
+use crate::protocol::{AuthChanged, CommandPermissionScope, FeatureToggle, Request, ServerEvent};
 use crate::server;
 use crate::transport::{Stream, WriteHalf};
 use crate::tui::remote_diff::RemoteDiffTracker;
@@ -653,6 +653,25 @@ impl RemoteConnection {
             id: self.next_request_id,
             request_id: request_id.to_string(),
             input: input.to_string(),
+        };
+        self.next_request_id += 1;
+        self.send_request(request).await
+    }
+
+    /// Send a command permission decision back to the server.
+    pub async fn send_command_permission_response(
+        &mut self,
+        request_id: &str,
+        approved: bool,
+        scope: CommandPermissionScope,
+        reason: Option<String>,
+    ) -> Result<()> {
+        let request = Request::CommandPermissionResponse {
+            id: self.next_request_id,
+            request_id: request_id.to_string(),
+            approved,
+            scope,
+            reason,
         };
         self.next_request_id += 1;
         self.send_request(request).await

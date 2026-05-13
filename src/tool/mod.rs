@@ -44,7 +44,10 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 
 pub(crate) use minnal_tool_core::intent_schema_property;
-pub use minnal_tool_core::{StdinInputRequest, Tool, ToolContext, ToolExecutionMode};
+pub use minnal_tool_core::{
+    CommandPermissionDecision, CommandPermissionRequest, CommandPermissionScope, StdinInputRequest,
+    Tool, ToolContext, ToolExecutionMode,
+};
 pub use minnal_tool_types::{ToolImage, ToolOutput};
 
 /// Registry of available tools (Arc-wrapped for sharing)
@@ -357,6 +360,8 @@ impl Registry {
 
         // Drop the lock before executing
         drop(tools);
+
+        crate::command_permissions::authorize_tool_execution(resolved_name, &input, &ctx).await?;
 
         let started_at = std::time::Instant::now();
         let result = tool.execute(input.clone(), ctx).await;

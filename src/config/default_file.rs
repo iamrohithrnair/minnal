@@ -208,6 +208,10 @@ port = 7643
 bind_addr = "0.0.0.0"
 
 [safety]
+# Command permission behavior for destructive/sensitive shell commands:
+# ask (default), deny, bypass, or shadow. Env override: MINNAL_COMMAND_PERMISSIONS.
+command_permissions = "ask"
+
 # Notification settings for ambient mode events
 
 # ntfy.sh push notifications (free, phone app: https://ntfy.sh)

@@ -364,6 +364,7 @@ pub(super) fn handle_run_subagent(
             tool_call_id: tool_call_id.clone(),
             working_dir,
             stdin_request_tx: None,
+            command_permission_request_tx: None,
             graceful_shutdown_signal: None,
             execution_mode: crate::tool::ToolExecutionMode::Direct,
         };
@@ -844,6 +845,42 @@ pub(super) async fn handle_stdin_response(
 ) {
     if let Some(tx) = stdin_responses.lock().await.remove(&request_id) {
         let _ = tx.send(input);
+    }
+    let _ = client_event_tx.send(ServerEvent::Done { id });
+}
+
+pub(super) async fn handle_command_permission_response(
+    id: u64,
+    request_id: String,
+    approved: bool,
+    scope: crate::protocol::CommandPermissionScope,
+    reason: Option<String>,
+    command_permission_responses: &Arc<
+        Mutex<
+            HashMap<String, tokio::sync::oneshot::Sender<crate::tool::CommandPermissionDecision>>,
+        >,
+    >,
+    client_event_tx: &mpsc::UnboundedSender<ServerEvent>,
+) {
+    if let Some(tx) = command_permission_responses
+        .lock()
+        .await
+        .remove(&request_id)
+    {
+        let decision = if approved {
+            let scope = match scope {
+                crate::protocol::CommandPermissionScope::Once => {
+                    crate::tool::CommandPermissionScope::Once
+                }
+                crate::protocol::CommandPermissionScope::Session => {
+                    crate::tool::CommandPermissionScope::Session
+                }
+            };
+            crate::tool::CommandPermissionDecision::Approved { scope }
+        } else {
+            crate::tool::CommandPermissionDecision::Denied { reason }
+        };
+        let _ = tx.send(decision);
     }
     let _ = client_event_tx.send(ServerEvent::Done { id });
 }

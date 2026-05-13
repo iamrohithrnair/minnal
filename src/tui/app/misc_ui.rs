@@ -2,6 +2,77 @@ use super::*;
 
 /// Update cost calculation based on token usage (for API-key providers)
 impl App {
+    pub(in crate::tui::app) fn show_command_permission_prompt(
+        &mut self,
+        pending: PendingCommandPermission,
+    ) {
+        if self.pending_command_permission.is_some() {
+            self.pending_command_permission_queue.push_back(pending);
+            self.set_status_notice(format!(
+                "Permission queued ({} pending)",
+                self.pending_command_permission_queue.len() + 1
+            ));
+            return;
+        }
+
+        self.set_command_permission_prompt(pending);
+    }
+
+    fn set_command_permission_prompt(&mut self, pending: PendingCommandPermission) {
+        let risk = if pending.risk.trim().is_empty() {
+            "normal"
+        } else {
+            pending.risk.trim()
+        };
+        let mut lines = vec![
+            format!(
+                "Command: {}",
+                crate::util::truncate_str(&pending.command, 160)
+            ),
+            format!(
+                "Directory: {}",
+                pending
+                    .cwd
+                    .as_deref()
+                    .unwrap_or("(session working directory)")
+            ),
+        ];
+        if !pending.reasons.is_empty() {
+            lines.push(format!("Reason: {}", pending.reasons.join("; ")));
+        }
+        lines.push("Press a=approve once, A=approve for session, d=deny.".to_string());
+        let status = if pending.tool_call_id.trim().is_empty() {
+            pending.tool_name.clone()
+        } else {
+            format!("{} · {}", pending.tool_name, pending.tool_call_id)
+        };
+
+        self.inline_interactive_state = None;
+        self.inline_view_state = Some(crate::tui::InlineViewState {
+            title: format!("Permission required · {risk} risk"),
+            status: Some(status),
+            lines,
+        });
+        self.pending_command_permission = Some(pending);
+        self.set_status_notice("Permission required: a approve, A approve session, d deny");
+    }
+
+    pub(in crate::tui::app) fn clear_command_permission_prompt(&mut self) {
+        self.pending_command_permission = None;
+        if let Some(next) = self.pending_command_permission_queue.pop_front() {
+            self.set_command_permission_prompt(next);
+            return;
+        }
+        if self
+            .inline_view_state
+            .as_ref()
+            .map(|view| view.title.starts_with("Permission required"))
+            .unwrap_or(false)
+        {
+            self.inline_view_state = None;
+        }
+    }
+
     pub(super) fn current_streaming_tps_elapsed(&self) -> Duration {
         let mut elapsed = self.streaming_tps_elapsed;
         if let Some(start) = self.streaming_tps_start {

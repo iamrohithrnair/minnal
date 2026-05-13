@@ -677,9 +677,37 @@ impl Default for AmbientConfig {
 }
 
 /// Safety system & notification configuration
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum CommandPermissionMode {
+    /// Ask before commands classified as destructive or sensitive.
+    #[default]
+    Ask,
+    /// Deny commands classified as destructive or sensitive.
+    Deny,
+    /// Allow commands classified as destructive or sensitive, but log the classification.
+    Bypass,
+    /// Allow commands classified as destructive or sensitive and log what would have prompted.
+    Shadow,
+}
+
+impl CommandPermissionMode {
+    pub fn parse(value: &str) -> Option<Self> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "ask" | "prompt" | "confirm" => Some(Self::Ask),
+            "deny" | "block" => Some(Self::Deny),
+            "bypass" | "allow" | "off" | "disabled" => Some(Self::Bypass),
+            "shadow" | "log" | "audit" => Some(Self::Shadow),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct SafetyConfig {
+    /// Permission behavior for destructive/sensitive shell commands.
+    pub command_permissions: CommandPermissionMode,
     /// ntfy.sh topic name (required for push notifications)
     pub ntfy_topic: Option<String>,
     /// ntfy.sh server URL (default: https://ntfy.sh)
@@ -727,6 +755,7 @@ pub struct SafetyConfig {
 impl Default for SafetyConfig {
     fn default() -> Self {
         Self {
+            command_permissions: CommandPermissionMode::Ask,
             ntfy_topic: None,
             ntfy_server: "https://ntfy.sh".to_string(),
             desktop_notifications: true,
@@ -749,6 +778,33 @@ impl Default for SafetyConfig {
             discord_bot_user_id: None,
             discord_reply_enabled: false,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CommandPermissionMode;
+
+    #[test]
+    fn parses_command_permission_modes_and_aliases() {
+        assert_eq!(CommandPermissionMode::parse("ask"), Some(CommandPermissionMode::Ask));
+        assert_eq!(
+            CommandPermissionMode::parse("prompt"),
+            Some(CommandPermissionMode::Ask)
+        );
+        assert_eq!(
+            CommandPermissionMode::parse("deny"),
+            Some(CommandPermissionMode::Deny)
+        );
+        assert_eq!(
+            CommandPermissionMode::parse("off"),
+            Some(CommandPermissionMode::Bypass)
+        );
+        assert_eq!(
+            CommandPermissionMode::parse("audit"),
+            Some(CommandPermissionMode::Shadow)
+        );
+        assert_eq!(CommandPermissionMode::parse("surprise"), None);
     }
 }
 

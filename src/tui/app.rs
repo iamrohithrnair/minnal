@@ -30,7 +30,7 @@ use helpers::*;
 use minnal_tui_messages::DisplayMessage;
 use ratatui::DefaultTerminal;
 use std::cell::RefCell;
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -105,6 +105,17 @@ struct PendingRemoteMessage {
     auto_retry: bool,
     retry_attempts: u8,
     retry_at: Option<Instant>,
+}
+
+#[derive(Debug, Clone)]
+pub(in crate::tui::app) struct PendingCommandPermission {
+    pub request_id: String,
+    pub tool_call_id: String,
+    pub tool_name: String,
+    pub command: String,
+    pub cwd: Option<String>,
+    pub risk: String,
+    pub reasons: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -838,6 +849,10 @@ pub struct App {
     side_panel_native_scrollbar: bool,
     // Passive inline UI (informational blocks shown above input).
     inline_view_state: Option<super::InlineViewState>,
+    // Active command permission prompt waiting for a local user decision.
+    pending_command_permission: Option<PendingCommandPermission>,
+    // Command permission prompts that arrived while another prompt was active.
+    pending_command_permission_queue: VecDeque<PendingCommandPermission>,
     // Interactive model/provider picker
     inline_interactive_state: Option<super::InlineInteractiveState>,
     // Cached model picker entries. Building these can require hydrating large provider catalogs.

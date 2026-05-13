@@ -11,6 +11,7 @@ fn make_ctx(stdin_tx: Option<mpsc::UnboundedSender<StdinInputRequest>>) -> ToolC
         tool_call_id: "test-call".to_string(),
         working_dir: Some(std::path::PathBuf::from("/tmp")),
         stdin_request_tx: stdin_tx,
+        command_permission_request_tx: None,
         graceful_shutdown_signal: None,
         execution_mode: crate::tool::ToolExecutionMode::Direct,
     }
@@ -23,6 +24,7 @@ fn make_agent_ctx(signal: minnal_agent_runtime::InterruptSignal) -> ToolContext 
         tool_call_id: "test-call-agent".to_string(),
         working_dir: Some(std::path::PathBuf::from("/tmp")),
         stdin_request_tx: None,
+        command_permission_request_tx: None,
         graceful_shutdown_signal: Some(signal),
         execution_mode: crate::tool::ToolExecutionMode::AgentTurn,
     }

@@ -44,6 +44,14 @@ pub enum CommDeliveryMode {
     Wake,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum CommandPermissionScope {
+    #[default]
+    Once,
+    Session,
+}
+
 /// A message in conversation history (for sync)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryMessage {
@@ -423,6 +431,19 @@ pub enum Request {
         request_id: String,
         /// The user's input (line of text)
         input: String,
+    },
+
+    /// Send a command permission decision to a waiting tool.
+    #[serde(rename = "command_permission_response")]
+    CommandPermissionResponse {
+        id: u64,
+        /// Matches the request_id from CommandPermissionRequest
+        request_id: String,
+        approved: bool,
+        #[serde(default)]
+        scope: CommandPermissionScope,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reason: Option<String>,
     },
 
     // === Agent-to-agent communication ===
@@ -1318,6 +1339,28 @@ pub enum ServerEvent {
         /// Tool call ID this is associated with
         tool_call_id: String,
     },
+
+    /// A command requires explicit user permission before execution.
+    #[serde(rename = "command_permission_request")]
+    CommandPermissionRequest {
+        /// Unique request ID for matching the response
+        request_id: String,
+        /// Tool call ID this is associated with
+        tool_call_id: String,
+        /// Tool requesting permission, usually `bash`
+        tool_name: String,
+        /// The command being requested
+        command: String,
+        /// Working directory where the command will run
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        cwd: Option<String>,
+        /// Risk label, e.g. normal or high
+        #[serde(default)]
+        risk: String,
+        /// Matched classifier reasons
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        reasons: Vec<String>,
+    },
 }
 
 /// Summary of a tool call for the comm_summary response
@@ -2020,6 +2063,7 @@ impl Request {
             Request::SwitchAnthropicAccount { id, .. } => *id,
             Request::SwitchOpenAiAccount { id, .. } => *id,
             Request::StdinResponse { id, .. } => *id,
+            Request::CommandPermissionResponse { id, .. } => *id,
             Request::AgentRegister { id, .. } => *id,
             Request::AgentTask { id, .. } => *id,
             Request::AgentCapabilities { id } => *id,

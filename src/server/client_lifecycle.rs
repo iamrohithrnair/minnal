@@ -1,8 +1,8 @@
 use super::client_actions::{
-    AgentTaskContext, NotifySessionContext, handle_agent_task, handle_compact, handle_input_shell,
-    handle_notify_session, handle_rename_session, handle_run_subagent, handle_set_feature,
-    handle_set_subagent_model, handle_split, handle_stdin_response, handle_transfer,
-    handle_trigger_memory_extraction,
+    AgentTaskContext, NotifySessionContext, handle_agent_task, handle_command_permission_response,
+    handle_compact, handle_input_shell, handle_notify_session, handle_rename_session,
+    handle_run_subagent, handle_set_feature, handle_set_subagent_model, handle_split,
+    handle_stdin_response, handle_transfer, handle_trigger_memory_extraction,
 };
 use super::client_comm::{
     handle_comm_channel_members, handle_comm_list, handle_comm_list_channels, handle_comm_message,
@@ -1004,6 +1004,11 @@ pub(super) async fn handle_client(
 
     let stdin_responses: Arc<Mutex<HashMap<String, tokio::sync::oneshot::Sender<String>>>> =
         Arc::new(Mutex::new(HashMap::new()));
+    let command_permission_responses: Arc<
+        Mutex<
+            HashMap<String, tokio::sync::oneshot::Sender<crate::tool::CommandPermissionDecision>>,
+        >,
+    > = Arc::new(Mutex::new(HashMap::new()));
 
     // Subscribe to bus events so we can forward ModelsUpdated to this client
     // (e.g. when Copilot finishes async init after the initial History was sent)
@@ -1012,9 +1017,12 @@ pub(super) async fn handle_client(
     // Set up stdin request forwarding: tools send StdinInputRequest, we forward to TUI
     let (stdin_req_tx, mut stdin_req_rx) =
         tokio::sync::mpsc::unbounded_channel::<crate::tool::StdinInputRequest>();
+    let (command_permission_req_tx, mut command_permission_req_rx) =
+        tokio::sync::mpsc::unbounded_channel::<crate::tool::CommandPermissionRequest>();
     {
         let mut agent_guard = agent.lock().await;
         agent_guard.set_stdin_request_tx(stdin_req_tx);
+        agent_guard.set_command_permission_request_tx(command_permission_req_tx);
     }
     let _stdin_forwarder = {
         let client_event_tx = client_event_tx.clone();
@@ -1028,11 +1036,44 @@ pub(super) async fn handle_client(
                     .await
                     .insert(request_id.clone(), req.response_tx);
                 let _ = client_event_tx.send(ServerEvent::StdinRequest {
-                    request_id,
+                    request_id: request_id.clone(),
                     prompt: req.prompt,
                     is_password: req.is_password,
                     tool_call_id: tool_call_id.clone(),
                 });
+            }
+        })
+    };
+    let _command_permission_forwarder = {
+        let client_event_tx = client_event_tx.clone();
+        let command_permission_responses = command_permission_responses.clone();
+        tokio::spawn(async move {
+            while let Some(req) = command_permission_req_rx.recv().await {
+                let request_id = req.request_id.clone();
+                command_permission_responses
+                    .lock()
+                    .await
+                    .insert(request_id.clone(), req.response_tx);
+                if client_event_tx
+                    .send(ServerEvent::CommandPermissionRequest {
+                        request_id: request_id.clone(),
+                        tool_call_id: req.tool_call_id,
+                        tool_name: req.tool_name,
+                        command: req.command,
+                        cwd: req.cwd,
+                        risk: req.risk,
+                        reasons: req.reasons,
+                    })
+                    .is_err()
+                    && let Some(tx) = command_permission_responses
+                        .lock()
+                        .await
+                        .remove(&request_id)
+                {
+                    let _ = tx.send(crate::tool::CommandPermissionDecision::Denied {
+                        reason: Some("No interactive client is available".to_string()),
+                    });
+                }
             }
         })
     };
@@ -1912,6 +1953,25 @@ pub(super) async fn handle_client(
             } => {
                 handle_stdin_response(id, request_id, input, &stdin_responses, &client_event_tx)
                     .await;
+            }
+
+            Request::CommandPermissionResponse {
+                id,
+                request_id,
+                approved,
+                scope,
+                reason,
+            } => {
+                handle_command_permission_response(
+                    id,
+                    request_id,
+                    approved,
+                    scope,
+                    reason,
+                    &command_permission_responses,
+                    &client_event_tx,
+                )
+                .await;
             }
 
             Request::AgentTask { id, task, .. } => {

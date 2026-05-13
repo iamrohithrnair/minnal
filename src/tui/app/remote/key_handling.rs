@@ -1,4 +1,5 @@
 use super::*;
+use crate::protocol::CommandPermissionScope;
 use crate::tui::app as app_mod;
 use crate::tui::app::PendingRemoteRewindNotice;
 use crate::tui::core;
@@ -234,6 +235,10 @@ async fn handle_remote_key_internal(
     let mut code = code;
     let mut modifiers = modifiers;
     ctrl_bracket_fallback_to_esc(&mut code, &mut modifiers);
+
+    if handle_command_permission_key(app, code, modifiers, remote).await? {
+        return Ok(());
+    }
 
     if app.changelog_scroll.is_some() {
         return app.handle_changelog_key(code);
@@ -2236,4 +2241,61 @@ async fn handle_remote_key_internal(
     }
 
     Ok(())
+}
+
+async fn handle_command_permission_key(
+    app: &mut App,
+    code: KeyCode,
+    modifiers: KeyModifiers,
+    remote: &mut RemoteConnection,
+) -> Result<bool> {
+    let Some(pending) = app.pending_command_permission.clone() else {
+        return Ok(false);
+    };
+
+    let decision = match code {
+        KeyCode::Char('A') => Some((
+            true,
+            CommandPermissionScope::Session,
+            None,
+            "Command approved for this session",
+        )),
+        KeyCode::Char('a') if modifiers.contains(KeyModifiers::SHIFT) => Some((
+            true,
+            CommandPermissionScope::Session,
+            None,
+            "Command approved for this session",
+        )),
+        KeyCode::Char('a')
+            if !modifiers.contains(KeyModifiers::CONTROL)
+                && !modifiers.contains(KeyModifiers::SHIFT) =>
+        {
+            Some((true, CommandPermissionScope::Once, None, "Command approved"))
+        }
+        KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Some((
+            false,
+            CommandPermissionScope::Once,
+            Some("Cancelled in TUI".to_string()),
+            "Command denied",
+        )),
+        KeyCode::Char('d') | KeyCode::Char('D') | KeyCode::Esc => Some((
+            false,
+            CommandPermissionScope::Once,
+            Some("Denied in TUI".to_string()),
+            "Command denied",
+        )),
+        _ => None,
+    };
+
+    if let Some((approved, scope, reason, notice)) = decision {
+        remote
+            .send_command_permission_response(&pending.request_id, approved, scope, reason)
+            .await?;
+        app.clear_command_permission_prompt();
+        app.set_status_notice(notice);
+        return Ok(true);
+    }
+
+    app.set_status_notice("Permission required: a approve, A approve session, d deny");
+    Ok(true)
 }

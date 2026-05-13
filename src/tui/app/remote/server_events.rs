@@ -1403,6 +1403,26 @@ pub(in crate::tui::app) fn handle_server_event(
             app.set_status_notice("⌨ Interactive terminal detected (command will timeout)");
             false
         }
+        ServerEvent::CommandPermissionRequest {
+            request_id,
+            tool_call_id,
+            tool_name,
+            command,
+            cwd,
+            risk,
+            reasons,
+        } => {
+            app.show_command_permission_prompt(PendingCommandPermission {
+                request_id,
+                tool_call_id,
+                tool_name,
+                command,
+                cwd,
+                risk,
+                reasons,
+            });
+            false
+        }
         _ => false,
     }
 }

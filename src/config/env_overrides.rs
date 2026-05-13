@@ -300,6 +300,11 @@ impl Config {
         }
 
         // Safety / notifications
+        if let Ok(v) = std::env::var("MINNAL_COMMAND_PERMISSIONS") {
+            if let Some(mode) = CommandPermissionMode::parse(&v) {
+                self.safety.command_permissions = mode;
+            }
+        }
         if let Ok(v) = std::env::var("MINNAL_NTFY_TOPIC") {
             self.safety.ntfy_topic = Some(v);
         }
