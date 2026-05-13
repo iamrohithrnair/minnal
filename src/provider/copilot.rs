@@ -298,7 +298,7 @@ impl CopilotApiProvider {
         }
 
         let bearer_start = std::time::Instant::now();
-        let bearer = match self.get_bearer_token().await {
+        let api_token = match self.get_api_token().await {
             Ok(t) => t,
             Err(e) => {
                 crate::logging::info(&format!(
@@ -312,11 +312,11 @@ impl CopilotApiProvider {
         };
 
         let fetch_start = std::time::Instant::now();
-        match copilot_auth::fetch_available_models(&self.client, &bearer).await {
+        match copilot_auth::fetch_available_models(&self.client, &api_token).await {
             Ok(models) => {
                 let picker_models: Vec<String> = models
                     .iter()
-                    .filter(|m| m.model_picker_enabled)
+                    .filter(|m| m.model_picker_enabled && copilot_auth::is_usable_chat_model(m))
                     .map(|m| m.id.clone())
                     .collect();
                 let all_ids: Vec<String> = models.iter().map(|m| m.id.clone()).collect();
@@ -390,22 +390,26 @@ impl CopilotApiProvider {
     }
 
     /// Get a valid Copilot bearer token, refreshing if expired
-    async fn get_bearer_token(&self) -> Result<String> {
+    async fn get_api_token(&self) -> Result<copilot_auth::CopilotApiToken> {
         {
             let guard = self.bearer_token.read().await;
             if let Some(ref token) = *guard
                 && !token.is_expired()
             {
-                return Ok(token.token.clone());
+                return Ok(token.clone());
             }
         }
 
         // Need to refresh
         let new_token =
             copilot_auth::exchange_github_token(&self.client, &self.github_token).await?;
-        let token_str = new_token.token.clone();
+        let token = new_token.clone();
         *self.bearer_token.write().await = Some(new_token);
-        Ok(token_str)
+        Ok(token)
+    }
+
+    async fn get_bearer_token(&self) -> Result<String> {
+        Ok(self.get_api_token().await?.token)
     }
 
     /// Check if an error indicates token expiration
@@ -642,7 +646,7 @@ impl CopilotApiProvider {
                 initiator, model
             ));
 
-            let bearer_token = match self.get_bearer_token().await {
+            let api_token = match self.get_api_token().await {
                 Ok(t) => t,
                 Err(e) => {
                     let _ = tx.send(Err(e)).await;
@@ -665,11 +669,8 @@ impl CopilotApiProvider {
 
             let resp = self
                 .client
-                .post(format!(
-                    "{}/chat/completions",
-                    copilot_auth::COPILOT_API_BASE
-                ))
-                .header("Authorization", format!("Bearer {}", bearer_token))
+                .post(format!("{}/chat/completions", api_token.api_endpoint))
+                .header("Authorization", format!("Bearer {}", api_token.token))
                 .header("Editor-Version", copilot_auth::EDITOR_VERSION)
                 .header("Editor-Plugin-Version", copilot_auth::EDITOR_PLUGIN_VERSION)
                 .header(
