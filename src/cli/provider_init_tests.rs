@@ -17,7 +17,7 @@ fn lock_env() -> std::sync::MutexGuard<'static, ()> {
 #[test]
 #[allow(deprecated)]
 fn test_provider_choice_arg_values() {
-    assert_eq!(ProviderChoice::Jcode.as_arg_value(), "jcode");
+    assert_eq!(ProviderChoice::Minnal.as_arg_value(), "minnal");
     assert_eq!(ProviderChoice::Claude.as_arg_value(), "claude");
     assert_eq!(
         ProviderChoice::ClaudeSubprocess.as_arg_value(),
@@ -68,7 +68,7 @@ fn test_server_bootstrap_login_selection_preserves_order() {
     );
     assert_eq!(
         resolve_login_selection("3", &providers).map(|provider| provider.id),
-        Some("jcode")
+        Some("minnal")
     );
     assert_eq!(
         resolve_login_selection("4", &providers).map(|provider| provider.id),
@@ -118,54 +118,54 @@ fn test_auto_init_login_selection_preserves_order() {
 }
 
 #[test]
-fn test_init_provider_jcode_delegates_runtime_profile_to_wrapper() {
+fn test_init_provider_minnal_delegates_runtime_profile_to_wrapper() {
     let _guard = lock_env();
     let _env_guard = crate::storage::lock_test_env();
     crate::subscription_catalog::clear_runtime_env();
-    crate::env::remove_var("JCODE_OPENROUTER_MODEL");
-    crate::env::remove_var("JCODE_RUNTIME_PROVIDER");
-    crate::env::remove_var("JCODE_ACTIVE_PROVIDER");
-    crate::env::remove_var("JCODE_FORCE_PROVIDER");
+    crate::env::remove_var("MINNAL_OPENROUTER_MODEL");
+    crate::env::remove_var("MINNAL_RUNTIME_PROVIDER");
+    crate::env::remove_var("MINNAL_ACTIVE_PROVIDER");
+    crate::env::remove_var("MINNAL_FORCE_PROVIDER");
 
     let runtime = tokio::runtime::Runtime::new().expect("tokio runtime");
     let provider = runtime
-        .block_on(init_provider(&ProviderChoice::Jcode, None))
-        .expect("init jcode provider");
+        .block_on(init_provider(&ProviderChoice::Minnal, None))
+        .expect("init minnal provider");
 
-    assert_eq!(provider.name(), "Jcode Subscription");
+    assert_eq!(provider.name(), "Minnal Subscription");
     assert!(crate::subscription_catalog::is_runtime_mode_enabled());
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_MODEL").ok().as_deref(),
+        std::env::var("MINNAL_OPENROUTER_MODEL").ok().as_deref(),
         Some(crate::subscription_catalog::default_model().id)
     );
     assert_eq!(
-        std::env::var("JCODE_ACTIVE_PROVIDER").ok().as_deref(),
+        std::env::var("MINNAL_ACTIVE_PROVIDER").ok().as_deref(),
         Some("openrouter")
     );
     assert_eq!(
-        std::env::var("JCODE_RUNTIME_PROVIDER").ok().as_deref(),
-        Some("jcode")
+        std::env::var("MINNAL_RUNTIME_PROVIDER").ok().as_deref(),
+        Some("minnal")
     );
     assert_eq!(
-        std::env::var("JCODE_FORCE_PROVIDER").ok().as_deref(),
+        std::env::var("MINNAL_FORCE_PROVIDER").ok().as_deref(),
         Some("1")
     );
 
     crate::subscription_catalog::clear_runtime_env();
-    crate::env::remove_var("JCODE_OPENROUTER_MODEL");
-    crate::env::remove_var("JCODE_RUNTIME_PROVIDER");
-    crate::env::remove_var("JCODE_ACTIVE_PROVIDER");
-    crate::env::remove_var("JCODE_FORCE_PROVIDER");
+    crate::env::remove_var("MINNAL_OPENROUTER_MODEL");
+    crate::env::remove_var("MINNAL_RUNTIME_PROVIDER");
+    crate::env::remove_var("MINNAL_ACTIVE_PROVIDER");
+    crate::env::remove_var("MINNAL_FORCE_PROVIDER");
 }
 
 #[test]
 fn test_openai_compatible_profile_overrides() {
     let _guard = lock_env();
     let keys = [
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
     ];
     let saved: Vec<(String, Option<String>)> = keys
         .iter()
@@ -173,12 +173,12 @@ fn test_openai_compatible_profile_overrides() {
         .collect();
 
     crate::env::set_var(
-        "JCODE_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
         "https://api.groq.com/openai/v1/",
     );
-    crate::env::set_var("JCODE_OPENAI_COMPAT_API_KEY_NAME", "GROQ_API_KEY");
-    crate::env::set_var("JCODE_OPENAI_COMPAT_ENV_FILE", "groq.env");
-    crate::env::set_var("JCODE_OPENAI_COMPAT_DEFAULT_MODEL", "openai/gpt-oss-120b");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_API_KEY_NAME", "GROQ_API_KEY");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_ENV_FILE", "groq.env");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_DEFAULT_MODEL", "openai/gpt-oss-120b");
 
     let resolved = resolve_openai_compatible_profile(provider_catalog::OPENAI_COMPAT_PROFILE);
     assert_eq!(resolved.api_base, "https://api.groq.com/openai/v1");
@@ -202,18 +202,18 @@ fn test_openai_compatible_profile_overrides() {
 fn test_openai_compatible_profile_rejects_invalid_overrides() {
     let _guard = lock_env();
     let keys = [
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
     ];
     let saved: Vec<(String, Option<String>)> = keys
         .iter()
         .map(|k| (k.to_string(), std::env::var(k).ok()))
         .collect();
 
-    crate::env::set_var("JCODE_OPENAI_COMPAT_API_BASE", "http://example.com/v1");
-    crate::env::set_var("JCODE_OPENAI_COMPAT_API_KEY_NAME", "bad-key-name");
-    crate::env::set_var("JCODE_OPENAI_COMPAT_ENV_FILE", "../bad.env");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_API_BASE", "http://example.com/v1");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_API_KEY_NAME", "bad-key-name");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_ENV_FILE", "../bad.env");
 
     let resolved = resolve_openai_compatible_profile(provider_catalog::OPENAI_COMPAT_PROFILE);
     assert_eq!(
@@ -312,8 +312,8 @@ fn login_provider_menu_shows_autodetected_auth_and_skip() {
 #[test]
 fn choice_for_login_provider_round_trips_core_targets() {
     assert_eq!(
-        choice_for_login_provider(provider_catalog::JCODE_LOGIN_PROVIDER),
-        Some(ProviderChoice::Jcode)
+        choice_for_login_provider(provider_catalog::MINNAL_LOGIN_PROVIDER),
+        Some(ProviderChoice::Minnal)
     );
     assert_eq!(
         choice_for_login_provider(provider_catalog::OPENROUTER_LOGIN_PROVIDER),
@@ -428,17 +428,17 @@ fn resolved_profile_default_model_uses_openai_compatible_override() {
     let _guard = lock_env();
     let _env_guard = crate::storage::lock_test_env();
     let saved: Vec<(String, Option<String>)> = [
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
     ]
     .iter()
     .map(|k| (k.to_string(), std::env::var(k).ok()))
     .collect();
 
-    crate::env::set_var("JCODE_OPENAI_COMPAT_API_BASE", "http://localhost:11434/v1");
-    crate::env::set_var("JCODE_OPENAI_COMPAT_DEFAULT_MODEL", "llama3.2");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_API_BASE", "http://localhost:11434/v1");
+    crate::env::set_var("MINNAL_OPENAI_COMPAT_DEFAULT_MODEL", "llama3.2");
 
     assert_eq!(
         resolved_profile_default_model(provider_catalog::OPENAI_COMPAT_PROFILE).as_deref(),
@@ -465,22 +465,22 @@ async fn init_provider_for_ollama_reapplies_local_compat_runtime_env_after_disab
     let _env_guard = crate::storage::lock_test_env();
     let dir = TempDir::new().expect("temp dir");
     let saved: Vec<(String, Option<String>)> = [
-        "JCODE_HOME",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_ALLOW_NO_AUTH",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
+        "MINNAL_HOME",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_ALLOW_NO_AUTH",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
     ]
     .iter()
     .map(|k| (k.to_string(), std::env::var(k).ok()))
     .collect();
 
-    crate::env::set_var("JCODE_HOME", dir.path());
+    crate::env::set_var("MINNAL_HOME", dir.path());
     crate::subscription_catalog::apply_runtime_env();
 
     let provider = init_provider_for_validation(&ProviderChoice::Ollama, Some("llama3.2"))
@@ -488,35 +488,35 @@ async fn init_provider_for_ollama_reapplies_local_compat_runtime_env_after_disab
         .expect("init ollama provider");
 
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_API_BASE").ok().as_deref(),
+        std::env::var("MINNAL_OPENROUTER_API_BASE").ok().as_deref(),
         Some("http://localhost:11434/v1")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_API_KEY_NAME")
+        std::env::var("MINNAL_OPENROUTER_API_KEY_NAME")
             .ok()
             .as_deref(),
         Some("OLLAMA_API_KEY")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_ENV_FILE").ok().as_deref(),
+        std::env::var("MINNAL_OPENROUTER_ENV_FILE").ok().as_deref(),
         Some("ollama.env")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_ALLOW_NO_AUTH")
+        std::env::var("MINNAL_OPENROUTER_ALLOW_NO_AUTH")
             .ok()
             .as_deref(),
         Some("1")
     );
     assert_eq!(
-        std::env::var("JCODE_FORCE_PROVIDER").ok().as_deref(),
+        std::env::var("MINNAL_FORCE_PROVIDER").ok().as_deref(),
         Some("1")
     );
     assert_eq!(
-        std::env::var("JCODE_ACTIVE_PROVIDER").ok().as_deref(),
+        std::env::var("MINNAL_ACTIVE_PROVIDER").ok().as_deref(),
         Some("openrouter")
     );
     assert_eq!(
-        std::env::var("JCODE_RUNTIME_PROVIDER").ok().as_deref(),
+        std::env::var("MINNAL_RUNTIME_PROVIDER").ok().as_deref(),
         Some("openai-compatible")
     );
     assert_eq!(provider.name(), "openrouter");
@@ -541,24 +541,24 @@ async fn auto_provider_noninteractive_skips_untrusted_external_auth_instead_of_b
     let _env_guard = crate::storage::lock_test_env();
     let dir = TempDir::new().expect("temp dir");
     let saved: Vec<(String, Option<String>)> = [
-        "JCODE_HOME",
-        "JCODE_NON_INTERACTIVE",
+        "MINNAL_HOME",
+        "MINNAL_NON_INTERACTIVE",
         "ANTHROPIC_API_KEY",
         "OPENAI_API_KEY",
         "OPENROUTER_API_KEY",
         "GITHUB_TOKEN",
         "GEMINI_API_KEY",
         "CURSOR_API_KEY",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]
     .iter()
     .map(|k| (k.to_string(), std::env::var(k).ok()))
     .collect();
 
-    crate::env::set_var("JCODE_HOME", dir.path());
-    crate::env::set_var("JCODE_NON_INTERACTIVE", "1");
+    crate::env::set_var("MINNAL_HOME", dir.path());
+    crate::env::set_var("MINNAL_NON_INTERACTIVE", "1");
     for key in [
         "ANTHROPIC_API_KEY",
         "OPENAI_API_KEY",
@@ -566,8 +566,8 @@ async fn auto_provider_noninteractive_skips_untrusted_external_auth_instead_of_b
         "GITHUB_TOKEN",
         "GEMINI_API_KEY",
         "CURSOR_API_KEY",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ] {
         crate::env::remove_var(key);
     }
@@ -622,8 +622,8 @@ fn pending_external_auth_review_candidates_include_shared_and_legacy_sources() {
     let _guard = lock_env();
     let _env_guard = crate::storage::lock_test_env();
     let dir = TempDir::new().expect("temp dir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", dir.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", dir.path());
 
     let opencode_path = crate::auth::external::ExternalAuthSource::OpenCode
         .path()
@@ -669,8 +669,8 @@ fn pending_external_auth_review_candidates_include_shared_and_legacy_sources() {
     }));
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }

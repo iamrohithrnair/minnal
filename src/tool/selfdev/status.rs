@@ -6,7 +6,7 @@ pub fn selfdev_status_output() -> Result<ToolOutput> {
     let mut status = String::new();
 
     status.push_str("## Current Version\n\n");
-    status.push_str(&format!("**Running:** jcode {}\n", env!("JCODE_VERSION")));
+    status.push_str(&format!("**Running:** minnal {}\n", env!("MINNAL_VERSION")));
 
     if let Some(repo_dir) = build::get_repo_dir() {
         let output = std::process::Command::new("git")
@@ -222,8 +222,8 @@ impl SelfDevTool {
             "debug_socket": debug_socket.to_string_lossy(),
             "main_socket": main_socket.to_string_lossy(),
             "debug_enabled": crate::config::config().display.debug_socket ||
-                             std::env::var("JCODE_DEBUG_CONTROL").is_ok() ||
-                             crate::storage::jcode_dir().map(|d| d.join("debug_control").exists()).unwrap_or(false),
+                             std::env::var("MINNAL_DEBUG_CONTROL").is_ok() ||
+                             crate::storage::minnal_dir().map(|d| d.join("debug_control").exists()).unwrap_or(false),
             "connect_example": format!(
                 "echo '{{\"type\":\"debug_command\",\"id\":1,\"command\":\"help\"}}' | nc -U {}",
                 debug_socket.display()

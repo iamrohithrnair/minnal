@@ -16,10 +16,10 @@ impl TestEnvGuard {
     fn new() -> anyhow::Result<Self> {
         let lock = crate::storage::lock_test_env();
         let temp_home = tempfile::Builder::new()
-            .prefix("jcode-restart-snapshot-test-home-")
+            .prefix("minnal-restart-snapshot-test-home-")
             .tempdir()?;
-        let prev_home = std::env::var_os("JCODE_HOME");
-        crate::env::set_var("JCODE_HOME", temp_home.path());
+        let prev_home = std::env::var_os("MINNAL_HOME");
+        crate::env::set_var("MINNAL_HOME", temp_home.path());
         Ok(Self {
             prev_home,
             _temp_home: temp_home,
@@ -31,9 +31,9 @@ impl TestEnvGuard {
 impl Drop for TestEnvGuard {
     fn drop(&mut self) {
         if let Some(prev_home) = &self.prev_home {
-            crate::env::set_var("JCODE_HOME", prev_home);
+            crate::env::set_var("MINNAL_HOME", prev_home);
         } else {
-            crate::env::remove_var("JCODE_HOME");
+            crate::env::remove_var("MINNAL_HOME");
         }
     }
 }
@@ -163,8 +163,8 @@ fn arm_auto_restore_from_recent_crashes_ignores_old_crashes() {
     crashed.status = crate::session::SessionStatus::Active;
     crashed.last_pid = Some(dead_pid);
     crashed.save().expect("save stale active session");
-    let active_dir = crate::storage::jcode_dir()
-        .expect("jcode dir")
+    let active_dir = crate::storage::minnal_dir()
+        .expect("minnal dir")
         .join("active_pids");
     std::fs::create_dir_all(&active_dir).expect("create active pid dir");
     std::fs::write(active_dir.join(&crashed.id), dead_pid.to_string())

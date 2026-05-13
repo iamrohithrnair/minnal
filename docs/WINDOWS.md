@@ -1,6 +1,6 @@
 # Windows Support Architecture
 
-This document describes how jcode achieves cross-platform support for Linux, macOS, and Windows.
+This document describes how minnal achieves cross-platform support for Linux, macOS, and Windows.
 
 ## Status
 
@@ -18,15 +18,15 @@ This document describes how jcode achieves cross-platform support for Linux, mac
 
 Current Windows install paths from `scripts/install.ps1`:
 
-- Launcher: `%LOCALAPPDATA%\\jcode\\bin\\jcode.exe`
-- Stable channel binary: `%LOCALAPPDATA%\\jcode\\builds\\stable\\jcode.exe`
-- Immutable versioned binaries: `%LOCALAPPDATA%\\jcode\\builds\\versions\\<version>\\jcode.exe`
+- Launcher: `%LOCALAPPDATA%\\minnal\\bin\\minnal.exe`
+- Stable channel binary: `%LOCALAPPDATA%\\minnal\\builds\\stable\\minnal.exe`
+- Immutable versioned binaries: `%LOCALAPPDATA%\\minnal\\builds\\versions\\<version>\\minnal.exe`
 
 Unlike the current Unix self-dev/local-build flow, the PowerShell installer currently installs the stable channel rather than a separate `current` channel.
 
 ## Transport Layer (`src/transport/`)
 
-The transport layer abstracts IPC (Inter-Process Communication). On Unix, jcode uses Unix domain sockets. On Windows, jcode uses named pipes.
+The transport layer abstracts IPC (Inter-Process Communication). On Unix, minnal uses Unix domain sockets. On Windows, minnal uses named pipes.
 
 ### Module Structure
 
@@ -60,7 +60,7 @@ Windows transport provides custom types wrapping `tokio::net::windows::named_pip
 - **`ReadHalf` / `WriteHalf`**: Created via `stream.into_split()` using `Arc<Mutex<Stream>>` since named pipes don't support native kernel-level splitting
 - **`SyncStream`**: Opens the named pipe as a regular file for blocking I/O
 
-Socket paths are converted to pipe names: `/run/user/1000/jcode.sock` becomes `\\.\pipe\jcode`.
+Socket paths are converted to pipe names: `/run/user/1000/minnal.sock` becomes `\\.\pipe\minnal`.
 
 ### API Surface
 

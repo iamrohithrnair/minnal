@@ -24,7 +24,7 @@ fn test_skill_prompt_integration() {
     let prompt = build_system_prompt(Some(skill_prompt), &[]);
 
     // The prompt should contain our default system prompt
-    assert!(prompt.contains("You are the Jcode Agent"));
+    assert!(prompt.contains("You are the Minnal Agent"));
 
     // The prompt should contain the skill prompt
     assert!(prompt.contains(skill_prompt));
@@ -42,9 +42,9 @@ fn test_skill_prompt_integration() {
 #[test]
 fn test_load_agents_md_files_uses_sandboxed_global_files() {
     let _guard = crate::storage::lock_test_env();
-    let prev_home = std::env::var_os("JCODE_HOME");
+    let prev_home = std::env::var_os("MINNAL_HOME");
     let temp = tempfile::TempDir::new().unwrap();
-    crate::env::set_var("JCODE_HOME", temp.path());
+    crate::env::set_var("MINNAL_HOME", temp.path());
     std::fs::create_dir_all(temp.path().join("external")).unwrap();
 
     std::fs::write(
@@ -61,9 +61,9 @@ fn test_load_agents_md_files_uses_sandboxed_global_files() {
     assert!(content.contains("sandboxed global agents instructions"));
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -75,7 +75,7 @@ fn test_session_context_includes_time_timezone_and_system_info() {
     assert!(context.contains("Timezone: UTC"));
     assert!(context.contains("OS: "));
     assert!(context.contains("Architecture: "));
-    assert!(context.contains("Jcode version: "));
+    assert!(context.contains("Minnal version: "));
 }
 
 #[test]
@@ -87,11 +87,11 @@ fn test_split_prompt_does_not_inject_session_context_per_turn() {
 }
 
 #[test]
-fn test_prompt_overlay_files_are_loaded_from_project_and_global_jcode_dirs() {
+fn test_prompt_overlay_files_are_loaded_from_project_and_global_minnal_dirs() {
     let _guard = crate::storage::lock_test_env();
-    let prev_home = std::env::var_os("JCODE_HOME");
+    let prev_home = std::env::var_os("MINNAL_HOME");
     let temp = tempfile::TempDir::new().unwrap();
-    crate::env::set_var("JCODE_HOME", temp.path());
+    crate::env::set_var("MINNAL_HOME", temp.path());
     std::fs::create_dir_all(temp.path()).unwrap();
     std::fs::write(
         temp.path().join("prompt-overlay.md"),
@@ -100,9 +100,9 @@ fn test_prompt_overlay_files_are_loaded_from_project_and_global_jcode_dirs() {
     .unwrap();
 
     let project_dir = tempfile::TempDir::new().unwrap();
-    std::fs::create_dir_all(project_dir.path().join(".jcode")).unwrap();
+    std::fs::create_dir_all(project_dir.path().join(".minnal")).unwrap();
     std::fs::write(
-        project_dir.path().join(".jcode/prompt-overlay.md"),
+        project_dir.path().join(".minnal/prompt-overlay.md"),
         "project prompt overlay instructions",
     )
     .unwrap();
@@ -126,9 +126,9 @@ fn test_prompt_overlay_files_are_loaded_from_project_and_global_jcode_dirs() {
     assert!(info.prompt_overlay_chars > 0);
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -144,7 +144,7 @@ fn test_non_selfdev_prompt_includes_lightweight_selfdev_hint() {
 #[test]
 fn test_selfdev_prompt_uses_full_selfdev_instructions() {
     let prompt = build_system_prompt_with_selfdev(None, &[], true);
-    assert!(prompt.contains("You are working on the jcode codebase itself."));
+    assert!(prompt.contains("You are working on the minnal codebase itself."));
     assert!(!prompt.contains("Self-Development Access"));
 }
 
@@ -155,7 +155,7 @@ fn test_selfdev_prompt_prefers_publish_flow_for_active_builds() {
     assert!(prompt.contains("cancel-build"));
     assert!(prompt.contains("selfdev reload"));
     assert!(prompt.contains("fallback when `selfdev build` is not appropriate"));
-    assert!(prompt.contains("scripts/dev_cargo.sh build --profile selfdev -p jcode --bin jcode"));
+    assert!(prompt.contains("scripts/dev_cargo.sh build --profile selfdev -p minnal --bin minnal"));
     assert!(prompt.contains("remote build host is configured"));
     assert!(prompt.contains("Do not wait for user input"));
 }

@@ -32,7 +32,7 @@ const DEFAULT_MODEL: &str = "anthropic.claude-3-5-sonnet-20241022-v2:0";
 const DEFAULT_MAX_OUTPUT_TOKENS: usize = 4096;
 pub const ENV_FILE: &str = "bedrock.env";
 pub const API_KEY_ENV: &str = "AWS_BEARER_TOKEN_BEDROCK";
-pub const REGION_ENV: &str = "JCODE_BEDROCK_REGION";
+pub const REGION_ENV: &str = "MINNAL_BEDROCK_REGION";
 
 #[derive(Debug, Clone)]
 struct BedrockModelInfo {
@@ -70,7 +70,7 @@ pub struct BedrockProvider {
 impl BedrockProvider {
     pub fn new() -> Self {
         let model =
-            std::env::var("JCODE_BEDROCK_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.to_string());
+            std::env::var("MINNAL_BEDROCK_MODEL").unwrap_or_else(|_| DEFAULT_MODEL.to_string());
         let provider = Self {
             model: Arc::new(RwLock::new(model)),
             fetched_models: Arc::new(RwLock::new(Vec::new())),
@@ -84,7 +84,7 @@ impl BedrockProvider {
     }
 
     pub fn has_credentials() -> bool {
-        let explicitly_enabled = std::env::var("JCODE_BEDROCK_ENABLE")
+        let explicitly_enabled = std::env::var("MINNAL_BEDROCK_ENABLE")
             .ok()
             .map(|v| matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes"))
             .unwrap_or(false);
@@ -96,7 +96,7 @@ impl BedrockProvider {
         let has_credential_hint = Self::configured_bearer_token().is_some()
             || std::env::var_os("AWS_ACCESS_KEY_ID").is_some()
             || std::env::var_os("AWS_PROFILE").is_some()
-            || std::env::var_os("JCODE_BEDROCK_PROFILE").is_some()
+            || std::env::var_os("MINNAL_BEDROCK_PROFILE").is_some()
             || std::env::var_os("AWS_WEB_IDENTITY_TOKEN_FILE").is_some()
             || std::env::var_os("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI").is_some()
             || std::env::var_os("AWS_CONTAINER_CREDENTIALS_FULL_URI").is_some()
@@ -115,7 +115,7 @@ impl BedrockProvider {
             loader = loader.region(aws_types::region::Region::new(region));
         }
         if let Ok(profile) =
-            std::env::var("JCODE_BEDROCK_PROFILE").or_else(|_| std::env::var("AWS_PROFILE"))
+            std::env::var("MINNAL_BEDROCK_PROFILE").or_else(|_| std::env::var("AWS_PROFILE"))
         {
             if let Some(credentials) = Self::credentials_from_aws_login_profile(&profile).await {
                 loader = loader.credentials_provider(credentials);
@@ -185,7 +185,7 @@ impl BedrockProvider {
     }
 
     async fn validate_credentials_if_requested() -> Result<()> {
-        let validate = std::env::var("JCODE_BEDROCK_VALIDATE_STS")
+        let validate = std::env::var("MINNAL_BEDROCK_VALIDATE_STS")
             .ok()
             .map(|v| !matches!(v.trim().to_ascii_lowercase().as_str(), "0" | "false" | "no"))
             .unwrap_or(false);
@@ -345,7 +345,7 @@ impl BedrockProvider {
         {
             "Bedrock throttled the request. Retry later or request a quota increase."
         } else if lower.contains("region") && lower.contains("missing") {
-            "AWS region is missing. Set AWS_REGION or JCODE_BEDROCK_REGION."
+            "AWS region is missing. Set AWS_REGION or MINNAL_BEDROCK_REGION."
         } else {
             "Bedrock request failed. Check AWS credentials, region, model access, and IAM permissions."
         };
@@ -528,19 +528,19 @@ impl BedrockProvider {
     }
 
     fn inference_config() -> Option<InferenceConfiguration> {
-        let max_tokens = std::env::var("JCODE_BEDROCK_MAX_TOKENS")
+        let max_tokens = std::env::var("MINNAL_BEDROCK_MAX_TOKENS")
             .ok()
             .and_then(|v| v.trim().parse::<i32>().ok())
             .filter(|v| *v > 0);
-        let temperature = std::env::var("JCODE_BEDROCK_TEMPERATURE")
+        let temperature = std::env::var("MINNAL_BEDROCK_TEMPERATURE")
             .ok()
             .and_then(|v| v.trim().parse::<f32>().ok())
             .filter(|v| (0.0..=1.0).contains(v));
-        let top_p = std::env::var("JCODE_BEDROCK_TOP_P")
+        let top_p = std::env::var("MINNAL_BEDROCK_TOP_P")
             .ok()
             .and_then(|v| v.trim().parse::<f32>().ok())
             .filter(|v| (0.0..=1.0).contains(v));
-        let stop_sequences = std::env::var("JCODE_BEDROCK_STOP_SEQUENCES")
+        let stop_sequences = std::env::var("MINNAL_BEDROCK_STOP_SEQUENCES")
             .ok()
             .map(|v| {
                 v.split(',')
@@ -1321,7 +1321,7 @@ impl Provider for BedrockProvider {
         true
     }
 
-    fn uses_jcode_compaction(&self) -> bool {
+    fn uses_minnal_compaction(&self) -> bool {
         true
     }
 
@@ -1377,13 +1377,13 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let _xdg = EnvVarGuard::set("XDG_CONFIG_HOME", temp.path().as_os_str());
         let _removed = [
-            "JCODE_BEDROCK_ENABLE",
+            "MINNAL_BEDROCK_ENABLE",
             API_KEY_ENV,
             REGION_ENV,
             "AWS_REGION",
             "AWS_DEFAULT_REGION",
             "AWS_PROFILE",
-            "JCODE_BEDROCK_PROFILE",
+            "MINNAL_BEDROCK_PROFILE",
             "AWS_ACCESS_KEY_ID",
             "AWS_SECRET_ACCESS_KEY",
             "AWS_SHARED_CREDENTIALS_FILE",
@@ -1399,9 +1399,9 @@ mod tests {
     #[test]
     fn explicit_enable_marks_configured_for_instance_metadata_credentials() {
         let _guard = crate::storage::lock_test_env();
-        crate::env::set_var("JCODE_BEDROCK_ENABLE", "1");
+        crate::env::set_var("MINNAL_BEDROCK_ENABLE", "1");
         assert!(BedrockProvider::has_credentials());
-        crate::env::remove_var("JCODE_BEDROCK_ENABLE");
+        crate::env::remove_var("MINNAL_BEDROCK_ENABLE");
     }
 
     #[test]
@@ -1410,13 +1410,13 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let _xdg = EnvVarGuard::set("XDG_CONFIG_HOME", temp.path().as_os_str());
         for key in [
-            "JCODE_BEDROCK_ENABLE",
+            "MINNAL_BEDROCK_ENABLE",
             API_KEY_ENV,
             REGION_ENV,
             "AWS_REGION",
             "AWS_DEFAULT_REGION",
             "AWS_PROFILE",
-            "JCODE_BEDROCK_PROFILE",
+            "MINNAL_BEDROCK_PROFILE",
             "AWS_ACCESS_KEY_ID",
         ] {
             crate::env::remove_var(key);
@@ -1742,7 +1742,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "requires AWS credentials and enabled Bedrock model access"]
     async fn bedrock_live_smoke_test() {
-        if std::env::var("JCODE_BEDROCK_LIVE_TEST").ok().as_deref() != Some("1") {
+        if std::env::var("MINNAL_BEDROCK_LIVE_TEST").ok().as_deref() != Some("1") {
             return;
         }
         let provider = BedrockProvider::new();

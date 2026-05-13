@@ -1,8 +1,8 @@
 use super::{ALL_OPENAI_MODELS, openrouter};
 use crate::auth;
 use crate::provider::models::provider_for_model;
-use jcode_provider_core::pricing as core_pricing;
-use jcode_provider_core::{RouteCheapnessEstimate, RouteCostConfidence, RouteCostSource};
+use minnal_provider_core::pricing as core_pricing;
+use minnal_provider_core::{RouteCheapnessEstimate, RouteCostConfidence, RouteCostSource};
 
 pub(crate) fn anthropic_api_pricing(model: &str) -> Option<RouteCheapnessEstimate> {
     core_pricing::anthropic_api_pricing(model)
@@ -45,7 +45,7 @@ pub(crate) fn openai_oauth_pricing(model: &str) -> RouteCheapnessEstimate {
 
 pub(crate) fn copilot_pricing(model: &str) -> RouteCheapnessEstimate {
     let zero_premium_mode = matches!(
-        std::env::var("JCODE_COPILOT_PREMIUM").ok().as_deref(),
+        std::env::var("MINNAL_COPILOT_PREMIUM").ok().as_deref(),
         Some("0")
     );
     core_pricing::copilot_pricing(model, zero_premium_mode)
@@ -145,28 +145,28 @@ pub(crate) fn cheapness_for_route(
 mod tests {
     use super::*;
     use crate::env;
-    use jcode_provider_core::{RouteBillingKind, RouteCostConfidence, RouteCostSource};
+    use minnal_provider_core::{RouteBillingKind, RouteCostConfidence, RouteCostSource};
 
     fn with_clean_provider_test_env<T>(f: impl FnOnce() -> T) -> T {
         let _guard = crate::storage::lock_test_env();
         let temp = tempfile::tempdir().expect("tempdir");
-        let prev_home = std::env::var_os("JCODE_HOME");
+        let prev_home = std::env::var_os("MINNAL_HOME");
         let prev_openai_api_key = std::env::var_os("OPENAI_API_KEY");
-        let prev_copilot_premium = std::env::var_os("JCODE_COPILOT_PREMIUM");
+        let prev_copilot_premium = std::env::var_os("MINNAL_COPILOT_PREMIUM");
         crate::auth::claude::set_active_account_override(None);
         crate::auth::codex::set_active_account_override(None);
-        env::set_var("JCODE_HOME", temp.path());
+        env::set_var("MINNAL_HOME", temp.path());
         env::remove_var("OPENAI_API_KEY");
-        env::remove_var("JCODE_COPILOT_PREMIUM");
+        env::remove_var("MINNAL_COPILOT_PREMIUM");
 
         let result = f();
 
         crate::auth::claude::set_active_account_override(None);
         crate::auth::codex::set_active_account_override(None);
         if let Some(prev_home) = prev_home {
-            env::set_var("JCODE_HOME", prev_home);
+            env::set_var("MINNAL_HOME", prev_home);
         } else {
-            env::remove_var("JCODE_HOME");
+            env::remove_var("MINNAL_HOME");
         }
         if let Some(prev_openai_api_key) = prev_openai_api_key {
             env::set_var("OPENAI_API_KEY", prev_openai_api_key);
@@ -174,9 +174,9 @@ mod tests {
             env::remove_var("OPENAI_API_KEY");
         }
         if let Some(prev_copilot_premium) = prev_copilot_premium {
-            env::set_var("JCODE_COPILOT_PREMIUM", prev_copilot_premium);
+            env::set_var("MINNAL_COPILOT_PREMIUM", prev_copilot_premium);
         } else {
-            env::remove_var("JCODE_COPILOT_PREMIUM");
+            env::remove_var("MINNAL_COPILOT_PREMIUM");
         }
         result
     }
@@ -238,7 +238,7 @@ mod tests {
     #[test]
     fn copilot_zero_mode_marks_estimate_high_confidence_and_zero_reference_cost() {
         with_clean_provider_test_env(|| {
-            env::set_var("JCODE_COPILOT_PREMIUM", "0");
+            env::set_var("MINNAL_COPILOT_PREMIUM", "0");
             let estimate = copilot_pricing("claude-opus-4-6");
             assert_eq!(estimate.billing_kind, RouteBillingKind::IncludedQuota);
             assert_eq!(estimate.confidence, RouteCostConfidence::High);

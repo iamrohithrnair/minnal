@@ -1,5 +1,5 @@
 use anyhow::Result;
-use jcode_agent_runtime::{SoftInterruptMessage, SoftInterruptSource};
+use minnal_agent_runtime::{SoftInterruptMessage, SoftInterruptSource};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -59,7 +59,7 @@ impl From<PersistedSoftInterrupt> for SoftInterruptMessage {
 }
 
 fn dir_path() -> Result<PathBuf> {
-    Ok(crate::storage::jcode_dir()?.join("pending-soft-interrupts"))
+    Ok(crate::storage::minnal_dir()?.join("pending-soft-interrupts"))
 }
 
 fn path_for_session(session_id: &str) -> Result<PathBuf> {

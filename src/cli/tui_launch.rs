@@ -22,9 +22,9 @@ pub(crate) fn resumed_window_title(session_id: &str) -> String {
     let icon = id::session_icon(&session_name);
     let session_label = crate::process_title::terminal_session_label_for_id(session_id);
     if let Some(server_info) = crate::registry::find_server_by_socket_sync(&server::socket_path()) {
-        format!("{} jcode/{} {}", icon, server_info.name, session_label)
+        format!("{} minnal/{} {}", icon, server_info.name, session_label)
     } else {
-        format!("{} jcode {}", icon, session_label)
+        format!("{} minnal {}", icon, session_label)
     }
 }
 
@@ -36,11 +36,11 @@ fn focus_title_best_effort(title: &str) {
     cmd.arg("-c")
         .arg(
             "sleep 0.4; \
-             if command -v wmctrl >/dev/null 2>&1; then wmctrl -a \"$JCODE_WINDOW_TITLE\" >/dev/null 2>&1 && exit 0; fi; \
-             if command -v xdotool >/dev/null 2>&1; then xdotool search --name \"$JCODE_WINDOW_TITLE\" windowactivate >/dev/null 2>&1 && exit 0; fi; \
+             if command -v wmctrl >/dev/null 2>&1; then wmctrl -a \"$MINNAL_WINDOW_TITLE\" >/dev/null 2>&1 && exit 0; fi; \
+             if command -v xdotool >/dev/null 2>&1; then xdotool search --name \"$MINNAL_WINDOW_TITLE\" windowactivate >/dev/null 2>&1 && exit 0; fi; \
              exit 0",
         )
-        .env("JCODE_WINDOW_TITLE", title)
+        .env("MINNAL_WINDOW_TITLE", title)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null());
@@ -155,7 +155,7 @@ pub async fn run_tui_client(
         );
     } else {
         crate::process_title::set_client_generic_title(super::selfdev::client_selfdev_requested());
-        let _ = crossterm::execute!(std::io::stdout(), crossterm::terminal::SetTitle("jcode"));
+        let _ = crossterm::execute!(std::io::stdout(), crossterm::terminal::SetTitle("minnal"));
     }
     startup_profile::mark("terminal_title");
 
@@ -270,7 +270,7 @@ pub async fn run_replay_command(
                         }
                     })
                     .collect::<String>();
-                std::path::PathBuf::from(format!("jcode_swarm_replay_{}_{}.mp4", safe_name, date))
+                std::path::PathBuf::from(format!("minnal_swarm_replay_{}_{}.mp4", safe_name, date))
             } else {
                 std::path::PathBuf::from(output)
             };
@@ -386,7 +386,7 @@ pub async fn run_replay_command(
                     }
                 })
                 .collect::<String>();
-            std::path::PathBuf::from(format!("jcode_replay_{}_{}.mp4", safe_name, date))
+            std::path::PathBuf::from(format!("minnal_replay_{}_{}.mp4", safe_name, date))
         } else {
             std::path::PathBuf::from(output)
         };
@@ -558,7 +558,7 @@ fn find_wezterm_gui_binary() -> Option<String> {
 
 #[cfg(not(unix))]
 fn resume_terminal_candidates_windows() -> Vec<String> {
-    std::env::var("JCODE_RESUME_TERMINAL")
+    std::env::var("MINNAL_RESUME_TERMINAL")
         .ok()
         .map(|value| {
             value
@@ -596,13 +596,13 @@ pub fn spawn_resume_in_new_terminal_with_provider(
 ) -> Result<bool> {
     use std::process::{Command, Stdio};
 
-    let mut jcode_args: Vec<String> = Vec::new();
+    let mut minnal_args: Vec<String> = Vec::new();
     if let Some(provider_key) = provider_key.filter(|value| !value.trim().is_empty()) {
-        jcode_args.push("--provider".to_string());
-        jcode_args.push(provider_key.to_string());
+        minnal_args.push("--provider".to_string());
+        minnal_args.push(provider_key.to_string());
     }
-    jcode_args.push("--resume".to_string());
-    jcode_args.push(session_id.to_string());
+    minnal_args.push("--resume".to_string());
+    minnal_args.push(session_id.to_string());
 
     let wezterm_gui = find_wezterm_gui_binary();
     let alacritty_available = Command::new("where")
@@ -630,7 +630,7 @@ pub fn spawn_resume_in_new_terminal_with_provider(
                 let mut cmd = Command::new(wezterm_bin);
                 cmd.args(["start", "--always-new-process", "--"])
                     .arg(exe)
-                    .args(&jcode_args)
+                    .args(&minnal_args)
                     .current_dir(cwd)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -644,7 +644,7 @@ pub fn spawn_resume_in_new_terminal_with_provider(
                 let mut cmd = Command::new("wt.exe");
                 cmd.args(["-p", "Command Prompt"])
                     .arg(exe)
-                    .args(&jcode_args)
+                    .args(&minnal_args)
                     .current_dir(cwd)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -658,7 +658,7 @@ pub fn spawn_resume_in_new_terminal_with_provider(
                 let mut cmd = Command::new("alacritty");
                 cmd.args(["-e"])
                     .arg(exe)
-                    .args(&jcode_args)
+                    .args(&minnal_args)
                     .current_dir(cwd)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -694,12 +694,12 @@ pub fn spawn_selfdev_in_new_terminal_with_provider(
 ) -> Result<bool> {
     use std::process::{Command, Stdio};
 
-    let mut jcode_args: Vec<String> = Vec::new();
+    let mut minnal_args: Vec<String> = Vec::new();
     if let Some(provider_key) = provider_key.filter(|value| !value.trim().is_empty()) {
-        jcode_args.push("--provider".to_string());
-        jcode_args.push(provider_key.to_string());
+        minnal_args.push("--provider".to_string());
+        minnal_args.push(provider_key.to_string());
     }
-    jcode_args.extend([
+    minnal_args.extend([
         "--resume".to_string(),
         session_id.to_string(),
         "self-dev".to_string(),
@@ -731,7 +731,7 @@ pub fn spawn_selfdev_in_new_terminal_with_provider(
                 let mut cmd = Command::new(wezterm_bin);
                 cmd.args(["start", "--always-new-process", "--"])
                     .arg(exe)
-                    .args(&jcode_args)
+                    .args(&minnal_args)
                     .current_dir(cwd)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -745,7 +745,7 @@ pub fn spawn_selfdev_in_new_terminal_with_provider(
                 let mut cmd = Command::new("wt.exe");
                 cmd.args(["-p", "Command Prompt"])
                     .arg(exe)
-                    .args(&jcode_args)
+                    .args(&minnal_args)
                     .current_dir(cwd)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -759,7 +759,7 @@ pub fn spawn_selfdev_in_new_terminal_with_provider(
                 let mut cmd = Command::new("alacritty");
                 cmd.args(["-e"])
                     .arg(exe)
-                    .args(&jcode_args)
+                    .args(&minnal_args)
                     .current_dir(cwd)
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -783,7 +783,7 @@ pub fn list_sessions() -> Result<()> {
         target: &crate::tui::session_picker::ResumeTarget,
     ) -> (std::path::PathBuf, Vec<String>) {
         match target {
-            crate::tui::session_picker::ResumeTarget::JcodeSession { session_id } => (
+            crate::tui::session_picker::ResumeTarget::MinnalSession { session_id } => (
                 exe.to_path_buf(),
                 vec!["--resume".to_string(), session_id.clone()],
             ),
@@ -832,7 +832,7 @@ pub fn list_sessions() -> Result<()> {
     ) -> Result<bool> {
         let (program, args) = build_resume_target_command(exe, target);
         let title = match target {
-            crate::tui::session_picker::ResumeTarget::JcodeSession { session_id } => {
+            crate::tui::session_picker::ResumeTarget::MinnalSession { session_id } => {
                 resumed_window_title(session_id)
             }
             crate::tui::session_picker::ResumeTarget::ClaudeCodeSession { session_id, .. } => {
@@ -868,9 +868,9 @@ pub fn list_sessions() -> Result<()> {
 
             if targets.len() == 1 {
                 let target = &targets[0];
-                let resolved_target = crate::import::resolve_resume_target_to_jcode(target)?;
+                let resolved_target = crate::import::resolve_resume_target_to_minnal(target)?;
                 let mut session_cwd = cwd.clone();
-                if let crate::tui::session_picker::ResumeTarget::JcodeSession { session_id } =
+                if let crate::tui::session_picker::ResumeTarget::MinnalSession { session_id } =
                     &resolved_target
                     && let Ok(sess) = session::Session::load(session_id)
                     && let Some(dir) = sess.working_dir.as_deref()
@@ -892,7 +892,7 @@ pub fn list_sessions() -> Result<()> {
 
                 for target in targets {
                     let resolved_target =
-                        match crate::import::resolve_resume_target_to_jcode(&target) {
+                        match crate::import::resolve_resume_target_to_minnal(&target) {
                             Ok(target) => target,
                             Err(e) => {
                                 eprintln!("Failed to import selected session: {}", e);
@@ -900,7 +900,7 @@ pub fn list_sessions() -> Result<()> {
                             }
                         };
                     let mut session_cwd = cwd.clone();
-                    if let crate::tui::session_picker::ResumeTarget::JcodeSession { session_id } =
+                    if let crate::tui::session_picker::ResumeTarget::MinnalSession { session_id } =
                         &resolved_target
                         && let Ok(sess) = session::Session::load(session_id)
                         && let Some(dir) = sess.working_dir.as_deref()
@@ -946,7 +946,8 @@ pub fn list_sessions() -> Result<()> {
             let mut warned_no_terminal = false;
 
             for target in targets {
-                let resolved_target = match crate::import::resolve_resume_target_to_jcode(&target) {
+                let resolved_target = match crate::import::resolve_resume_target_to_minnal(&target)
+                {
                     Ok(target) => target,
                     Err(e) => {
                         eprintln!("Failed to import selected session: {}", e);
@@ -954,7 +955,7 @@ pub fn list_sessions() -> Result<()> {
                     }
                 };
                 let mut session_cwd = cwd.clone();
-                if let crate::tui::session_picker::ResumeTarget::JcodeSession { session_id } =
+                if let crate::tui::session_picker::ResumeTarget::MinnalSession { session_id } =
                     &resolved_target
                     && let Ok(sess) = session::Session::load(session_id)
                     && let Some(dir) = sess.working_dir.as_deref()
@@ -1028,7 +1029,7 @@ pub fn list_sessions() -> Result<()> {
                             );
                             warned_no_terminal = true;
                         }
-                        eprintln!("  jcode --resume {}", session_id);
+                        eprintln!("  minnal --resume {}", session_id);
                     }
                     Err(e) => {
                         eprintln!("Failed to spawn session {}: {}", session_id, e);

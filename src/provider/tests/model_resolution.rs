@@ -172,7 +172,7 @@ fn test_direct_chutes_ignores_legacy_openrouter_catalog_cache() {
         let temp_home = tempfile::tempdir().expect("temp HOME");
         let home = temp_home.path().to_string_lossy().to_string();
         with_env_var("HOME", &home, || {
-            let cache_dir = temp_home.path().join(".jcode").join("cache");
+            let cache_dir = temp_home.path().join(".minnal").join("cache");
             std::fs::create_dir_all(&cache_dir).expect("create cache dir");
             let cached_at = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
@@ -395,9 +395,9 @@ fn test_set_model_accepts_bare_openai_openrouter_pin_when_openrouter_available()
 fn test_forced_openrouter_treats_claude_like_model_as_provider_local() {
     with_clean_provider_test_env(|| {
         with_env_var("OPENROUTER_API_KEY", "test-openrouter-key", || {
-            with_env_var("JCODE_OPENROUTER_PROVIDER_FEATURES", "0", || {
+            with_env_var("MINNAL_OPENROUTER_PROVIDER_FEATURES", "0", || {
                 with_env_var(
-                    "JCODE_OPENROUTER_API_BASE",
+                    "MINNAL_OPENROUTER_API_BASE",
                     "https://compat.example.test/v1",
                     || {
                         let openrouter = Arc::new(
@@ -437,9 +437,9 @@ fn test_forced_openrouter_treats_claude_like_model_as_provider_local() {
 fn test_forced_openrouter_preserves_custom_at_sign_model_ids() {
     with_clean_provider_test_env(|| {
         with_env_var("OPENROUTER_API_KEY", "test-openrouter-key", || {
-            with_env_var("JCODE_OPENROUTER_PROVIDER_FEATURES", "0", || {
+            with_env_var("MINNAL_OPENROUTER_PROVIDER_FEATURES", "0", || {
                 with_env_var(
-                    "JCODE_OPENROUTER_API_BASE",
+                    "MINNAL_OPENROUTER_API_BASE",
                     "https://compat.example.test/v1",
                     || {
                         let openrouter = Arc::new(
@@ -479,10 +479,10 @@ fn test_forced_openrouter_preserves_custom_at_sign_model_ids() {
 fn test_config_default_provider_openai_compatible_keeps_gpt_model_provider_local() {
     with_clean_provider_test_env(|| {
         with_env_var(
-            "JCODE_OPENAI_COMPAT_API_BASE",
+            "MINNAL_OPENAI_COMPAT_API_BASE",
             "https://compat.example.test/v1",
             || {
-                with_env_var("JCODE_OPENAI_COMPAT_API_KEY_NAME", "OPENAI_API_KEY", || {
+                with_env_var("MINNAL_OPENAI_COMPAT_API_KEY_NAME", "OPENAI_API_KEY", || {
                     with_env_var("OPENAI_API_KEY", "test-compatible-key", || {
                         crate::provider_catalog::force_apply_openai_compatible_profile_env(Some(
                             crate::provider_catalog::OPENAI_COMPAT_PROFILE,
@@ -530,9 +530,9 @@ fn test_config_default_provider_openai_compatible_keeps_gpt_model_provider_local
 fn test_custom_compatible_model_routes_do_not_request_openrouter_rewrite() {
     with_clean_provider_test_env(|| {
         with_env_var("OPENROUTER_API_KEY", "test-openrouter-key", || {
-            with_env_var("JCODE_OPENROUTER_PROVIDER_FEATURES", "0", || {
+            with_env_var("MINNAL_OPENROUTER_PROVIDER_FEATURES", "0", || {
                 with_env_var(
-                    "JCODE_OPENROUTER_API_BASE",
+                    "MINNAL_OPENROUTER_API_BASE",
                     "https://compat.example.test/v1",
                     || {
                         let openrouter = Arc::new(

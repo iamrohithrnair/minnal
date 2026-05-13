@@ -94,7 +94,7 @@ impl Tool for GmailTool {
     async fn execute(&self, input: Value, _ctx: ToolContext) -> Result<ToolOutput> {
         if !google::has_tokens() {
             return Ok(ToolOutput::new(
-                "Gmail is not configured. Run `jcode login google` to set up Gmail access.",
+                "Gmail is not configured. Run `minnal login google` to set up Gmail access.",
             ));
         }
 
@@ -283,7 +283,7 @@ impl Tool for GmailTool {
                     return Ok(ToolOutput::new(
                         "Send is not available. Your Gmail access is configured as Read & Draft Only (API-level restriction).\n\
                          The draft has been created - open Gmail to send it manually.\n\
-                         To enable sending, run `jcode login google --upgrade`.",
+                         To enable sending, run `minnal login google --upgrade`.",
                     ));
                 }
 
@@ -328,7 +328,7 @@ impl Tool for GmailTool {
                     return Ok(ToolOutput::new(
                         "Send is not available. Your Gmail access is configured as Read & Draft Only (API-level restriction).\n\
                          Open Gmail to send the draft manually.\n\
-                         To enable sending, run `jcode login google --upgrade`.",
+                         To enable sending, run `minnal login google --upgrade`.",
                     ));
                 }
 
@@ -356,7 +356,7 @@ impl Tool for GmailTool {
                 if !tokens.tier.can_delete() {
                     return Ok(ToolOutput::new(
                         "Trash is not available. Your Gmail access is configured as Read & Draft Only (API-level restriction).\n\
-                         To enable delete, run `jcode login google --upgrade`.",
+                         To enable delete, run `minnal login google --upgrade`.",
                     ));
                 }
 

@@ -54,7 +54,7 @@ pub fn runtime_id_for_login_provider(
 ) -> Option<RuntimeProviderId> {
     match provider.target {
         LoginProviderTarget::AutoImport => Some(RuntimeProviderId::AutoImport),
-        LoginProviderTarget::Jcode => Some(RuntimeProviderId::Jcode),
+        LoginProviderTarget::Minnal => Some(RuntimeProviderId::Minnal),
         LoginProviderTarget::Claude => Some(RuntimeProviderId::Claude),
         LoginProviderTarget::OpenAi => Some(RuntimeProviderId::OpenAi),
         LoginProviderTarget::OpenAiApiKey => Some(RuntimeProviderId::OpenAiApiKey),

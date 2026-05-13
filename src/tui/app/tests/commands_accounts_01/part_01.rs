@@ -30,8 +30,8 @@ fn session_picker_resume_action_keeps_overlay_open() {
                 search_index: "keep-open keep open".to_string(),
                 server_name: None,
                 server_icon: None,
-                source: crate::tui::session_picker::SessionSource::Jcode,
-                resume_target: crate::tui::session_picker::ResumeTarget::JcodeSession {
+                source: crate::tui::session_picker::SessionSource::Minnal,
+                resume_target: crate::tui::session_picker::ResumeTarget::MinnalSession {
                     session_id: "session_keep_open".to_string(),
                 },
                 external_path: None,
@@ -80,8 +80,8 @@ fn session_picker_ctrl_enter_queues_current_terminal_resume_and_closes_overlay()
                 search_index: "here".to_string(),
                 server_name: None,
                 server_icon: None,
-                source: crate::tui::session_picker::SessionSource::Jcode,
-                resume_target: crate::tui::session_picker::ResumeTarget::JcodeSession {
+                source: crate::tui::session_picker::SessionSource::Minnal,
+                resume_target: crate::tui::session_picker::ResumeTarget::MinnalSession {
                     session_id: "session_here_123".to_string(),
                 },
                 external_path: None,
@@ -193,7 +193,7 @@ fn test_help_topic_shows_back_command_details() {
 
 #[test]
 fn test_catchup_next_queues_resume_for_attention_session() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.is_remote = true;
         app.remote_session_id = Some(app.session.id.clone());
@@ -258,7 +258,7 @@ fn test_back_command_queues_return_without_showing_brief() {
 
 #[test]
 fn test_maybe_show_catchup_after_history_adds_brief_page_and_marks_seen() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.side_panel = test_side_panel_snapshot("plan", "Plan");
 
@@ -363,8 +363,8 @@ fn test_help_topic_shows_refactor_command_details() {
 fn test_save_command_bookmarks_session_with_memory_enabled() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let mut app = create_test_app();
     app.memory_enabled = true;
@@ -388,9 +388,9 @@ fn test_save_command_bookmarks_session_with_memory_enabled() {
     assert!(msg.content.contains("quick-label"));
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -400,8 +400,8 @@ fn test_goals_command_opens_overview_in_side_panel() {
     let temp = tempfile::tempdir().expect("tempdir");
     let project = temp.path().join("repo");
     std::fs::create_dir_all(&project).expect("project dir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     crate::goal::create_goal(
         crate::goal::GoalCreateInput {
@@ -426,9 +426,9 @@ fn test_goals_command_opens_overview_in_side_panel() {
     assert!(msg.content.contains("Opened goals overview"));
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -447,8 +447,8 @@ fn test_btw_command_requires_question() {
 fn test_btw_command_prepares_side_panel_and_hidden_turn() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let mut app = create_test_app();
     app.input = "/btw what did we decide about config?".to_string();
@@ -474,9 +474,9 @@ fn test_btw_command_prepares_side_panel_and_hidden_turn() {
     assert!(msg.content.contains("Running `/btw`"));
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -484,8 +484,8 @@ fn test_btw_command_prepares_side_panel_and_hidden_turn() {
 fn test_btw_command_in_remote_mode_queues_followup_instead_of_erroring() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let mut app = create_test_app();
     app.is_remote = true;
@@ -504,9 +504,9 @@ fn test_btw_command_in_remote_mode_queues_followup_instead_of_erroring() {
     assert!(msg.content.contains("Running `/btw`"));
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -548,13 +548,13 @@ fn test_git_command_works_in_remote_mode_with_accessible_working_directory() {
     assert!(msg.content.contains("tracked.txt"));
     assert!(
         !msg.content
-            .contains("currently only available in a local jcode TUI session")
+            .contains("currently only available in a local minnal TUI session")
     );
 }
 
 #[test]
 fn test_observe_command_enables_transient_page_without_persisting() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.input = "/observe on".to_string();
         app.submit_input();
@@ -580,7 +580,7 @@ fn test_observe_command_enables_transient_page_without_persisting() {
 
 #[test]
 fn test_splitview_command_enables_transient_page_without_persisting() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         app.input = "/splitview on".to_string();
         app.submit_input();
@@ -789,8 +789,8 @@ fn test_goals_show_command_focuses_goal_page() {
     let temp = tempfile::tempdir().expect("tempdir");
     let project = temp.path().join("repo");
     std::fs::create_dir_all(&project).expect("project dir");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
 
     let goal = crate::goal::create_goal(
         crate::goal::GoalCreateInput {
@@ -813,9 +813,9 @@ fn test_goals_show_command_focuses_goal_page() {
     );
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 

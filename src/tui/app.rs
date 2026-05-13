@@ -27,7 +27,7 @@ use crossterm::event::{
 use debug::DebugTrace;
 use futures::StreamExt;
 use helpers::*;
-use jcode_tui_messages::DisplayMessage;
+use minnal_tui_messages::DisplayMessage;
 use ratatui::DefaultTerminal;
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -41,7 +41,7 @@ use tokio::time::interval;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AppRuntimeMode {
-    /// Normal product TUI. The client renders state owned by the jcode server.
+    /// Normal product TUI. The client renders state owned by the minnal server.
     RemoteClient,
     /// Deterministic playback of recorded session/server events. Never calls live providers.
     Replay,

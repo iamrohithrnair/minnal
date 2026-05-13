@@ -71,14 +71,14 @@ impl SkillRegistry {
     }
 
     /// Import skills from Claude Code and Codex CLI on first run.
-    /// Only runs if ~/.jcode/skills/ doesn't exist yet.
+    /// Only runs if ~/.minnal/skills/ doesn't exist yet.
     fn import_from_external() {
-        let jcode_skills = match crate::storage::jcode_dir() {
+        let minnal_skills = match crate::storage::minnal_dir() {
             Ok(dir) => dir.join("skills"),
             Err(_) => return,
         };
 
-        if jcode_skills.exists() {
+        if minnal_skills.exists() {
             return; // Not first run
         }
 
@@ -89,10 +89,10 @@ impl SkillRegistry {
         if let Ok(claude_skills) = crate::storage::user_home_path(".claude/skills")
             && claude_skills.is_dir()
         {
-            let count = Self::copy_skills_dir(&claude_skills, &jcode_skills);
+            let count = Self::copy_skills_dir(&claude_skills, &minnal_skills);
             if count > 0 {
                 sources.push(format!("{} from Claude Code", count));
-                copied.extend(Self::list_skill_names(&jcode_skills));
+                copied.extend(Self::list_skill_names(&minnal_skills));
             }
         }
 
@@ -100,10 +100,10 @@ impl SkillRegistry {
         if let Ok(codex_skills) = crate::storage::user_home_path(".codex/skills")
             && codex_skills.is_dir()
         {
-            let count = Self::copy_skills_dir(&codex_skills, &jcode_skills);
+            let count = Self::copy_skills_dir(&codex_skills, &minnal_skills);
             if count > 0 {
                 sources.push(format!("{} from Codex CLI", count));
-                copied.extend(Self::list_skill_names(&jcode_skills));
+                copied.extend(Self::list_skill_names(&minnal_skills));
             }
         }
 
@@ -211,11 +211,11 @@ impl SkillRegistry {
 
         let mut registry = Self::default();
 
-        // Load from ~/.jcode/skills/ (jcode's own global skills)
-        if let Ok(jcode_dir) = crate::storage::jcode_dir() {
-            let jcode_skills = jcode_dir.join("skills");
-            if jcode_skills.exists() {
-                registry.load_from_dir(&jcode_skills)?;
+        // Load from ~/.minnal/skills/ (minnal's own global skills)
+        if let Ok(minnal_dir) = crate::storage::minnal_dir() {
+            let minnal_skills = minnal_dir.join("skills");
+            if minnal_skills.exists() {
+                registry.load_from_dir(&minnal_skills)?;
             }
         }
 
@@ -230,10 +230,10 @@ impl SkillRegistry {
     }
 
     fn load_project_local_dirs(&mut self, working_dir: Option<&Path>) -> Result<()> {
-        // Load from ./.jcode/skills/ (project-local jcode skills)
-        let local_jcode = Self::project_local_dir(working_dir, ".jcode");
-        if local_jcode.exists() {
-            self.load_from_dir(&local_jcode)?;
+        // Load from ./.minnal/skills/ (project-local minnal skills)
+        let local_minnal = Self::project_local_dir(working_dir, ".minnal");
+        if local_minnal.exists() {
+            self.load_from_dir(&local_minnal)?;
         }
 
         // Fallback: ./.claude/skills/ (project-local Claude skills for compatibility)
@@ -358,18 +358,18 @@ impl SkillRegistry {
 
         let mut count = 0;
 
-        // Load from ~/.jcode/skills/ (jcode's own global skills)
-        if let Ok(jcode_dir) = crate::storage::jcode_dir() {
-            let jcode_skills = jcode_dir.join("skills");
-            if jcode_skills.exists() {
-                count += self.load_from_dir_count(&jcode_skills)?;
+        // Load from ~/.minnal/skills/ (minnal's own global skills)
+        if let Ok(minnal_dir) = crate::storage::minnal_dir() {
+            let minnal_skills = minnal_dir.join("skills");
+            if minnal_skills.exists() {
+                count += self.load_from_dir_count(&minnal_skills)?;
             }
         }
 
-        // Load from ./.jcode/skills/ (project-local jcode skills)
-        let local_jcode = Self::project_local_dir(working_dir, ".jcode");
-        if local_jcode.exists() {
-            count += self.load_from_dir_count(&local_jcode)?;
+        // Load from ./.minnal/skills/ (project-local minnal skills)
+        let local_minnal = Self::project_local_dir(working_dir, ".minnal");
+        if local_minnal.exists() {
+            count += self.load_from_dir_count(&local_minnal)?;
         }
 
         // Fallback: ./.claude/skills/ (project-local Claude skills for compatibility)
@@ -529,9 +529,9 @@ mod tests {
     }
 
     #[test]
-    fn load_for_working_dir_reads_project_local_jcode_skills() {
+    fn load_for_working_dir_reads_project_local_minnal_skills() {
         let temp = tempfile::tempdir().expect("tempdir");
-        write_test_skill(temp.path(), ".jcode", "wd-only");
+        write_test_skill(temp.path(), ".minnal", "wd-only");
 
         let registry = SkillRegistry::load_for_working_dir(Some(temp.path())).expect("load skills");
 
@@ -545,7 +545,7 @@ mod tests {
     #[test]
     fn reload_all_for_working_dir_replaces_stale_snapshot_with_session_local_skills() {
         let temp = tempfile::tempdir().expect("tempdir");
-        write_test_skill(temp.path(), ".jcode", "session-skill");
+        write_test_skill(temp.path(), ".minnal", "session-skill");
 
         let mut registry = SkillRegistry::default();
         let count = registry

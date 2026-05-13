@@ -80,7 +80,7 @@ fn is_background_task_notification_content(content: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jcode_tui_messages::DisplayMessage;
+    use minnal_tui_messages::DisplayMessage;
 
     #[test]
     fn test_display_message_helpers() {

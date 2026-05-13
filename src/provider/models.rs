@@ -11,7 +11,7 @@ pub use catalog::{
     AnthropicModelCatalog, OpenAIModelCatalog, fetch_anthropic_model_catalog,
     fetch_anthropic_model_catalog_oauth, fetch_openai_context_limits, fetch_openai_model_catalog,
 };
-use jcode_provider_core::{
+use minnal_provider_core::{
     ALL_CLAUDE_MODELS, ALL_OPENAI_MODELS, ModelCapabilities, ModelRoute,
     context_limit_for_model_with_provider_and_cache, core_provider_for_model_with_hint,
     provider_key_from_hint, shared_http_client,
@@ -64,7 +64,7 @@ pub(crate) fn ensure_model_allowed_for_subscription(model: &str) -> Result<()> {
         && !crate::subscription_catalog::is_curated_model(model)
     {
         anyhow::bail!(
-            "Model '{}' is not included in the current jcode subscription catalog",
+            "Model '{}' is not included in the current minnal subscription catalog",
             model
         );
     }

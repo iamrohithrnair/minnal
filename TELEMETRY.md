@@ -1,6 +1,6 @@
-# jcode Telemetry
+# minnal Telemetry
 
-jcode collects **anonymous, minimal usage statistics** to help understand how many people use jcode, what providers/models are popular, whether onboarding works, which feature families are used, how often sessions succeed, and whether performance/regressions are improving. This data helps prioritize development without collecting prompts or code.
+minnal collects **anonymous, minimal usage statistics** to help understand how many people use minnal, what providers/models are popular, whether onboarding works, which feature families are used, how often sessions succeed, and whether performance/regressions are improving. This data helps prioritize development without collecting prompts or code.
 
 Recent telemetry additions also include: coarse onboarding steps, explicit thumbs-up / thumbs-down feedback, build-channel / dev-mode cleanup flags, session/workflow/tool-category summaries, coarse project language buckets, retention helpers like active days in the last 7 / 30 days, workflow cadence fields for session timing and multi-sessioning, privacy-safe per-turn timing/outcome metrics, and schema v5 agent-time / autonomy / pain-attribution metrics.
 
@@ -12,7 +12,7 @@ Recent telemetry additions also include: coarse onboarding steps, explicit thumb
 |-------|---------|----------|
 | `id` | `a1b2c3d4-...` | Random UUID, not tied to your identity |
 | `event` | `"install"` | Event type |
-| `version` | `"0.6.0"` | jcode version |
+| `version` | `"0.6.0"` | minnal version |
 | `os` | `"linux"` | Operating system |
 | `arch` | `"x86_64"` | CPU architecture |
 
@@ -22,8 +22,8 @@ Recent telemetry additions also include: coarse onboarding steps, explicit thumb
 |-------|---------|----------|
 | `id` | `a1b2c3d4-...` | Same random UUID |
 | `event` | `"upgrade"` | Event type |
-| `version` | `"0.9.1"` | Current jcode version |
-| `from_version` | `"0.8.1"` | Previously recorded jcode version |
+| `version` | `"0.9.1"` | Current minnal version |
+| `from_version` | `"0.8.1"` | Previously recorded minnal version |
 | `os` / `arch` | `"linux"` / `"x86_64"` | Environment breakdown |
 
 ### Auth Success Event
@@ -61,7 +61,7 @@ Recent telemetry additions also include: coarse onboarding steps, explicit thumb
 |-------|---------|----------|
 | `id` | `a1b2c3d4-...` | Same random UUID |
 | `event` | `"session_start"` | Event type |
-| `version` | `"0.6.0"` | jcode version |
+| `version` | `"0.6.0"` | minnal version |
 | `os` | `"linux"` | Operating system |
 | `arch` | `"x86_64"` | CPU architecture |
 | `provider_start` | `"OpenAI"` | Provider when session started |
@@ -80,7 +80,7 @@ Recent telemetry additions also include: coarse onboarding steps, explicit thumb
 |-------|---------|----------|
 | `id` | `a1b2c3d4-...` | Same random UUID |
 | `event` | `"session_end"` / `"session_crash"` | Event type |
-| `version` | `"0.6.0"` | jcode version |
+| `version` | `"0.6.0"` | minnal version |
 | `os` | `"linux"` | Operating system |
 | `arch` | `"x86_64"` | CPU architecture |
 | `provider_start` | `"OpenAI"` | Provider when session started |
@@ -208,19 +208,19 @@ Most events also carry a few coarse quality / cleanup fields:
 - No error messages or stack traces in telemetry (only coarse categories and end reasons)
 - No exact wall-clock timestamps beyond coarse hour-of-day / weekday buckets
 
-The UUID is randomly generated on first run and stored at `~/.jcode/telemetry_id`. It is not derived from your machine, username, email, or any identifiable information.
+The UUID is randomly generated on first run and stored at `~/.minnal/telemetry_id`. It is not derived from your machine, username, email, or any identifiable information.
 
 ## How It Works
 
-1. On first launch, jcode generates a random UUID and sends an `install` event
-2. When a session begins, jcode sends a `session_start` event
-3. When a session ends normally, jcode sends a `session_end` event with coarse session metrics
-4. When auth succeeds, jcode sends a coarse `auth_success` event for activation-funnel analysis
-5. When jcode detects a version change, it sends an `upgrade` event
-6. On best-effort crash/signal handling, jcode sends a `session_crash` event
-7. jcode may also send one-off onboarding milestone events and explicit feedback events when triggered
+1. On first launch, minnal generates a random UUID and sends an `install` event
+2. When a session begins, minnal sends a `session_start` event
+3. When a session ends normally, minnal sends a `session_end` event with coarse session metrics
+4. When auth succeeds, minnal sends a coarse `auth_success` event for activation-funnel analysis
+5. When minnal detects a version change, it sends an `upgrade` event
+6. On best-effort crash/signal handling, minnal sends a `session_crash` event
+7. minnal may also send one-off onboarding milestone events and explicit feedback events when triggered
 8. Requests are fire-and-forget HTTP POSTs that don't block normal usage (install/session shutdown have short bounded blocking timeouts)
-9. If a request fails (offline, firewall, etc.), jcode silently continues - no retries, no queuing
+9. If a request fails (offline, firewall, etc.), minnal silently continues - no retries, no queuing
 
 The telemetry endpoint is a Cloudflare Worker that stores events in a D1 database. The source code for the worker is in [`telemetry-worker/`](./telemetry-worker/).
 
@@ -234,13 +234,13 @@ Any of these methods will disable telemetry completely:
 
 ```bash
 # Option 1: Environment variable
-export JCODE_NO_TELEMETRY=1
+export MINNAL_NO_TELEMETRY=1
 
 # Option 2: Standard DO_NOT_TRACK (https://consoledonottrack.com/)
 export DO_NOT_TRACK=1
 
 # Option 3: File-based opt-out
-touch ~/.jcode/no_telemetry
+touch ~/.minnal/no_telemetry
 ```
 
 When opted out, zero network requests are made. The telemetry module short-circuits immediately.

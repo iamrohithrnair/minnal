@@ -2,7 +2,7 @@ use crate::storage;
 use anyhow::Result;
 use std::path::PathBuf;
 
-pub use jcode_task_types::TodoItem;
+pub use minnal_task_types::TodoItem;
 
 pub fn load_todos(session_id: &str) -> Result<Vec<TodoItem>> {
     let path = todo_path(session_id)?;
@@ -18,6 +18,6 @@ pub fn save_todos(session_id: &str, todos: &[TodoItem]) -> Result<()> {
 }
 
 fn todo_path(session_id: &str) -> Result<PathBuf> {
-    let base = storage::jcode_dir()?;
+    let base = storage::minnal_dir()?;
     Ok(base.join("todos").join(format!("{}.json", session_id)))
 }

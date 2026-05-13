@@ -73,7 +73,7 @@ pub fn show_crash_resume_hint() {
 
     if crashed.len() == 1 {
         eprintln!(
-            "\x1b[33m💥 Session \x1b[1m{}\x1b[0m\x1b[33m crashed. Resume with:\x1b[0m  jcode --resume {}",
+            "\x1b[33m💥 Session \x1b[1m{}\x1b[0m\x1b[33m crashed. Resume with:\x1b[0m  minnal --resume {}",
             session_label, id
         );
     } else {
@@ -82,17 +82,17 @@ pub fn show_crash_resume_hint() {
             crashed.len(),
             session_label
         );
-        eprintln!("\x1b[33m   Resume with:\x1b[0m  jcode --resume {}", id);
-        eprintln!("\x1b[33m   List all:\x1b[0m     jcode --resume");
+        eprintln!("\x1b[33m   Resume with:\x1b[0m  minnal --resume {}", id);
+        eprintln!("\x1b[33m   List all:\x1b[0m     minnal --resume");
     }
     eprintln!();
 }
 
 fn init_tui_terminal() -> Result<ratatui::DefaultTerminal> {
     if !io::stdin().is_terminal() || !io::stdout().is_terminal() {
-        anyhow::bail!("jcode TUI requires an interactive terminal (stdin/stdout must be a TTY)");
+        anyhow::bail!("minnal TUI requires an interactive terminal (stdin/stdout must be a TTY)");
     }
-    let is_resuming = std::env::var("JCODE_RESUMING").is_ok();
+    let is_resuming = std::env::var("MINNAL_RESUMING").is_ok();
     if is_resuming {
         init_tui_terminal_resume()
     } else {
@@ -107,8 +107,8 @@ fn init_tui_terminal() -> Result<ratatui::DefaultTerminal> {
 
 pub fn init_tui_runtime() -> Result<(ratatui::DefaultTerminal, TuiRuntimeState)> {
     let terminal = init_tui_terminal()?;
-    crate::tui::mermaid::install_jcode_mermaid_hooks();
-    crate::tui::markdown::install_jcode_markdown_hooks();
+    crate::tui::mermaid::install_minnal_mermaid_hooks();
+    crate::tui::markdown::install_minnal_markdown_hooks();
     crate::tui::mermaid::init_picker();
 
     let perf_policy = crate::perf::tui_policy();
@@ -175,7 +175,7 @@ pub fn print_session_resume_hint(session_id: &str) {
         "\x1b[33mSession \x1b[1m{}\x1b[0m\x1b[33m - to resume:\x1b[0m",
         session_name
     );
-    eprintln!("  jcode --resume {}", session_id);
+    eprintln!("  minnal --resume {}", session_id);
     eprintln!();
 }
 
@@ -303,8 +303,8 @@ mod tests {
         set_current_session(test_session);
 
         if let Some(session_id) = get_current_session() {
-            let expected_cmd = format!("jcode --resume {}", session_id);
-            assert!(expected_cmd.starts_with("jcode --resume "));
+            let expected_cmd = format!("minnal --resume {}", session_id);
+            assert!(expected_cmd.starts_with("minnal --resume "));
             assert!(!session_id.is_empty());
         } else {
             panic!("Session ID should be set");

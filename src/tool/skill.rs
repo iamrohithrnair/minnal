@@ -263,7 +263,7 @@ mod tests {
 
     fn create_test_tool_with_skill(name: &str) -> (SkillTool, tempfile::TempDir) {
         let temp_dir = tempfile::tempdir().unwrap();
-        let skill_dir = temp_dir.path().join(".jcode").join("skills").join(name);
+        let skill_dir = temp_dir.path().join(".minnal").join("skills").join(name);
         std::fs::create_dir_all(&skill_dir).unwrap();
         std::fs::write(
             skill_dir.join("SKILL.md"),

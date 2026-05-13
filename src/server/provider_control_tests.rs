@@ -342,18 +342,18 @@ async fn notify_auth_changed_with_azure_hint_applies_runtime_model_without_compl
         "AZURE_OPENAI_MODEL",
         "AZURE_OPENAI_API_KEY",
         "AZURE_OPENAI_USE_ENTRA",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
     crate::env::set_var("AZURE_OPENAI_ENDPOINT", "https://example.openai.azure.com");
     crate::env::set_var("AZURE_OPENAI_MODEL", "azure-deployment");
@@ -418,11 +418,11 @@ async fn notify_auth_changed_with_azure_hint_applies_runtime_model_without_compl
             .any(|model| model == "azure-deployment")
     );
     assert_eq!(
-        std::env::var("JCODE_RUNTIME_PROVIDER").as_deref(),
+        std::env::var("MINNAL_RUNTIME_PROVIDER").as_deref(),
         Ok("azure-openai")
     );
     assert_eq!(
-        std::env::var("JCODE_ACTIVE_PROVIDER").as_deref(),
+        std::env::var("MINNAL_ACTIVE_PROVIDER").as_deref(),
         Ok("openrouter")
     );
     assert_eq!(
@@ -435,18 +435,18 @@ async fn notify_auth_changed_with_azure_hint_applies_runtime_model_without_compl
 #[test]
 fn cerebras_auth_hint_applies_openai_compatible_runtime_profile() {
     let _guard = EnvGuard::save(&[
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
 
     let request =
@@ -457,27 +457,27 @@ fn cerebras_auth_hint_applies_openai_compatible_runtime_profile() {
     let default_model = activation.activated_model.as_deref();
     assert_eq!(default_model, Some("qwen-3-235b-a22b-instruct-2507"));
     assert_eq!(
-        std::env::var("JCODE_RUNTIME_PROVIDER").as_deref(),
+        std::env::var("MINNAL_RUNTIME_PROVIDER").as_deref(),
         Ok("openai-compatible")
     );
     assert_eq!(
-        std::env::var("JCODE_ACTIVE_PROVIDER").as_deref(),
+        std::env::var("MINNAL_ACTIVE_PROVIDER").as_deref(),
         Ok("openrouter")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_API_BASE").as_deref(),
+        std::env::var("MINNAL_OPENROUTER_API_BASE").as_deref(),
         Ok("https://api.cerebras.ai/v1")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_API_KEY_NAME").as_deref(),
+        std::env::var("MINNAL_OPENROUTER_API_KEY_NAME").as_deref(),
         Ok("CEREBRAS_API_KEY")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_ENV_FILE").as_deref(),
+        std::env::var("MINNAL_OPENROUTER_ENV_FILE").as_deref(),
         Ok("cerebras.env")
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_CACHE_NAMESPACE").as_deref(),
+        std::env::var("MINNAL_OPENROUTER_CACHE_NAMESPACE").as_deref(),
         Ok("cerebras")
     );
     assert_eq!(
@@ -489,18 +489,18 @@ fn cerebras_auth_hint_applies_openai_compatible_runtime_profile() {
 #[tokio::test]
 async fn notify_auth_changed_typed_cerebras_event_controls_user_visible_catalog_identity() {
     let _guard = EnvGuard::save(&[
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
 
     crate::bus::reset_models_updated_publish_state_for_tests();
@@ -588,7 +588,7 @@ async fn notify_auth_changed_typed_cerebras_event_controls_user_visible_catalog_
         final_activity.message
     );
     assert_eq!(
-        std::env::var("JCODE_OPENROUTER_CACHE_NAMESPACE").as_deref(),
+        std::env::var("MINNAL_OPENROUTER_CACHE_NAMESPACE").as_deref(),
         Ok("cerebras")
     );
 }
@@ -596,18 +596,18 @@ async fn notify_auth_changed_typed_cerebras_event_controls_user_visible_catalog_
 #[tokio::test]
 async fn notify_auth_changed_switches_from_stale_model_to_matching_provider_route() {
     let _guard = EnvGuard::save(&[
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
 
     crate::bus::reset_models_updated_publish_state_for_tests();
@@ -695,18 +695,18 @@ async fn notify_auth_changed_switches_from_stale_model_to_matching_provider_rout
 #[tokio::test]
 async fn notify_auth_changed_does_not_override_manual_model_selected_during_refresh() {
     let _guard = EnvGuard::save(&[
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
 
     crate::bus::reset_models_updated_publish_state_for_tests();
@@ -836,18 +836,18 @@ async fn auth_model_first_prompt_e2e_state_space_is_bounded_by_selection_source(
 
     for scenario in scenarios {
         let _guard = EnvGuard::save(&[
-            "JCODE_OPENROUTER_API_BASE",
-            "JCODE_OPENROUTER_API_KEY_NAME",
-            "JCODE_OPENROUTER_ENV_FILE",
-            "JCODE_OPENROUTER_CACHE_NAMESPACE",
-            "JCODE_OPENROUTER_PROVIDER_FEATURES",
-            "JCODE_OPENROUTER_MODEL_CATALOG",
-            "JCODE_OPENROUTER_AUTH_HEADER",
-            "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-            "JCODE_OPENROUTER_MODEL",
-            "JCODE_RUNTIME_PROVIDER",
-            "JCODE_ACTIVE_PROVIDER",
-            "JCODE_FORCE_PROVIDER",
+            "MINNAL_OPENROUTER_API_BASE",
+            "MINNAL_OPENROUTER_API_KEY_NAME",
+            "MINNAL_OPENROUTER_ENV_FILE",
+            "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+            "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+            "MINNAL_OPENROUTER_MODEL_CATALOG",
+            "MINNAL_OPENROUTER_AUTH_HEADER",
+            "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+            "MINNAL_OPENROUTER_MODEL",
+            "MINNAL_RUNTIME_PROVIDER",
+            "MINNAL_ACTIVE_PROVIDER",
+            "MINNAL_FORCE_PROVIDER",
         ]);
 
         crate::bus::reset_models_updated_publish_state_for_tests();
@@ -1018,18 +1018,18 @@ async fn auth_model_first_prompt_e2e_state_space_is_bounded_by_selection_source(
 #[tokio::test]
 async fn notify_auth_changed_switches_only_current_session_model() {
     let _guard = EnvGuard::save(&[
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
     ]);
 
     crate::bus::reset_models_updated_publish_state_for_tests();

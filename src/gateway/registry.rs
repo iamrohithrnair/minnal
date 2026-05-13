@@ -2,10 +2,10 @@ use anyhow::Result;
 use sha2::{Digest, Sha256};
 
 use crate::storage;
-use jcode_gateway_types::{PairedDevice, PairingCode};
+use minnal_gateway_types::{PairedDevice, PairingCode};
 
 // ---------------------------------------------------------------------------
-// Device registry (persisted to ~/.jcode/devices.json)
+// Device registry (persisted to ~/.minnal/devices.json)
 // ---------------------------------------------------------------------------
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
@@ -16,9 +16,9 @@ pub struct DeviceRegistry {
 }
 
 impl DeviceRegistry {
-    /// Load from ~/.jcode/devices.json
+    /// Load from ~/.minnal/devices.json
     pub fn load() -> Self {
-        let path = match storage::jcode_dir() {
+        let path = match storage::minnal_dir() {
             Ok(d) => d.join("devices.json"),
             Err(_) => return Self::default(),
         };
@@ -31,9 +31,9 @@ impl DeviceRegistry {
         }
     }
 
-    /// Save to ~/.jcode/devices.json
+    /// Save to ~/.minnal/devices.json
     pub fn save(&self) -> Result<()> {
-        let path = storage::jcode_dir()?.join("devices.json");
+        let path = storage::minnal_dir()?.join("devices.json");
         let contents = serde_json::to_string_pretty(self)?;
         std::fs::write(&path, contents)?;
         Ok(())

@@ -32,9 +32,9 @@ fn test_openai_fast_mode_defaults_to_priority() {
 #[test]
 fn test_generated_default_config_uses_low_openai_reasoning_effort() {
     let _guard = crate::storage::lock_test_env();
-    let prev_home = std::env::var_os("JCODE_HOME");
+    let prev_home = std::env::var_os("MINNAL_HOME");
     let dir = tempfile::TempDir::new().expect("tempdir");
-    crate::env::set_var("JCODE_HOME", dir.path());
+    crate::env::set_var("MINNAL_HOME", dir.path());
 
     let path = Config::create_default_config_file().expect("create default config file");
     let content = std::fs::read_to_string(path).expect("read default config file");
@@ -49,18 +49,18 @@ fn test_generated_default_config_uses_low_openai_reasoning_effort() {
     );
 
     if let Some(prev) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev);
+        crate::env::set_var("MINNAL_HOME", prev);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
 #[test]
 fn global_config_cache_reloads_after_manual_file_edit() {
     let _guard = crate::storage::lock_test_env();
-    let prev_home = std::env::var_os("JCODE_HOME");
+    let prev_home = std::env::var_os("MINNAL_HOME");
     let dir = tempfile::TempDir::new().expect("tempdir");
-    crate::env::set_var("JCODE_HOME", dir.path());
+    crate::env::set_var("MINNAL_HOME", dir.path());
     Config::invalidate_cache();
 
     let path = Config::path().expect("config path");
@@ -75,16 +75,16 @@ fn global_config_cache_reloads_after_manual_file_edit() {
 
     assert!(crate::config::config().display.centered);
 
-    restore_env_var("JCODE_HOME", prev_home);
+    restore_env_var("MINNAL_HOME", prev_home);
     Config::invalidate_cache();
 }
 
 #[test]
 fn config_save_invalidates_global_config_cache() {
     let _guard = crate::storage::lock_test_env();
-    let prev_home = std::env::var_os("JCODE_HOME");
+    let prev_home = std::env::var_os("MINNAL_HOME");
     let dir = tempfile::TempDir::new().expect("tempdir");
-    crate::env::set_var("JCODE_HOME", dir.path());
+    crate::env::set_var("MINNAL_HOME", dir.path());
     Config::invalidate_cache();
 
     let mut cfg = Config::default();
@@ -96,16 +96,16 @@ fn config_save_invalidates_global_config_cache() {
     cfg.save().expect("save updated config");
     assert!(crate::config::config().display.centered);
 
-    restore_env_var("JCODE_HOME", prev_home);
+    restore_env_var("MINNAL_HOME", prev_home);
     Config::invalidate_cache();
 }
 
 #[test]
 fn cached_external_auth_trust_observes_manual_revocation() {
     let _guard = crate::storage::lock_test_env();
-    let prev_home = std::env::var_os("JCODE_HOME");
+    let prev_home = std::env::var_os("MINNAL_HOME");
     let dir = tempfile::TempDir::new().expect("tempdir");
-    crate::env::set_var("JCODE_HOME", dir.path());
+    crate::env::set_var("MINNAL_HOME", dir.path());
     Config::invalidate_cache();
 
     let auth_file = dir.path().join("external-auth.json");
@@ -129,7 +129,7 @@ fn cached_external_auth_trust_observes_manual_revocation() {
         &auth_file
     ));
 
-    restore_env_var("JCODE_HOME", prev_home);
+    restore_env_var("MINNAL_HOME", prev_home);
     Config::invalidate_cache();
 }
 
@@ -196,8 +196,8 @@ fn test_session_picker_resume_action_deserializes_kebab_case() {
 #[test]
 fn test_env_override_auto_server_reload() {
     let _guard = crate::storage::lock_test_env();
-    let prev = std::env::var_os("JCODE_AUTO_SERVER_RELOAD");
-    crate::env::set_var("JCODE_AUTO_SERVER_RELOAD", "false");
+    let prev = std::env::var_os("MINNAL_AUTO_SERVER_RELOAD");
+    crate::env::set_var("MINNAL_AUTO_SERVER_RELOAD", "false");
 
     let mut cfg = Config::default();
     cfg.apply_env_overrides();
@@ -205,19 +205,19 @@ fn test_env_override_auto_server_reload() {
     assert!(!cfg.display.auto_server_reload);
 
     if let Some(prev) = prev {
-        crate::env::set_var("JCODE_AUTO_SERVER_RELOAD", prev);
+        crate::env::set_var("MINNAL_AUTO_SERVER_RELOAD", prev);
     } else {
-        crate::env::remove_var("JCODE_AUTO_SERVER_RELOAD");
+        crate::env::remove_var("MINNAL_AUTO_SERVER_RELOAD");
     }
 }
 
 #[test]
 fn test_env_override_native_scrollbars() {
     let _guard = crate::storage::lock_test_env();
-    let prev_chat = std::env::var_os("JCODE_CHAT_NATIVE_SCROLLBAR");
-    let prev_side = std::env::var_os("JCODE_SIDE_PANEL_NATIVE_SCROLLBAR");
-    crate::env::set_var("JCODE_CHAT_NATIVE_SCROLLBAR", "true");
-    crate::env::set_var("JCODE_SIDE_PANEL_NATIVE_SCROLLBAR", "false");
+    let prev_chat = std::env::var_os("MINNAL_CHAT_NATIVE_SCROLLBAR");
+    let prev_side = std::env::var_os("MINNAL_SIDE_PANEL_NATIVE_SCROLLBAR");
+    crate::env::set_var("MINNAL_CHAT_NATIVE_SCROLLBAR", "true");
+    crate::env::set_var("MINNAL_SIDE_PANEL_NATIVE_SCROLLBAR", "false");
 
     let mut cfg = Config::default();
     cfg.apply_env_overrides();
@@ -226,22 +226,22 @@ fn test_env_override_native_scrollbars() {
     assert!(!cfg.display.native_scrollbars.side_panel);
 
     if let Some(prev) = prev_chat {
-        crate::env::set_var("JCODE_CHAT_NATIVE_SCROLLBAR", prev);
+        crate::env::set_var("MINNAL_CHAT_NATIVE_SCROLLBAR", prev);
     } else {
-        crate::env::remove_var("JCODE_CHAT_NATIVE_SCROLLBAR");
+        crate::env::remove_var("MINNAL_CHAT_NATIVE_SCROLLBAR");
     }
     if let Some(prev) = prev_side {
-        crate::env::set_var("JCODE_SIDE_PANEL_NATIVE_SCROLLBAR", prev);
+        crate::env::set_var("MINNAL_SIDE_PANEL_NATIVE_SCROLLBAR", prev);
     } else {
-        crate::env::remove_var("JCODE_SIDE_PANEL_NATIVE_SCROLLBAR");
+        crate::env::remove_var("MINNAL_SIDE_PANEL_NATIVE_SCROLLBAR");
     }
 }
 
 #[test]
 fn test_env_override_diff_mode_full_inline() {
     let _guard = crate::storage::lock_test_env();
-    let prev = std::env::var_os("JCODE_DIFF_MODE");
-    crate::env::set_var("JCODE_DIFF_MODE", "full-inline");
+    let prev = std::env::var_os("MINNAL_DIFF_MODE");
+    crate::env::set_var("MINNAL_DIFF_MODE", "full-inline");
 
     let mut cfg = Config::default();
     cfg.apply_env_overrides();
@@ -249,18 +249,18 @@ fn test_env_override_diff_mode_full_inline() {
     assert_eq!(cfg.display.diff_mode, DiffDisplayMode::FullInline);
 
     if let Some(prev) = prev {
-        crate::env::set_var("JCODE_DIFF_MODE", prev);
+        crate::env::set_var("MINNAL_DIFF_MODE", prev);
     } else {
-        crate::env::remove_var("JCODE_DIFF_MODE");
+        crate::env::remove_var("MINNAL_DIFF_MODE");
     }
 }
 
 #[test]
 fn test_env_override_trusted_external_auth_splits_source_and_path_entries() {
     let _guard = crate::storage::lock_test_env();
-    let prev = std::env::var_os("JCODE_TRUSTED_EXTERNAL_AUTH_SOURCES");
+    let prev = std::env::var_os("MINNAL_TRUSTED_EXTERNAL_AUTH_SOURCES");
     crate::env::set_var(
-        "JCODE_TRUSTED_EXTERNAL_AUTH_SOURCES",
+        "MINNAL_TRUSTED_EXTERNAL_AUTH_SOURCES",
         "legacy_source,claude_code_credentials|/tmp/auth.json",
     );
 
@@ -274,9 +274,9 @@ fn test_env_override_trusted_external_auth_splits_source_and_path_entries() {
     );
 
     if let Some(prev) = prev {
-        crate::env::set_var("JCODE_TRUSTED_EXTERNAL_AUTH_SOURCES", prev);
+        crate::env::set_var("MINNAL_TRUSTED_EXTERNAL_AUTH_SOURCES", prev);
     } else {
-        crate::env::remove_var("JCODE_TRUSTED_EXTERNAL_AUTH_SOURCES");
+        crate::env::remove_var("MINNAL_TRUSTED_EXTERNAL_AUTH_SOURCES");
     }
 }
 

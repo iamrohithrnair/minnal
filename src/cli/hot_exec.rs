@@ -38,7 +38,7 @@ pub fn hot_restart(session_id: &str) -> Result<()> {
 
     crate::logging::info(&format!("Restarting with current binary: {:?}", exe));
 
-    crate::env::set_var("JCODE_RESUMING", "1");
+    crate::env::set_var("MINNAL_RESUMING", "1");
 
     let mut cmd = ProcessCommand::new(&exe);
     if is_selfdev {
@@ -53,9 +53,9 @@ pub fn hot_restart(session_id: &str) -> Result<()> {
 pub fn hot_reload(session_id: &str) -> Result<()> {
     let cwd = std::env::current_dir()?;
 
-    crate::env::set_var("JCODE_RESUMING", "1");
+    crate::env::set_var("MINNAL_RESUMING", "1");
 
-    if let Ok(migrate_binary) = std::env::var("JCODE_MIGRATE_BINARY") {
+    if let Ok(migrate_binary) = std::env::var("MINNAL_MIGRATE_BINARY") {
         let binary_path = std::path::PathBuf::from(&migrate_binary);
         if binary_path.exists() {
             crate::logging::info("Migrating to stable binary...");
@@ -131,9 +131,9 @@ pub fn hot_reload(session_id: &str) -> Result<()> {
 pub fn hot_rebuild(session_id: &str) -> Result<()> {
     let cwd = std::env::current_dir()?;
     let repo_dir =
-        build::get_repo_dir().ok_or_else(|| anyhow::anyhow!("Could not find jcode repository"))?;
+        build::get_repo_dir().ok_or_else(|| anyhow::anyhow!("Could not find minnal repository"))?;
 
-    eprintln!("Rebuilding jcode with session {}...", session_id);
+    eprintln!("Rebuilding minnal with session {}...", session_id);
 
     eprintln!("Pulling latest changes...");
     if let Err(e) = update::run_git_pull_ff_only(&repo_dir, true) {
@@ -178,7 +178,7 @@ pub fn hot_rebuild(session_id: &str) -> Result<()> {
 
     update::print_centered(&format!("Restarting with session {}...", session_id));
 
-    crate::env::set_var("JCODE_RESUMING", "1");
+    crate::env::set_var("MINNAL_RESUMING", "1");
 
     let mut cmd = ProcessCommand::new(&exe);
     if is_selfdev {
@@ -213,7 +213,7 @@ pub fn spawn_background_session_rebuild(session_id: String) {
             publish(SessionUpdateStatus::Error {
                 session_id,
                 action,
-                message: "Rebuild failed: could not find the jcode repository.".to_string(),
+                message: "Rebuild failed: could not find the minnal repository.".to_string(),
             });
             return;
         };
@@ -336,7 +336,7 @@ pub fn hot_update(session_id: &str) -> Result<()> {
 
     match update::check_for_update_blocking() {
         Ok(Some(release)) => {
-            let current = env!("JCODE_VERSION");
+            let current = env!("MINNAL_VERSION");
             update::print_centered(&format!(
                 "Update available: {} -> {}",
                 current, release.tag_name
@@ -360,7 +360,7 @@ pub fn hot_update(session_id: &str) -> Result<()> {
 
                     update::print_centered(&format!("Restarting with session {}...", session_id));
 
-                    crate::env::set_var("JCODE_RESUMING", "1");
+                    crate::env::set_var("MINNAL_RESUMING", "1");
 
                     let mut cmd = ProcessCommand::new(&exe);
                     if is_selfdev {
@@ -380,7 +380,7 @@ pub fn hot_update(session_id: &str) -> Result<()> {
             }
         }
         Ok(None) => {
-            update::print_centered(&format!("Already up to date ({})", env!("JCODE_VERSION")));
+            update::print_centered(&format!("Already up to date ({})", env!("MINNAL_VERSION")));
         }
         Err(e) => {
             update::print_centered(&format!("✗ Update check failed: {}", e));
@@ -388,7 +388,7 @@ pub fn hot_update(session_id: &str) -> Result<()> {
         }
     }
 
-    crate::env::set_var("JCODE_RESUMING", "1");
+    crate::env::set_var("MINNAL_RESUMING", "1");
     let exe = std::env::current_exe()?;
     let is_selfdev = crate::cli::selfdev::client_selfdev_requested();
     let mut cmd = ProcessCommand::new(&exe);
@@ -439,7 +439,7 @@ pub fn check_for_updates() -> Option<bool> {
 
 pub fn run_auto_update() -> Result<()> {
     let repo_dir =
-        get_repo_dir().ok_or_else(|| anyhow::anyhow!("Could not find jcode repository"))?;
+        get_repo_dir().ok_or_else(|| anyhow::anyhow!("Could not find minnal repository"))?;
 
     update::run_git_pull_ff_only(&repo_dir, true)?;
 
@@ -487,7 +487,7 @@ pub fn run_update() -> Result<()> {
             Ok(Some(release)) => {
                 update::print_centered(&format!(
                     "Downloading {} \u{2192} {}...",
-                    env!("JCODE_VERSION"),
+                    env!("MINNAL_VERSION"),
                     release.tag_name
                 ));
                 let _path =
@@ -499,10 +499,10 @@ pub fn run_update() -> Result<()> {
                         ));
                     })?;
                 update::print_centered(&format!("✅ Updated to {}", release.tag_name));
-                update::print_centered("Restart jcode to use the new version.");
+                update::print_centered("Restart minnal to use the new version.");
             }
             Ok(None) => {
-                update::print_centered(&format!("Already up to date ({})", env!("JCODE_VERSION")));
+                update::print_centered(&format!("Already up to date ({})", env!("MINNAL_VERSION")));
             }
             Err(e) => {
                 anyhow::bail!("Update check failed: {}", e);
@@ -512,9 +512,9 @@ pub fn run_update() -> Result<()> {
     }
 
     let repo_dir =
-        get_repo_dir().ok_or_else(|| anyhow::anyhow!("Could not find jcode repository"))?;
+        get_repo_dir().ok_or_else(|| anyhow::anyhow!("Could not find minnal repository"))?;
 
-    update::print_centered(&format!("Updating jcode from {}...", repo_dir.display()));
+    update::print_centered(&format!("Updating minnal from {}...", repo_dir.display()));
 
     update::print_centered("Pulling latest changes (fast-forward only)...");
     update::run_git_pull_ff_only(&repo_dir, true)?;

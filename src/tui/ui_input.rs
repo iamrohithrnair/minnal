@@ -852,7 +852,7 @@ mod tests {
                 running: vec![crate::message::ToolCall {
                     id: "batch-1-bash".to_string(),
                     name: "bash".to_string(),
-                    input: serde_json::json!({"command": "cargo test -p jcode"}),
+                    input: serde_json::json!({"command": "cargo test -p minnal"}),
                     intent: None,
                 }],
                 subcalls: Vec::new(),

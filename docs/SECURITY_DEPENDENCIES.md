@@ -2,12 +2,12 @@
 
 Last reviewed: 2026-03-05
 
-This file tracks the current `cargo audit` findings for jcode and the intended remediation path.
+This file tracks the current `cargo audit` findings for minnal and the intended remediation path.
 It is not an allowlist. It is a triage record so advisories are visible and actionable.
 
 ## Current advisories
 
-| Advisory | Crate | Dependency path | Affected area in jcode | Triage | Planned action |
+| Advisory | Crate | Dependency path | Affected area in minnal | Triage | Planned action |
 |---|---|---|---|---|---|
 | `RUSTSEC-2025-0141` | `bincode` | `syntect -> bincode` | Markdown/code highlighting in the TUI | Unmaintained transitive dependency. No direct exposure in the provider/auth flow. | Track `syntect` upgrades or replace `syntect` if upstream does not move off `bincode` soon. |
 | `RUSTSEC-2024-0436` | `paste` | `ratatui -> paste`, `tokenizers -> paste`, `tract-* -> paste` | TUI rendering, tokenizers, embedding/model support | Widely transitive. Not isolated to one module. | Prefer upstream dependency upgrades before any local workaround. Re-evaluate after bumping `ratatui`, `tokenizers`, and `tract-*`. |

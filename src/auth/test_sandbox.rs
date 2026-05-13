@@ -13,7 +13,7 @@ impl AuthTestSandbox {
     pub(crate) fn new() -> anyhow::Result<Self> {
         let lock = crate::storage::lock_test_env();
         let temp = tempfile::Builder::new()
-            .prefix("jcode-auth-lifecycle-")
+            .prefix("minnal-auth-lifecycle-")
             .tempdir()?;
         let saved_env = tracked_env_vars()
             .into_iter()
@@ -27,9 +27,9 @@ impl AuthTestSandbox {
             crate::env::remove_var(key);
         }
 
-        std::fs::create_dir_all(temp.path().join("config").join("jcode"))?;
+        std::fs::create_dir_all(temp.path().join("config").join("minnal"))?;
         std::fs::create_dir_all(temp.path().join("external"))?;
-        crate::env::set_var("JCODE_HOME", temp.path());
+        crate::env::set_var("MINNAL_HOME", temp.path());
         crate::provider_catalog::force_apply_openai_compatible_profile_env(None);
         reset_global_auth_state();
 
@@ -45,7 +45,7 @@ impl AuthTestSandbox {
     }
 
     pub(crate) fn config_dir(&self) -> PathBuf {
-        self.root().join("config").join("jcode")
+        self.root().join("config").join("minnal")
     }
 
     pub(crate) fn external_dir(&self) -> PathBuf {
@@ -65,7 +65,7 @@ impl AuthTestSandbox {
         let path = self.env_file_path(file_name);
         std::fs::create_dir_all(self.config_dir())?;
         std::fs::write(&path, format!("{}={}\n", env_key, value))?;
-        jcode_core::fs::set_permissions_owner_only(&path)?;
+        minnal_core::fs::set_permissions_owner_only(&path)?;
         reset_global_auth_state();
         Ok(path)
     }
@@ -101,34 +101,34 @@ fn reset_global_auth_state() {
 
 fn tracked_env_vars() -> Vec<String> {
     let mut keys = [
-        "JCODE_HOME",
+        "MINNAL_HOME",
         "XDG_CONFIG_HOME",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_ALLOW_NO_AUTH",
-        "JCODE_OPENROUTER_PROVIDER",
-        "JCODE_OPENROUTER_NO_FALLBACK",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_STATIC_MODELS",
-        "JCODE_OPENROUTER_AUTH_HEADER",
-        "JCODE_OPENROUTER_AUTH_HEADER_NAME",
-        "JCODE_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_SETUP_URL",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
-        "JCODE_OPENAI_COMPAT_LOCAL_ENABLED",
-        "JCODE_NAMED_PROVIDER_PROFILE",
-        "JCODE_PROVIDER_PROFILE_ACTIVE",
-        "JCODE_PROVIDER_PROFILE_NAME",
-        "JCODE_RUNTIME_PROVIDER",
-        "JCODE_ACTIVE_PROVIDER",
-        "JCODE_FORCE_PROVIDER",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_ALLOW_NO_AUTH",
+        "MINNAL_OPENROUTER_PROVIDER",
+        "MINNAL_OPENROUTER_NO_FALLBACK",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_STATIC_MODELS",
+        "MINNAL_OPENROUTER_AUTH_HEADER",
+        "MINNAL_OPENROUTER_AUTH_HEADER_NAME",
+        "MINNAL_OPENROUTER_DYNAMIC_BEARER_PROVIDER",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_SETUP_URL",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_LOCAL_ENABLED",
+        "MINNAL_NAMED_PROVIDER_PROFILE",
+        "MINNAL_PROVIDER_PROFILE_ACTIVE",
+        "MINNAL_PROVIDER_PROFILE_NAME",
+        "MINNAL_RUNTIME_PROVIDER",
+        "MINNAL_ACTIVE_PROVIDER",
+        "MINNAL_FORCE_PROVIDER",
         "OPENAI_API_KEY",
         "OPENROUTER_API_KEY",
         "ANTHROPIC_API_KEY",
@@ -159,11 +159,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sandbox_isolates_jcode_home_and_config_dir() {
+    fn sandbox_isolates_minnal_home_and_config_dir() {
         let sandbox = AuthTestSandbox::new().expect("sandbox");
 
         assert_eq!(
-            std::env::var("JCODE_HOME").ok().as_deref(),
+            std::env::var("MINNAL_HOME").ok().as_deref(),
             Some(sandbox.root().to_str().unwrap())
         );
         assert_eq!(

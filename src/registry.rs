@@ -2,7 +2,7 @@
 
 //! Server registry for multi-server architecture
 //!
-//! Tracks running servers in `~/.jcode/servers.json` for discovery by clients.
+//! Tracks running servers in `~/.minnal/servers.json` for discovery by clients.
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use tokio::fs;
 
-use crate::storage::jcode_dir;
+use crate::storage::minnal_dir;
 
 /// Information about a running server
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -188,26 +188,26 @@ impl ServerRegistry {
 
 /// Get the path to the registry file
 pub fn registry_path() -> Result<PathBuf> {
-    Ok(jcode_dir()?.join("servers.json"))
+    Ok(minnal_dir()?.join("servers.json"))
 }
 
 /// Get the socket directory path
 pub fn socket_dir() -> Result<PathBuf> {
-    Ok(crate::storage::runtime_dir().join("jcode"))
+    Ok(crate::storage::runtime_dir().join("minnal"))
 }
 
 /// Get the socket path for a named server
 pub fn server_socket_path(name: &str) -> PathBuf {
     socket_dir()
         .map(|d| d.join(format!("{}.sock", name)))
-        .unwrap_or_else(|_| std::env::temp_dir().join(format!("jcode-{}.sock", name)))
+        .unwrap_or_else(|_| std::env::temp_dir().join(format!("minnal-{}.sock", name)))
 }
 
 /// Get the debug socket path for a named server
 pub fn server_debug_socket_path(name: &str) -> PathBuf {
     socket_dir()
         .map(|d| d.join(format!("{}-debug.sock", name)))
-        .unwrap_or_else(|_| std::env::temp_dir().join(format!("jcode-{}-debug.sock", name)))
+        .unwrap_or_else(|_| std::env::temp_dir().join(format!("minnal-{}-debug.sock", name)))
 }
 
 /// Check if a process is still running

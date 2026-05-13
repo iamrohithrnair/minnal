@@ -1,11 +1,11 @@
 use super::*;
-use crate::storage::jcode_dir;
+use crate::storage::minnal_dir;
 use std::path::PathBuf;
 
 impl Config {
     /// Get the config file path
     pub fn path() -> Option<PathBuf> {
-        jcode_dir().ok().map(|d| d.join("config.toml"))
+        minnal_dir().ok().map(|d| d.join("config.toml"))
     }
 
     /// Load config from file, with environment variable overrides
@@ -206,7 +206,7 @@ impl Config {
         }
 
         // The global config snapshot can be initialized before an auth flow saves
-        // a new path-bound trust decision, or before tests switch JCODE_HOME. Fall
+        // a new path-bound trust decision, or before tests switch MINNAL_HOME. Fall
         // back to a fresh load on cache misses so fast auth probes remain correct
         // without penalizing the common already-trusted path.
         Self::load()

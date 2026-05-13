@@ -120,8 +120,8 @@ async fn stream_response(
 
     if send_openrouter_headers {
         req = req
-            .header("HTTP-Referer", "https://github.com/jcode")
-            .header("X-Title", "jcode");
+            .header("HTTP-Referer", "https://github.com/minnal")
+            .header("X-Title", "minnal");
     }
 
     let response = req
@@ -363,12 +363,12 @@ impl OpenRouterStream {
                         .and_then(|c| c.as_str())
                         && !reasoning_content.is_empty()
                     {
-                        let reasoning_delta = if reasoning_content.starts_with(&self.reasoning_buffer)
-                        {
-                            &reasoning_content[self.reasoning_buffer.len()..]
-                        } else {
-                            reasoning_content
-                        };
+                        let reasoning_delta =
+                            if reasoning_content.starts_with(&self.reasoning_buffer) {
+                                &reasoning_content[self.reasoning_buffer.len()..]
+                            } else {
+                                reasoning_content
+                            };
                         self.reasoning_buffer = reasoning_content.to_string();
                         if !reasoning_delta.is_empty() {
                             self.pending

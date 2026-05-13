@@ -125,7 +125,7 @@ fn extract_email_from_jwt() {
 fn load_credentials_falls_back_to_env_api_key() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
     let _api_key = EnvVarGuard::set("OPENAI_API_KEY", "sk-env-test");
     set_active_account_override(None);
 
@@ -140,7 +140,7 @@ fn load_credentials_falls_back_to_env_api_key() {
 fn multi_account_active_switch_works() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
     set_active_account_override(None);
 
     upsert_account(OpenAiAccount {
@@ -177,7 +177,7 @@ fn multi_account_active_switch_works() {
 fn load_auth_file_migrates_legacy_codex_tokens() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
     set_active_account_override(None);
 
     let legacy_path = temp
@@ -212,7 +212,7 @@ fn load_auth_file_migrates_legacy_codex_tokens() {
 fn load_credentials_ignores_legacy_oauth_without_consent() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
     set_active_account_override(None);
 
     let legacy_path = temp
@@ -252,7 +252,7 @@ fn load_credentials_ignores_legacy_oauth_without_consent() {
 fn load_credentials_reads_legacy_oauth_when_allowed() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
     let _allow = EnvVarGuard::set(ALLOW_LEGACY_AUTH_ENV, "1");
     set_active_account_override(None);
 
@@ -291,7 +291,7 @@ fn load_credentials_reads_legacy_oauth_without_changing_external_permissions() {
 
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
     let _allow = EnvVarGuard::set(ALLOW_LEGACY_AUTH_ENV, "1");
     set_active_account_override(None);
 
@@ -341,7 +341,7 @@ fn load_credentials_reads_legacy_oauth_without_changing_external_permissions() {
 fn load_auth_file_renames_existing_labels_to_numbered_scheme() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
     set_active_account_override(None);
 
     let auth_path = temp.path().join("openai-auth.json");

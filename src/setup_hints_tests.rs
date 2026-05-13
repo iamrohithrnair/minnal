@@ -69,9 +69,9 @@ fn first_three_launches_can_include_hotkey_notice_too() {
 }
 
 #[test]
-fn paused_jcode_shell_command_keeps_failures_visible() {
-    let command = paused_jcode_shell_command("/tmp/jcode");
+fn paused_minnal_shell_command_keeps_failures_visible() {
+    let command = paused_minnal_shell_command("/tmp/minnal");
     assert!(command.contains("Press Enter to close"));
-    assert!(command.contains("Jcode exited with status"));
-    assert!(command.contains("jcode executable not found"));
+    assert!(command.contains("Minnal exited with status"));
+    assert!(command.contains("minnal executable not found"));
 }

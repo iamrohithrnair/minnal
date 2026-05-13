@@ -27,7 +27,7 @@ use super::{ResumeTarget, SessionSource};
 const TRANSCRIPT_SEARCH_CHUNK_BYTES: usize = 64 * 1024;
 
 fn session_scan_limit() -> usize {
-    std::env::var("JCODE_SESSION_PICKER_MAX_SESSIONS")
+    std::env::var("MINNAL_SESSION_PICKER_MAX_SESSIONS")
         .ok()
         .and_then(|raw| raw.trim().parse::<usize>().ok())
         .map(|n| n.clamp(MIN_SESSION_SCAN_LIMIT, MAX_SESSION_SCAN_LIMIT))
@@ -41,7 +41,7 @@ fn session_candidate_window(scan_limit: usize) -> usize {
 }
 
 fn include_old_saved_sessions_on_initial_load() -> bool {
-    std::env::var("JCODE_SESSION_PICKER_INCLUDE_OLD_SAVED")
+    std::env::var("MINNAL_SESSION_PICKER_INCLUDE_OLD_SAVED")
         .ok()
         .is_some_and(|raw| matches!(raw.trim(), "1" | "true" | "TRUE" | "yes" | "YES"))
 }
@@ -200,8 +200,8 @@ fn session_transcript_contains_query(session: &SessionInfo, query_lower: &str) -
 #[cfg(test)]
 fn transcript_paths_for_session(session: &SessionInfo) -> Vec<PathBuf> {
     match &session.resume_target {
-        ResumeTarget::JcodeSession { session_id } => {
-            let Ok(sessions_dir) = storage::jcode_dir().map(|dir| dir.join("sessions")) else {
+        ResumeTarget::MinnalSession { session_id } => {
+            let Ok(sessions_dir) = storage::minnal_dir().map(|dir| dir.join("sessions")) else {
                 return Vec::new();
             };
             vec![
@@ -403,7 +403,7 @@ fn classify_session_source(
         return SessionSource::Codex;
     }
 
-    SessionSource::Jcode
+    SessionSource::Minnal
 }
 
 fn collect_files_recursive(root: &Path, extension: &str) -> Vec<PathBuf> {
@@ -1271,7 +1271,7 @@ pub(super) fn crashed_sessions_from_all_sessions(
 }
 
 pub fn load_sessions() -> Result<Vec<SessionInfo>> {
-    let sessions_dir = storage::jcode_dir()?.join("sessions");
+    let sessions_dir = storage::minnal_dir()?.join("sessions");
     let scan_limit = session_scan_limit();
 
     if let Ok(cache) = session_list_cache().lock()
@@ -1392,7 +1392,7 @@ pub fn load_sessions() -> Result<Vec<SessionInfo>> {
                     server_name: None,
                     server_icon: None,
                     source,
-                    resume_target: ResumeTarget::JcodeSession {
+                    resume_target: ResumeTarget::MinnalSession {
                         session_id: stem.to_string(),
                     },
                     external_path: None,

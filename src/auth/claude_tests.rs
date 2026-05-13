@@ -25,15 +25,15 @@ impl Drop for EnvVarGuard {
 }
 
 #[test]
-fn jcode_auth_file_default_is_empty() {
-    let auth = JcodeAuthFile::default();
+fn minnal_auth_file_default_is_empty() {
+    let auth = MinnalAuthFile::default();
     assert!(auth.anthropic_accounts.is_empty());
     assert!(auth.active_anthropic_account.is_none());
 }
 
 #[test]
-fn jcode_auth_file_roundtrip() {
-    let auth = JcodeAuthFile {
+fn minnal_auth_file_roundtrip() {
+    let auth = MinnalAuthFile {
         anthropic_accounts: vec![AnthropicAccount {
             label: "work".to_string(),
             access: "acc_123".to_string(),
@@ -48,7 +48,7 @@ fn jcode_auth_file_roundtrip() {
     };
 
     let json = serde_json::to_string_pretty(&auth).unwrap();
-    let parsed: JcodeAuthFile = serde_json::from_str(&json).unwrap();
+    let parsed: MinnalAuthFile = serde_json::from_str(&json).unwrap();
 
     assert_eq!(parsed.anthropic_accounts.len(), 1);
     assert_eq!(parsed.anthropic_accounts[0].label, "work");
@@ -57,12 +57,12 @@ fn jcode_auth_file_roundtrip() {
 }
 
 #[test]
-fn jcode_path_respects_jcode_home() {
+fn minnal_path_respects_minnal_home() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set("MINNAL_HOME", temp.path());
 
-    assert_eq!(jcode_path().unwrap(), temp.path().join("auth.json"));
+    assert_eq!(minnal_path().unwrap(), temp.path().join("auth.json"));
     assert_eq!(
         claude_code_path().unwrap(),
         temp.path()
@@ -85,7 +85,7 @@ fn jcode_path_respects_jcode_home() {
 fn load_auth_file_renames_existing_labels_to_numbered_scheme() {
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().unwrap();
-    let _home = EnvVarGuard::set("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set("MINNAL_HOME", temp.path());
     set_active_account_override(None);
 
     let auth_path = temp.path().join("auth.json");
@@ -123,8 +123,8 @@ fn load_auth_file_renames_existing_labels_to_numbered_scheme() {
 }
 
 #[test]
-fn jcode_auth_file_multi_account() {
-    let auth = JcodeAuthFile {
+fn minnal_auth_file_multi_account() {
+    let auth = MinnalAuthFile {
         anthropic_accounts: vec![
             AnthropicAccount {
                 label: "personal".to_string(),
@@ -150,13 +150,13 @@ fn jcode_auth_file_multi_account() {
     };
 
     let json = serde_json::to_string(&auth).unwrap();
-    let parsed: JcodeAuthFile = serde_json::from_str(&json).unwrap();
+    let parsed: MinnalAuthFile = serde_json::from_str(&json).unwrap();
     assert_eq!(parsed.anthropic_accounts.len(), 2);
     assert_eq!(parsed.active_anthropic_account, Some("work".to_string()));
 }
 
 #[test]
-fn jcode_auth_file_legacy_migration_format() {
+fn minnal_auth_file_legacy_migration_format() {
     let legacy_json = r#"{
         "anthropic": {
             "access": "legacy_acc",
@@ -164,7 +164,7 @@ fn jcode_auth_file_legacy_migration_format() {
             "expires": 12345
         }
     }"#;
-    let parsed: JcodeAuthFile = serde_json::from_str(legacy_json).unwrap();
+    let parsed: MinnalAuthFile = serde_json::from_str(legacy_json).unwrap();
     assert!(parsed.anthropic_accounts.is_empty());
     assert!(parsed.anthropic.is_some());
 }
@@ -247,7 +247,7 @@ fn anthropic_account_subscription_type_omitted_when_none() {
 
 #[test]
 fn update_account_profile_sets_email() {
-    let mut auth = JcodeAuthFile::default();
+    let mut auth = MinnalAuthFile::default();
     auth.anthropic_accounts.push(AnthropicAccount {
         label: "test".to_string(),
         access: "acc".to_string(),
@@ -349,7 +349,7 @@ fn load_claude_code_credentials_does_not_change_external_permissions() {
 
     let _lock = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().expect("tempdir");
-    let _home = EnvVarGuard::set("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set("MINNAL_HOME", temp.path());
 
     let path = claude_code_path().expect("claude code path");
     std::fs::create_dir_all(path.parent().unwrap()).expect("create dir");

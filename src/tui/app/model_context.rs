@@ -18,7 +18,7 @@ impl App {
     }
 
     fn failover_config_hint() -> &'static str {
-        "To turn this off, set `[provider].cross_provider_failover = \"manual\"` in `~/.jcode/config.toml` or export `JCODE_CROSS_PROVIDER_FAILOVER=manual`."
+        "To turn this off, set `[provider].cross_provider_failover = \"manual\"` in `~/.minnal/config.toml` or export `MINNAL_CROSS_PROVIDER_FAILOVER=manual`."
     }
 
     fn apply_provider_switch_for_failover(
@@ -99,7 +99,7 @@ impl App {
     fn handle_provider_failover_prompt(&mut self, prompt: crate::provider::ProviderFailoverPrompt) {
         let input_summary = Self::format_failover_input_summary(&prompt);
         let manual_message = format!(
-            "⚠ **{} became unavailable** — jcode did **not** resend your prompt to **{}** automatically.\n\nReason: {}\n\nRetrying elsewhere would send {}.\n\nTo switch manually now, use `/model` and pick a model from **{}**, then resend. {}",
+            "⚠ **{} became unavailable** — minnal did **not** resend your prompt to **{}** automatically.\n\nReason: {}\n\nRetrying elsewhere would send {}.\n\nTo switch manually now, use `/model` and pick a model from **{}**, then resend. {}",
             prompt.from_label,
             prompt.to_label,
             prompt.reason,
@@ -125,7 +125,7 @@ impl App {
                     deadline: Instant::now() + Duration::from_secs(3),
                 });
                 self.push_display_message(DisplayMessage::system(format!(
-                    "⚠ **{} became unavailable** — jcode will switch to **{}** in **3 seconds** unless you cancel.\n\nReason: {}\n\nRetrying would send {}. Press **Esc** to cancel.\n\n{}",
+                    "⚠ **{} became unavailable** — minnal will switch to **{}** in **3 seconds** unless you cancel.\n\nReason: {}\n\nRetrying would send {}. Press **Esc** to cancel.\n\n{}",
                     prompt.from_label,
                     prompt.to_label,
                     prompt.reason,
@@ -313,7 +313,7 @@ impl App {
     }
 
     pub(super) fn update_compaction_usage_from_stream(&mut self) {
-        if self.is_remote || !self.provider.uses_jcode_compaction() {
+        if self.is_remote || !self.provider.uses_minnal_compaction() {
             return;
         }
         let Some(tokens) = self.current_stream_context_tokens() else {
@@ -1000,7 +1000,7 @@ pub(super) fn handle_model_command(app: &mut App, trimmed: &str) -> bool {
         crate::bus::Bus::global().publish(crate::bus::BusEvent::UiActivity(
             crate::bus::UiActivity::catalog(
                 Some(session_id.clone()),
-                "**Model List Refresh Started**\n\nFetching the provider model catalog now. Jcode will show the discovered model and route changes when the refresh completes.",
+                "**Model List Refresh Started**\n\nFetching the provider model catalog now. Minnal will show the discovered model and route changes when the refresh completes.",
                 Some("Refreshing model list..."),
             ),
         ));

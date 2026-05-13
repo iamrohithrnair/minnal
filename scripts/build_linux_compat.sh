@@ -17,10 +17,10 @@ if [[ "$out_dir" != /* ]]; then
   out_dir="$repo_root/$out_dir"
 fi
 
-artifact="${JCODE_COMPAT_ARTIFACT:-minnal-linux-x86_64}"
-profile="${JCODE_COMPAT_PROFILE:-release}"
-image="${JCODE_COMPAT_IMAGE:-quay.io/pypa/manylinux2014_x86_64}"
-cache_root="${JCODE_COMPAT_CACHE_DIR:-$HOME/.cache/jcode-linux-compat}"
+artifact="${MINNAL_COMPAT_ARTIFACT:-minnal-linux-x86_64}"
+profile="${MINNAL_COMPAT_PROFILE:-release}"
+image="${MINNAL_COMPAT_IMAGE:-quay.io/pypa/manylinux2014_x86_64}"
+cache_root="${MINNAL_COMPAT_CACHE_DIR:-$HOME/.cache/minnal-linux-compat}"
 target="x86_64-unknown-linux-gnu"
 
 mkdir -p "$out_dir" \
@@ -36,10 +36,10 @@ echo "Output dir: $out_dir"
 
 docker run --rm \
   -e CARGO_TERM_COLOR=always \
-  -e JCODE_RELEASE_BUILD="${JCODE_RELEASE_BUILD:-1}" \
-  -e JCODE_BUILD_SEMVER="${JCODE_BUILD_SEMVER:-}" \
-  -e JCODE_COMPAT_PROFILE="$profile" \
-  -e JCODE_COMPAT_TARGET="$target" \
+  -e MINNAL_RELEASE_BUILD="${MINNAL_RELEASE_BUILD:-1}" \
+  -e MINNAL_BUILD_SEMVER="${MINNAL_BUILD_SEMVER:-}" \
+  -e MINNAL_COMPAT_PROFILE="$profile" \
+  -e MINNAL_COMPAT_TARGET="$target" \
   -e HOST_UID="$host_uid" \
   -e HOST_GID="$host_gid" \
   -v "$repo_root:/work" \
@@ -87,9 +87,9 @@ docker run --rm \
 	    export CARGO_TARGET_DIR=/work/target/linux-compat
 	    export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-1}"
 	    export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS="${CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUSTFLAGS:--C link-arg=-static-libgcc}"
-	    cargo build --profile "$JCODE_COMPAT_PROFILE" --target "$JCODE_COMPAT_TARGET" -p jcode --bin jcode
+	    cargo build --profile "$MINNAL_COMPAT_PROFILE" --target "$MINNAL_COMPAT_TARGET" -p minnal --bin minnal
 
-	    cp "$CARGO_TARGET_DIR/$JCODE_COMPAT_TARGET/$JCODE_COMPAT_PROFILE/jcode" "/out/'"$artifact"'.bin"
+	    cp "$CARGO_TARGET_DIR/$MINNAL_COMPAT_TARGET/$MINNAL_COMPAT_PROFILE/minnal" "/out/'"$artifact"'.bin"
 	    chmod +x "/out/'"$artifact"'.bin"
 	    cat > "/out/'"$artifact"'" <<WRAPPER
 #!/usr/bin/env sh
@@ -117,7 +117,7 @@ WRAPPER
 	    # Preserve the OpenSSL runtime libraries used by the build image. Some
 	    # Terminal-Bench containers are older than the build host and either lack
 	    # libssl entirely or expose a different SONAME. The Harbor adapter uploads
-	    # these sibling libraries and sets LD_LIBRARY_PATH for the jcode process.
+	    # these sibling libraries and sets LD_LIBRARY_PATH for the minnal process.
 	    ldd "/out/'"$artifact"'.bin" \
 	      | awk "/lib(ssl|crypto)[.]so/ { print \$3 }" \
 	      | while read -r lib; do

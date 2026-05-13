@@ -21,7 +21,7 @@ use crate::plan::{
     task_control_target_item_id,
 };
 use crate::protocol::{NotificationType, PlanGraphStatus, ServerEvent};
-use jcode_agent_runtime::SoftInterruptSource;
+use minnal_agent_runtime::SoftInterruptSource;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock, broadcast, mpsc, watch};

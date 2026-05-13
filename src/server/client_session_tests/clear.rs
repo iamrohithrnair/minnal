@@ -107,10 +107,10 @@ async fn handle_clear_session_replaces_runtime_handles_and_updates_shutdown_regi
     old_queue
         .lock()
         .map_err(|_| anyhow!("old queue lock"))?
-        .push(jcode_agent_runtime::SoftInterruptMessage {
+        .push(minnal_agent_runtime::SoftInterruptMessage {
             content: "stale queued message".to_string(),
             urgent: false,
-            source: jcode_agent_runtime::SoftInterruptSource::User,
+            source: minnal_agent_runtime::SoftInterruptSource::User,
         });
     old_background_signal.fire();
     old_cancel_signal.fire();

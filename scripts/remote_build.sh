@@ -2,15 +2,15 @@
 # Remote cargo runner (build/test/check/clippy) via SSH + rsync.
 #
 # Defaults:
-# - Config file: ~/.config/jcode/remote-build.env (override with JCODE_REMOTE_CONFIG)
-# - Host: JCODE_REMOTE_HOST from env/config, or --host
-# - Remote dir: .cache/remote-builds/jcode/<repo-name> (override with JCODE_REMOTE_DIR or --remote-dir)
+# - Config file: ~/.config/minnal/remote-build.env (override with MINNAL_REMOTE_CONFIG)
+# - Host: MINNAL_REMOTE_HOST from env/config, or --host
+# - Remote dir: .cache/remote-builds/minnal/<repo-name> (override with MINNAL_REMOTE_DIR or --remote-dir)
 #
 # Examples:
 #   scripts/remote_build.sh --release
 #   scripts/remote_build.sh test
 #   scripts/remote_build.sh check --all-targets
-#   scripts/remote_build.sh --host mybox --remote-dir ~/src/jcode test -- --nocapture
+#   scripts/remote_build.sh --host mybox --remote-dir ~/src/minnal test -- --nocapture
 
 set -euo pipefail
 
@@ -20,8 +20,8 @@ Usage: scripts/remote_build.sh [options] [cargo-subcommand] [cargo-args...]
 
 Options:
   -r, --release        Add --release to cargo invocation
-  --host HOST          Remote SSH host (default: $JCODE_REMOTE_HOST from env/config; required if unset)
-  --remote-dir DIR     Remote project directory (default: $JCODE_REMOTE_DIR or .cache/remote-builds/jcode/<repo-name>)
+  --host HOST          Remote SSH host (default: $MINNAL_REMOTE_HOST from env/config; required if unset)
+  --remote-dir DIR     Remote project directory (default: $MINNAL_REMOTE_DIR or .cache/remote-builds/minnal/<repo-name>)
   --no-sync            Skip rsync upload step
   --sync-back          Force sync-back of built binary after command
   --no-sync-back       Disable sync-back of built binary after command
@@ -31,8 +31,8 @@ Behavior:
   - Default cargo subcommand is 'build'
   - Sync-back defaults to ON for 'build', OFF for other subcommands
   - For build sync-back, copies target/{debug|release}/<artifact> from remote to local
-    (artifact defaults to 'jcode', or '--bin <name>' when provided)
-  - Default config file is ~/.config/jcode/remote-build.env
+    (artifact defaults to 'minnal', or '--bin <name>' when provided)
+  - Default config file is ~/.config/minnal/remote-build.env
 EOF
 }
 
@@ -41,12 +41,12 @@ REPO_NAME="$(basename "$LOCAL_DIR")"
 
 # shellcheck source=scripts/remote_config.sh
 source "$LOCAL_DIR/scripts/remote_config.sh"
-jcode_load_remote_config
+minnal_load_remote_config
 
-REMOTE="${JCODE_REMOTE_HOST:-}"
-REMOTE_DIR="${JCODE_REMOTE_DIR:-.cache/remote-builds/jcode/${REPO_NAME}}"
-SSH_BIN="${JCODE_REMOTE_SSH_BIN:-ssh}"
-RSYNC_BIN="${JCODE_REMOTE_RSYNC_BIN:-rsync}"
+REMOTE="${MINNAL_REMOTE_HOST:-}"
+REMOTE_DIR="${MINNAL_REMOTE_DIR:-.cache/remote-builds/minnal/${REPO_NAME}}"
+SSH_BIN="${MINNAL_REMOTE_SSH_BIN:-ssh}"
+RSYNC_BIN="${MINNAL_REMOTE_RSYNC_BIN:-rsync}"
 
 SYNC_SOURCE=1
 SYNC_BACK_MODE="auto" # auto|always|never
@@ -110,7 +110,7 @@ if [[ "$REMOTE_DIR" == *" "* ]]; then
 fi
 
 if [[ -z "$REMOTE" ]]; then
-    echo "error: remote host not configured; set JCODE_REMOTE_HOST or pass --host HOST" >&2
+    echo "error: remote host not configured; set MINNAL_REMOTE_HOST or pass --host HOST" >&2
     exit 2
 fi
 
@@ -162,7 +162,7 @@ else
     build_mode="debug"
 fi
 
-artifact_name="jcode"
+artifact_name="minnal"
 if [[ "$SUBCOMMAND" == "build" ]]; then
     for ((i=0; i<${#POSITIONAL[@]}; i++)); do
         if [[ "${POSITIONAL[$i]}" == "--bin" && $((i + 1)) -lt ${#POSITIONAL[@]} ]]; then
@@ -205,7 +205,7 @@ if [[ "$SYNC_SOURCE" -eq 1 ]]; then
         --exclude '*.log' \
         --exclude '.claude/' \
         --exclude '.codex-socktest/' \
-        --exclude '.jcode/' \
+        --exclude '.minnal/' \
         --exclude '.tmp/' \
         --exclude '.wrangler/' \
         --exclude 'tmp/' \
@@ -221,16 +221,16 @@ if [[ "$SYNC_SOURCE" -eq 1 ]]; then
         printf 'git_date=%s\n' "$local_git_date"
         printf 'git_tag=%s\n' "$local_git_tag"
         printf 'git_dirty=%s\n' "$local_git_dirty"
-        printf 'changelog_raw<<JCODE_CHANGELOG_EOF\n%s\nJCODE_CHANGELOG_EOF\n' "$local_changelog_raw"
+        printf 'changelog_raw<<MINNAL_CHANGELOG_EOF\n%s\nMINNAL_CHANGELOG_EOF\n' "$local_changelog_raw"
     } > "$metadata_file"
-    "$RSYNC_BIN" -avz "$metadata_file" "$REMOTE:$REMOTE_DIR/.jcode-build-meta"
+    "$RSYNC_BIN" -avz "$metadata_file" "$REMOTE:$REMOTE_DIR/.minnal-build-meta"
 else
     echo ""
     echo "[1/3] Skipping source sync (--no-sync)"
 fi
 
 printf -v REMOTE_CARGO_CMD '%q ' "${CARGO_CMD[@]}"
-printf -v REMOTE_INNER_CMD 'cd %q && env JCODE_BUILD_METADATA_FILE=.jcode-build-meta %s' "$REMOTE_DIR" "$REMOTE_CARGO_CMD"
+printf -v REMOTE_INNER_CMD 'cd %q && env MINNAL_BUILD_METADATA_FILE=.minnal-build-meta %s' "$REMOTE_DIR" "$REMOTE_CARGO_CMD"
 printf -v REMOTE_RUN_CMD 'sh -lc %q' "$REMOTE_INNER_CMD"
 echo ""
 echo "[2/3] Running on remote..."

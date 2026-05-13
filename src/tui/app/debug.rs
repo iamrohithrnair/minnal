@@ -698,7 +698,7 @@ pub(super) fn handle_debug_command(app: &mut App, trimmed: &str) -> bool {
 
         let recording_dir = dirs::config_dir()
             .unwrap_or_else(|| std::path::PathBuf::from("."))
-            .join("jcode")
+            .join("minnal")
             .join("recordings");
         let _ = std::fs::create_dir_all(&recording_dir);
 

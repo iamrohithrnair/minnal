@@ -15,8 +15,8 @@ from pathlib import Path
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Profile a single resumed jcode spawn")
-    parser.add_argument("--binary", default="./target/selfdev/jcode")
+    parser = argparse.ArgumentParser(description="Profile a single resumed minnal spawn")
+    parser.add_argument("--binary", default="./target/selfdev/minnal")
     parser.add_argument("--timeout", type=float, default=20.0)
     parser.add_argument("--cwd", default=os.getcwd())
     parser.add_argument("--json", action="store_true", help="Emit JSON summary")
@@ -96,7 +96,7 @@ def reply_queries(master_fd: int, buffer: bytes) -> bytes:
 
 
 def latest_log_file(log_dir: Path) -> Path:
-    logs = sorted(log_dir.glob("jcode-*.log"), key=lambda p: p.stat().st_mtime)
+    logs = sorted(log_dir.glob("minnal-*.log"), key=lambda p: p.stat().st_mtime)
     if not logs:
         raise RuntimeError(f"no log files found in {log_dir}")
     return logs[-1]
@@ -111,25 +111,25 @@ def extract_timing_lines(log_path: Path) -> list[str]:
 
 
 def profile_single_spawn(binary: str, cwd: str, timeout_s: float) -> dict:
-    root = Path(tempfile.mkdtemp(prefix="jcode-single-profile-"))
+    root = Path(tempfile.mkdtemp(prefix="minnal-single-profile-"))
     home = root / "home"
     runtime_dir = root / "run"
-    socket_path = runtime_dir / "jcode.sock"
-    debug_socket_path = runtime_dir / "jcode-debug.sock"
+    socket_path = runtime_dir / "minnal.sock"
+    debug_socket_path = runtime_dir / "minnal-debug.sock"
     home.mkdir(parents=True, exist_ok=True)
     runtime_dir.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
     env.update(
         {
-            "JCODE_HOME": str(home),
-            "JCODE_RUNTIME_DIR": str(runtime_dir),
-            "JCODE_SOCKET": str(socket_path),
-            "JCODE_DEBUG_SOCKET": str(debug_socket_path),
-            "JCODE_SWARM_ENABLED": "0",
-            "JCODE_NO_TELEMETRY": "1",
-            "JCODE_TRACE": "1",
-            "JCODE_TEMP_SERVER": "1",
-            "JCODE_SERVER_OWNER_PID": str(os.getpid()),
+            "MINNAL_HOME": str(home),
+            "MINNAL_RUNTIME_DIR": str(runtime_dir),
+            "MINNAL_SOCKET": str(socket_path),
+            "MINNAL_DEBUG_SOCKET": str(debug_socket_path),
+            "MINNAL_SWARM_ENABLED": "0",
+            "MINNAL_NO_TELEMETRY": "1",
+            "MINNAL_TRACE": "1",
+            "MINNAL_TEMP_SERVER": "1",
+            "MINNAL_SERVER_OWNER_PID": str(os.getpid()),
         }
     )
 
@@ -186,7 +186,7 @@ def profile_single_spawn(binary: str, cwd: str, timeout_s: float) -> dict:
                 buffer += chunk
                 buffer = reply_queries(master_fd, buffer)
                 lower = buffer.lower()
-                if b"loading session" in lower or b"jcode" in lower or len(buffer) > 4096:
+                if b"loading session" in lower or b"minnal" in lower or len(buffer) > 4096:
                     if time.perf_counter() - last_output_at >= settle_after_output_s:
                         break
             elif last_output_at is not None and time.perf_counter() - last_output_at >= settle_after_output_s:

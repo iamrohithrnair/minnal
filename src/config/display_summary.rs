@@ -102,7 +102,7 @@ impl Config {
 - Discord replies: {}
 
 *Edit the config file or set environment variables to customize.*
-*Environment variables (e.g., `JCODE_SCROLL_UP_KEY`, `JCODE_GATEWAY_ENABLED`) override file settings.*"#,
+*Environment variables (e.g., `MINNAL_SCROLL_UP_KEY`, `MINNAL_GATEWAY_ENABLED`) override file settings.*"#,
             path,
             self.keybindings.scroll_up,
             self.keybindings.scroll_down,

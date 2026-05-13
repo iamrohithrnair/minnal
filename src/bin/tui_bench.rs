@@ -1,13 +1,13 @@
 use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
-use jcode::message::{ContentBlock, Role, ToolCall};
-use jcode::perf::{SyntheticSystemProfile, TuiPerfPolicy, tui_policy_for};
-use jcode::prompt::ContextInfo;
-use jcode::session::{Session, StoredDisplayRole};
-use jcode::side_panel::{
+use minnal::message::{ContentBlock, Role, ToolCall};
+use minnal::perf::{SyntheticSystemProfile, TuiPerfPolicy, tui_policy_for};
+use minnal::prompt::ContextInfo;
+use minnal::session::{Session, StoredDisplayRole};
+use minnal::side_panel::{
     SidePanelPage, SidePanelPageFormat, SidePanelPageSource, SidePanelSnapshot,
 };
-use jcode::tui::{DisplayMessage, ProcessingStatus, TuiState, info_widget::InfoWidgetData};
+use minnal::tui::{DisplayMessage, ProcessingStatus, TuiState, info_widget::InfoWidgetData};
 use ratatui::Terminal;
 use ratatui::backend::TestBackend;
 use serde::Serialize;
@@ -333,7 +333,7 @@ struct BenchState {
     scroll_offset: usize,
     is_processing: bool,
     status: ProcessingStatus,
-    diff_mode: jcode::config::DiffDisplayMode,
+    diff_mode: minnal::config::DiffDisplayMode,
     queue_mode: bool,
     context_info: ContextInfo,
     info_widget: InfoWidgetData,
@@ -426,7 +426,7 @@ impl BenchState {
             scroll_offset: 0,
             is_processing,
             status,
-            diff_mode: jcode::config::DiffDisplayMode::Off,
+            diff_mode: minnal::config::DiffDisplayMode::Off,
             queue_mode: true,
             context_info: ContextInfo::default(),
             info_widget: InfoWidgetData::default(),
@@ -442,7 +442,7 @@ impl BenchState {
                 .then(|| match side_panel_source {
                     SidePanelSource::LinkedFile => Some(
                         std::env::temp_dir()
-                            .join("jcode_tui_bench")
+                            .join("minnal_tui_bench")
                             .join("side_panel_linked.md"),
                     ),
                     SidePanelSource::Managed => None,
@@ -459,10 +459,10 @@ impl BenchState {
         focused_page_id: Option<&str>,
         max_messages: usize,
     ) -> Result<Self> {
-        let session = jcode::replay::load_session(id_or_path)
+        let session = minnal::replay::load_session(id_or_path)
             .with_context(|| format!("failed to load session '{}'", id_or_path))?;
         let mut side_panel =
-            jcode::side_panel::snapshot_for_session(&session.id).unwrap_or_default();
+            minnal::side_panel::snapshot_for_session(&session.id).unwrap_or_default();
         if side_panel.pages.is_empty() {
             side_panel = reconstruct_side_panel_snapshot_from_session(&session);
         }
@@ -502,9 +502,9 @@ impl BenchState {
                 ProcessingStatus::Idle
             },
             diff_mode: if matches!(mode, BenchMode::FileDiff) {
-                jcode::config::DiffDisplayMode::File
+                minnal::config::DiffDisplayMode::File
             } else {
-                jcode::config::DiffDisplayMode::Off
+                minnal::config::DiffDisplayMode::Off
             },
             queue_mode: true,
             context_info: ContextInfo::default(),
@@ -548,17 +548,17 @@ impl BenchState {
                 path.display()
             )
         })?;
-        let _ = jcode::side_panel::refresh_linked_page_content(&mut self.side_panel, None);
+        let _ = minnal::side_panel::refresh_linked_page_content(&mut self.side_panel, None);
         Ok(())
     }
 
     fn prewarm_side_panel(&self, width: u16, height: u16) -> bool {
-        jcode::tui::prewarm_focused_side_panel(
+        minnal::tui::prewarm_focused_side_panel(
             &self.side_panel,
             width,
             height,
             40,
-            jcode::tui::mermaid::protocol_type().is_some(),
+            minnal::tui::mermaid::protocol_type().is_some(),
             false,
         )
     }
@@ -608,7 +608,7 @@ fn session_to_display_messages(session: &Session, max_messages: usize) -> Vec<Di
     out
 }
 
-fn stored_message_visible_text(message: &jcode::session::StoredMessage) -> String {
+fn stored_message_visible_text(message: &minnal::session::StoredMessage) -> String {
     let mut parts = Vec::new();
     for block in &message.content {
         match block {
@@ -808,7 +808,7 @@ impl TuiState for BenchState {
         })
     }
 
-    fn side_pane_images(&self) -> Vec<jcode::session::RenderedImage> {
+    fn side_pane_images(&self) -> Vec<minnal::session::RenderedImage> {
         Vec::new()
     }
 
@@ -916,7 +916,7 @@ impl TuiState for BenchState {
         None
     }
 
-    fn batch_progress(&self) -> Option<jcode::bus::BatchProgress> {
+    fn batch_progress(&self) -> Option<minnal::bus::BatchProgress> {
         None
     }
 
@@ -940,7 +940,7 @@ impl TuiState for BenchState {
         false
     }
 
-    fn diff_mode(&self) -> jcode::config::DiffDisplayMode {
+    fn diff_mode(&self) -> minnal::config::DiffDisplayMode {
         self.diff_mode
     }
 
@@ -1006,7 +1006,7 @@ impl TuiState for BenchState {
     }
 
     fn context_limit(&self) -> Option<usize> {
-        Some(jcode::provider::DEFAULT_CONTEXT_LIMIT)
+        Some(minnal::provider::DEFAULT_CONTEXT_LIMIT)
     }
 
     fn client_update_available(&self) -> bool {
@@ -1027,19 +1027,19 @@ impl TuiState for BenchState {
 
     fn render_streaming_markdown(&self, width: usize) -> Vec<ratatui::text::Line<'static>> {
         // For benchmarks, just use the standard markdown renderer
-        jcode::tui::markdown::render_markdown_with_width(&self.streaming_text, Some(width))
+        minnal::tui::markdown::render_markdown_with_width(&self.streaming_text, Some(width))
     }
 
     fn centered_mode(&self) -> bool {
         false
     }
 
-    fn auth_status(&self) -> jcode::auth::AuthStatus {
-        jcode::auth::AuthStatus::default()
+    fn auth_status(&self) -> minnal::auth::AuthStatus {
+        minnal::auth::AuthStatus::default()
     }
 
-    fn diagram_mode(&self) -> jcode::config::DiagramDisplayMode {
-        jcode::config::DiagramDisplayMode::Pinned
+    fn diagram_mode(&self) -> minnal::config::DiagramDisplayMode {
+        minnal::config::DiagramDisplayMode::Pinned
     }
 
     fn diagram_focus(&self) -> bool {
@@ -1066,8 +1066,8 @@ impl TuiState for BenchState {
         true
     }
 
-    fn diagram_pane_position(&self) -> jcode::config::DiagramPanePosition {
-        jcode::config::DiagramPanePosition::default()
+    fn diagram_pane_position(&self) -> minnal::config::DiagramPanePosition {
+        minnal::config::DiagramPanePosition::default()
     }
 
     fn diagram_zoom(&self) -> u8 {
@@ -1085,7 +1085,7 @@ impl TuiState for BenchState {
     fn diff_pane_focus(&self) -> bool {
         self.diff_pane_focus
     }
-    fn side_panel(&self) -> &jcode::side_panel::SidePanelSnapshot {
+    fn side_panel(&self) -> &minnal::side_panel::SidePanelSnapshot {
         &self.side_panel
     }
     fn pin_images(&self) -> bool {
@@ -1093,17 +1093,20 @@ impl TuiState for BenchState {
     }
 
     fn chat_native_scrollbar(&self) -> bool {
-        jcode::config::config().display.native_scrollbars.chat
+        minnal::config::config().display.native_scrollbars.chat
     }
 
     fn side_panel_native_scrollbar(&self) -> bool {
-        jcode::config::config().display.native_scrollbars.side_panel
+        minnal::config::config()
+            .display
+            .native_scrollbars
+            .side_panel
     }
 
     fn diff_line_wrap(&self) -> bool {
         true
     }
-    fn inline_interactive_state(&self) -> Option<&jcode::tui::InlineInteractiveState> {
+    fn inline_interactive_state(&self) -> Option<&minnal::tui::InlineInteractiveState> {
         None
     }
 
@@ -1117,25 +1120,25 @@ impl TuiState for BenchState {
 
     fn session_picker_overlay(
         &self,
-    ) -> Option<&std::cell::RefCell<jcode::tui::session_picker::SessionPicker>> {
+    ) -> Option<&std::cell::RefCell<minnal::tui::session_picker::SessionPicker>> {
         None
     }
 
     fn login_picker_overlay(
         &self,
-    ) -> Option<&std::cell::RefCell<jcode::tui::login_picker::LoginPicker>> {
+    ) -> Option<&std::cell::RefCell<minnal::tui::login_picker::LoginPicker>> {
         None
     }
 
     fn account_picker_overlay(
         &self,
-    ) -> Option<&std::cell::RefCell<jcode::tui::account_picker::AccountPicker>> {
+    ) -> Option<&std::cell::RefCell<minnal::tui::account_picker::AccountPicker>> {
         None
     }
 
     fn usage_overlay(
         &self,
-    ) -> Option<&std::cell::RefCell<jcode::tui::usage_overlay::UsageOverlay>> {
+    ) -> Option<&std::cell::RefCell<minnal::tui::usage_overlay::UsageOverlay>> {
         None
     }
 
@@ -1147,19 +1150,19 @@ impl TuiState for BenchState {
         self.started_at.elapsed().as_millis() as u64
     }
 
-    fn copy_badge_ui(&self) -> jcode::tui::CopyBadgeUiState {
-        jcode::tui::CopyBadgeUiState::default()
+    fn copy_badge_ui(&self) -> minnal::tui::CopyBadgeUiState {
+        minnal::tui::CopyBadgeUiState::default()
     }
 
     fn copy_selection_mode(&self) -> bool {
         false
     }
 
-    fn copy_selection_range(&self) -> Option<jcode::tui::CopySelectionRange> {
+    fn copy_selection_range(&self) -> Option<minnal::tui::CopySelectionRange> {
         None
     }
 
-    fn copy_selection_status(&self) -> Option<jcode::tui::CopySelectionStatus> {
+    fn copy_selection_status(&self) -> Option<minnal::tui::CopySelectionStatus> {
         None
     }
 
@@ -1167,7 +1170,7 @@ impl TuiState for BenchState {
         Vec::new()
     }
 
-    fn cache_ttl_status(&self) -> Option<jcode::tui::CacheTtlInfo> {
+    fn cache_ttl_status(&self) -> Option<minnal::tui::CacheTtlInfo> {
         None
     }
 }
@@ -1184,9 +1187,9 @@ fn make_text(len: usize) -> String {
 }
 
 fn main() -> Result<()> {
-    if std::env::var("JCODE_TUI_PROFILE").is_ok() {
-        jcode::logging::init();
-        if let Some(path) = jcode::logging::log_path() {
+    if std::env::var("MINNAL_TUI_PROFILE").is_ok() {
+        minnal::logging::init();
+        if let Some(path) = minnal::logging::log_path() {
             println!("profile_log: {}", path.display());
         }
     }
@@ -1211,7 +1214,7 @@ fn main() -> Result<()> {
     let stream_text = make_text(args.assistant_len.max(args.stream_chunk));
 
     if matches!(args.mode, BenchMode::MermaidFlicker) {
-        let result = jcode::tui::mermaid::debug_flicker_benchmark(args.frames.max(4));
+        let result = minnal::tui::mermaid::debug_flicker_benchmark(args.frames.max(4));
         println!("mode: {:?}", args.mode);
         println!("steps: {}", result.steps);
         println!("protocol_supported: {}", result.protocol_supported);
@@ -1251,21 +1254,21 @@ fn main() -> Result<()> {
     }
 
     if matches!(args.mode, BenchMode::FileDiff) {
-        state.diff_mode = jcode::config::DiffDisplayMode::File;
+        state.diff_mode = minnal::config::DiffDisplayMode::File;
     }
 
     let profile_mermaid_ui = matches!(args.mode, BenchMode::MermaidUi);
     let profile_side_panel = matches!(args.mode, BenchMode::SidePanel | BenchMode::MermaidUi);
     if profile_side_panel {
-        jcode::tui::mermaid::init_picker();
-        jcode::tui::mermaid::clear_active_diagrams();
-        jcode::tui::mermaid::clear_streaming_preview_diagram();
-        jcode::tui::clear_side_panel_render_caches();
-        jcode::tui::reset_side_panel_debug_stats();
-        jcode::tui::markdown::reset_debug_stats();
-        jcode::tui::mermaid::reset_debug_stats();
+        minnal::tui::mermaid::init_picker();
+        minnal::tui::mermaid::clear_active_diagrams();
+        minnal::tui::mermaid::clear_streaming_preview_diagram();
+        minnal::tui::clear_side_panel_render_caches();
+        minnal::tui::reset_side_panel_debug_stats();
+        minnal::tui::markdown::reset_debug_stats();
+        minnal::tui::mermaid::reset_debug_stats();
         if !args.keep_mermaid_cache {
-            let _ = jcode::tui::mermaid::clear_cache();
+            let _ = minnal::tui::mermaid::clear_cache();
         }
         if !args.no_side_panel_prewarm {
             let _ = state.prewarm_side_panel(args.width, args.height);
@@ -1301,19 +1304,19 @@ fn main() -> Result<()> {
             state.is_processing = true;
             state.status = ProcessingStatus::Streaming;
         }
-        let markdown_before = profile_side_panel.then(jcode::tui::markdown::debug_stats);
-        let mermaid_before = profile_side_panel.then(jcode::tui::mermaid::debug_stats);
-        let side_panel_before = profile_side_panel.then(jcode::tui::side_panel_debug_stats);
+        let markdown_before = profile_side_panel.then(minnal::tui::markdown::debug_stats);
+        let mermaid_before = profile_side_panel.then(minnal::tui::mermaid::debug_stats);
+        let side_panel_before = profile_side_panel.then(minnal::tui::side_panel_debug_stats);
         let frame_start = Instant::now();
-        terminal.draw(|f| jcode::tui::render_frame(f, &state))?;
+        terminal.draw(|f| minnal::tui::render_frame(f, &state))?;
         let frame_ms = frame_start.elapsed().as_secs_f64() * 1000.0;
         frame_times_ms.push(frame_ms);
         if let (Some(markdown_before), Some(mermaid_before), Some(side_panel_before)) =
             (markdown_before, mermaid_before, side_panel_before)
         {
-            let markdown_after = jcode::tui::markdown::debug_stats();
-            let mermaid_after = jcode::tui::mermaid::debug_stats();
-            let side_panel_after = jcode::tui::side_panel_debug_stats();
+            let markdown_after = minnal::tui::markdown::debug_stats();
+            let mermaid_after = minnal::tui::mermaid::debug_stats();
+            let side_panel_after = minnal::tui::side_panel_debug_stats();
             side_panel_profiles.push(SidePanelFrameProfile {
                 frame,
                 ms: frame_ms,
@@ -1388,24 +1391,24 @@ fn main() -> Result<()> {
     let warm_start = args.warmup_frames.min(frame_times_ms.len());
     let warm_summary = summarize_timing(&frame_times_ms[warm_start..]);
     let first_frame_ms = frame_times_ms.first().copied().unwrap_or(0.0);
-    let side_panel_final_stats = profile_side_panel.then(jcode::tui::side_panel_debug_stats);
-    let markdown_final_stats = profile_side_panel.then(jcode::tui::markdown::debug_stats);
-    let mermaid_final_stats = profile_side_panel.then(jcode::tui::mermaid::debug_stats);
+    let side_panel_final_stats = profile_side_panel.then(minnal::tui::side_panel_debug_stats);
+    let markdown_final_stats = profile_side_panel.then(minnal::tui::markdown::debug_stats);
+    let mermaid_final_stats = profile_side_panel.then(minnal::tui::mermaid::debug_stats);
     let mermaid_ui_summary = if profile_mermaid_ui {
         Some(summarize_mermaid_ui(
             &side_panel_profiles,
-            jcode::tui::mermaid::protocol_type().is_some(),
-            jcode::tui::mermaid::protocol_type().map(|p| format!("{:?}", p)),
+            minnal::tui::mermaid::protocol_type().is_some(),
+            minnal::tui::mermaid::protocol_type().map(|p| format!("{:?}", p)),
         ))
     } else {
         None
     };
-    let actual_policy = summarize_policy("detected", jcode::perf::tui_policy());
+    let actual_policy = summarize_policy("detected", minnal::perf::tui_policy());
     let synthetic_policy = args.synthetic_profile.map(|kind| {
-        let synthetic = jcode::perf::synthetic_profile(kind.to_system_profile());
+        let synthetic = minnal::perf::synthetic_profile(kind.to_system_profile());
         summarize_policy(
             kind.to_system_profile().label(),
-            tui_policy_for(&synthetic, &jcode::config::config().display),
+            tui_policy_for(&synthetic, &minnal::config::config().display),
         )
     });
     let cold_frame_count = side_panel_profiles

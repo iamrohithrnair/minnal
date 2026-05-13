@@ -6,97 +6,97 @@
     "unwrap_or_default": 464
   },
   "tracked_files": {
-    "crates/jcode-desktop/build.rs": {
+    "crates/minnal-desktop/build.rs": {
       "dot_ok": 2,
       "let_underscore": 0,
       "unwrap_or_default": 0
     },
-    "crates/jcode-desktop/src/desktop_prefs.rs": {
+    "crates/minnal-desktop/src/desktop_prefs.rs": {
       "dot_ok": 1,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-desktop/src/main.rs": {
+    "crates/minnal-desktop/src/main.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-desktop/src/render_helpers.rs": {
+    "crates/minnal-desktop/src/render_helpers.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-desktop/src/session_data.rs": {
+    "crates/minnal-desktop/src/session_data.rs": {
       "dot_ok": 1,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-desktop/src/session_launch.rs": {
+    "crates/minnal-desktop/src/session_launch.rs": {
       "dot_ok": 3,
       "let_underscore": 7,
       "unwrap_or_default": 0
     },
-    "crates/jcode-desktop/src/single_session.rs": {
+    "crates/minnal-desktop/src/single_session.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 13
     },
-    "crates/jcode-desktop/src/single_session_render.rs": {
+    "crates/minnal-desktop/src/single_session_render.rs": {
       "dot_ok": 1,
       "let_underscore": 0,
       "unwrap_or_default": 0
     },
-    "crates/jcode-desktop/src/workspace.rs": {
+    "crates/minnal-desktop/src/workspace.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 2
     },
-    "crates/jcode-mobile-core/src/visual.rs": {
+    "crates/minnal-mobile-core/src/visual.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-mobile-sim/src/gpu_preview.rs": {
+    "crates/minnal-mobile-sim/src/gpu_preview.rs": {
       "dot_ok": 7,
       "let_underscore": 0,
       "unwrap_or_default": 0
     },
-    "crates/jcode-mobile-sim/src/lib.rs": {
+    "crates/minnal-mobile-sim/src/lib.rs": {
       "dot_ok": 0,
       "let_underscore": 2,
       "unwrap_or_default": 4
     },
-    "crates/jcode-mobile-sim/src/main.rs": {
+    "crates/minnal-mobile-sim/src/main.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-notify-email/src/lib.rs": {
+    "crates/minnal-notify-email/src/lib.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-provider-core/src/openai_schema.rs": {
+    "crates/minnal-provider-core/src/openai_schema.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-provider-gemini/src/lib.rs": {
+    "crates/minnal-provider-gemini/src/lib.rs": {
       "dot_ok": 2,
       "let_underscore": 0,
       "unwrap_or_default": 1
     },
-    "crates/jcode-provider-metadata/src/lib.rs": {
+    "crates/minnal-provider-metadata/src/lib.rs": {
       "dot_ok": 1,
       "let_underscore": 0,
       "unwrap_or_default": 0
     },
-    "crates/jcode-provider-openrouter/src/lib.rs": {
+    "crates/minnal-provider-openrouter/src/lib.rs": {
       "dot_ok": 14,
       "let_underscore": 4,
       "unwrap_or_default": 0
     },
-    "crates/jcode-tui-workspace/src/workspace_map.rs": {
+    "crates/minnal-tui-workspace/src/workspace_map.rs": {
       "dot_ok": 0,
       "let_underscore": 0,
       "unwrap_or_default": 1
@@ -526,7 +526,7 @@
       "let_underscore": 20,
       "unwrap_or_default": 3
     },
-    "src/provider/jcode.rs": {
+    "src/provider/minnal.rs": {
       "dot_ok": 0,
       "let_underscore": 3,
       "unwrap_or_default": 0

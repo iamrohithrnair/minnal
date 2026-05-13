@@ -1,6 +1,6 @@
 #[test]
 fn test_cancel_pending_provider_failover_clears_countdown() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         write_test_config("[provider]\ncross_provider_failover = \"countdown\"\n");
         let (mut app, _active_provider) = create_switchable_test_app("claude");
         let prompt = crate::provider::ProviderFailoverPrompt {
@@ -108,7 +108,7 @@ impl Provider for SwitchableMockProvider {
 }
 
 fn create_switchable_test_app(initial_provider: &str) -> (App, StdArc<StdMutex<String>>) {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -240,7 +240,7 @@ impl Provider for AsyncAuthRefreshingMockProvider {
 }
 
 fn create_auth_refresh_test_app() -> App {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -323,7 +323,7 @@ impl Provider for AntigravityMockProvider {
 }
 
 fn create_antigravity_picker_test_app() -> App {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -449,7 +449,7 @@ impl Provider for LoginSmokeModelProvider {
 }
 
 fn create_login_smoke_model_app() -> App {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -506,7 +506,7 @@ impl Provider for FailingModelSwitchProvider {
 }
 
 fn create_failing_model_switch_test_app() -> App {
-    ensure_test_jcode_home_if_unset();
+    ensure_test_minnal_home_if_unset();
     clear_persisted_test_ui_state();
     crate::tui::ui::clear_test_render_state_for_tests();
 
@@ -527,7 +527,7 @@ fn write_test_config(contents: &str) {
 
 fn failover_error_message(prompt: &crate::provider::ProviderFailoverPrompt) -> String {
     format!(
-        "[jcode-provider-failover]{}\nignored",
+        "[minnal-provider-failover]{}\nignored",
         serde_json::to_string(prompt).expect("serialize failover prompt")
     )
 }

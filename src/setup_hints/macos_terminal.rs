@@ -78,7 +78,7 @@ struct MacTerminalPreference {
 }
 
 fn mac_terminal_pref_path() -> Result<PathBuf> {
-    Ok(storage::jcode_dir()?.join("preferred_terminal.json"))
+    Ok(storage::minnal_dir()?.join("preferred_terminal.json"))
 }
 
 fn load_preferred_macos_terminal() -> Option<MacTerminalKind> {
@@ -140,10 +140,10 @@ pub(super) fn escape_applescript_text(input: &str) -> String {
     input.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-pub(super) fn paused_jcode_shell_command(exe_path: &str) -> String {
+pub(super) fn paused_minnal_shell_command(exe_path: &str) -> String {
     let escaped_exe = escape_shell_single_quotes(exe_path);
     format!(
-        r#"if [ ! -x '{exe}' ]; then printf 'jcode executable not found.\n'; exit 127; fi; '{exe}'; status=$?; if [ "$status" -ne 0 ]; then printf '\nJcode exited with status %s.\n' "$status"; printf 'Press Enter to close... '; read -r _; fi; exit "$status""#,
+        r#"if [ ! -x '{exe}' ]; then printf 'minnal executable not found.\n'; exit 127; fi; '{exe}'; status=$?; if [ "$status" -ne 0 ]; then printf '\nMinnal exited with status %s.\n' "$status"; printf 'Press Enter to close... '; read -r _; fi; exit "$status""#,
         exe = escaped_exe,
     )
 }

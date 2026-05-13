@@ -119,7 +119,7 @@ impl McpManagementTool {
                 "No MCP servers connected.\n\n\
                 To connect a server, use:\n\
                 {\"action\": \"connect\", \"server\": \"name\", \"command\": \"/path/to/server\", \"args\": []}\n\n\
-                Or add servers to ~/.jcode/mcp.json or .jcode/mcp.json and use {\"action\": \"reload\"}.\n\
+                Or add servers to ~/.minnal/mcp.json or .minnal/mcp.json and use {\"action\": \"reload\"}.\n\
                 .claude/mcp.json is also supported for compatibility."
             ).with_title("MCP: No servers"));
         }
@@ -280,7 +280,7 @@ impl McpManagementTool {
             }
             return Ok(ToolOutput::new(
                 "No servers found in config.\n\n\
-                Add servers to ~/.jcode/mcp.json (global) or .jcode/mcp.json (project):\n\
+                Add servers to ~/.minnal/mcp.json (global) or .minnal/mcp.json (project):\n\
                 {\n  \"servers\": {\n    \"server-name\": {\n      \"command\": \"/path/to/server\",\n      \"args\": [],\n      \"env\": {},\n      \"shared\": true\n    }\n  }\n}\n\n\
                 .claude/mcp.json is also supported for compatibility."
             ).with_title("MCP: Empty config"));
@@ -377,7 +377,7 @@ mod tests {
 
     impl LocalMcpConfigGuard {
         fn new(content: &str) -> std::io::Result<Self> {
-            let path = PathBuf::from(".jcode/mcp.json");
+            let path = PathBuf::from(".minnal/mcp.json");
             let dir = path
                 .parent()
                 .ok_or_else(|| std::io::Error::other("missing parent"))?;
@@ -496,8 +496,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_reload_empty_config() {
-        let _guard =
-            LocalMcpConfigGuard::new("{\"servers\":{}}").expect("create temporary .jcode/mcp.json");
+        let _guard = LocalMcpConfigGuard::new("{\"servers\":{}}")
+            .expect("create temporary .minnal/mcp.json");
         let tool = create_test_tool();
         let ctx = create_test_context();
         let input = json!({"action": "reload"});

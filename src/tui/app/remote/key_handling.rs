@@ -818,7 +818,7 @@ async fn handle_remote_key_internal(
                             app.remote_session_id
                                 .clone()
                                 .or_else(|| Some(app.session.id.clone())),
-                            "**Model List Refresh Started**\n\nAsked the remote server to refresh the provider model catalog. Jcode will show the discovered model and route changes when the server responds.",
+                            "**Model List Refresh Started**\n\nAsked the remote server to refresh the provider model catalog. Minnal will show the discovered model and route changes when the server responds.",
                             Some("Refreshing model list..."),
                         ),
                     );

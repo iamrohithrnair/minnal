@@ -1,1 +1,1 @@
-pub(crate) use jcode_tui_style::color::*;
+pub(crate) use minnal_tui_style::color::*;

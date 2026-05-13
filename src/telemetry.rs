@@ -2,7 +2,8 @@ use crate::storage;
 mod lifecycle;
 mod state_support;
 use chrono::{DateTime, NaiveDate, Utc};
-use jcode_usage_types::{
+use lifecycle::emit_lifecycle_event;
+use minnal_usage_types::{
     AuthEvent, ErrorCounts, FeedbackEvent, InstallEvent, OnboardingStepEvent,
     SessionLifecycleEvent, SessionStartEvent, TelemetryProjectProfile as ProjectProfile,
     TelemetryToolCategory as ToolCategory, TelemetryWorkflowCounts, TurnEndEvent, UpgradeEvent,
@@ -11,8 +12,7 @@ use jcode_usage_types::{
     mcp_telemetry_server_name as mcp_server_name, sanitize_feedback_text, sanitize_telemetry_label,
     telemetry_workflow_flags_from_counts,
 };
-pub use jcode_usage_types::{ErrorCategory, SessionEndReason};
-use lifecycle::emit_lifecycle_event;
+pub use minnal_usage_types::{ErrorCategory, SessionEndReason};
 use serde_json::Value;
 use state_support::*;
 use std::collections::HashSet;
@@ -20,7 +20,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 
-const TELEMETRY_ENDPOINT: &str = "https://jcode-telemetry.jeremyhuang55555.workers.dev/v1/event";
+const TELEMETRY_ENDPOINT: &str = "https://minnal-telemetry.jeremyhuang55555.workers.dev/v1/event";
 const ASYNC_SEND_TIMEOUT: Duration = Duration::from_secs(5);
 const BLOCKING_INSTALL_TIMEOUT: Duration = Duration::from_millis(1200);
 const BLOCKING_LIFECYCLE_TIMEOUT: Duration = Duration::from_millis(800);
@@ -254,10 +254,10 @@ enum DeliveryMode {
 }
 
 pub fn is_enabled() -> bool {
-    if std::env::var("JCODE_NO_TELEMETRY").is_ok() || std::env::var("DO_NOT_TRACK").is_ok() {
+    if std::env::var("MINNAL_NO_TELEMETRY").is_ok() || std::env::var("DO_NOT_TRACK").is_ok() {
         return false;
     }
-    if let Ok(dir) = storage::jcode_dir()
+    if let Ok(dir) = storage::minnal_dir()
         && dir.join("no_telemetry").exists()
     {
         return false;
@@ -436,7 +436,7 @@ fn detect_project_profile() -> ProjectProfile {
     let Some(root) = cwd.as_deref() else {
         return profile;
     };
-    profile.repo_present = root.join(".git").exists() || crate::build::is_jcode_repo(root);
+    profile.repo_present = root.join(".git").exists() || crate::build::is_minnal_repo(root);
     let mut scanned_files = 0usize;
     for entry in walkdir::WalkDir::new(root)
         .max_depth(3)
@@ -785,7 +785,7 @@ pub fn record_command_family(command: &str) {
 
 fn post_payload(payload: serde_json::Value, timeout: Duration) -> bool {
     let client = match reqwest::blocking::Client::builder()
-        .user_agent(crate::provider::JCODE_USER_AGENT)
+        .user_agent(crate::provider::MINNAL_USER_AGENT)
         .timeout(timeout)
         .build()
     {
@@ -1716,11 +1716,11 @@ pub fn current_provider_model() -> Option<(String, String)> {
 
 fn show_first_run_notice() {
     eprintln!("\x1b[90m");
-    eprintln!("  jcode collects anonymous usage statistics (install count, version, OS,");
+    eprintln!("  minnal collects anonymous usage statistics (install count, version, OS,");
     eprintln!("  session activity, tool counts, and crash/exit reasons). No code, filenames,");
     eprintln!("  prompts, or personal data is sent.");
-    eprintln!("  To opt out: export JCODE_NO_TELEMETRY=1");
-    eprintln!("  Details: https://github.com/1jehuang/jcode/blob/master/TELEMETRY.md");
+    eprintln!("  To opt out: export MINNAL_NO_TELEMETRY=1");
+    eprintln!("  Details: https://github.com/1jehuang/minnal/blob/master/TELEMETRY.md");
     eprintln!("\x1b[0m");
 }
 

@@ -39,7 +39,7 @@ pub(super) fn launch_client_executable() -> PathBuf {
     crate::build::client_update_candidate(crate::cli::selfdev::client_selfdev_requested())
         .map(|(path, _label)| path)
         .or_else(|| std::env::current_exe().ok())
-        .unwrap_or_else(|| PathBuf::from("jcode"))
+        .unwrap_or_else(|| PathBuf::from("minnal"))
 }
 
 pub(super) fn partition_queued_messages(
@@ -90,18 +90,18 @@ pub(super) fn ctrl_bracket_fallback_to_esc(_code: &mut KeyCode, _modifiers: &mut
 
 /// Debug command file path
 pub(super) fn debug_cmd_path() -> PathBuf {
-    if let Ok(path) = std::env::var("JCODE_DEBUG_CMD_PATH") {
+    if let Ok(path) = std::env::var("MINNAL_DEBUG_CMD_PATH") {
         return PathBuf::from(path);
     }
-    std::env::temp_dir().join("jcode_debug_cmd")
+    std::env::temp_dir().join("minnal_debug_cmd")
 }
 
 /// Debug response file path
 pub(super) fn debug_response_path() -> PathBuf {
-    if let Ok(path) = std::env::var("JCODE_DEBUG_RESPONSE_PATH") {
+    if let Ok(path) = std::env::var("MINNAL_DEBUG_RESPONSE_PATH") {
         return PathBuf::from(path);
     }
-    std::env::temp_dir().join("jcode_debug_response")
+    std::env::temp_dir().join("minnal_debug_response")
 }
 
 /// Parse rate limit reset time from error message
@@ -370,7 +370,7 @@ pub(super) fn mask_email(email: &str) -> String {
     format!("{}@{}", masked_local, domain)
 }
 
-/// Spawn a new terminal window that resumes a jcode session.
+/// Spawn a new terminal window that resumes a minnal session.
 /// Returns Ok(true) if a terminal was successfully launched, Ok(false) if no terminal found.
 fn resume_invocation_args(session_id: &str, socket: Option<&str>) -> Vec<String> {
     let mut args = vec![
@@ -397,7 +397,7 @@ pub(super) fn build_resume_command(
     socket: Option<&str>,
 ) -> (PathBuf, Vec<String>, String) {
     match target {
-        ResumeTarget::JcodeSession { session_id } => {
+        ResumeTarget::MinnalSession { session_id } => {
             let exe = launch_client_executable();
             let args = resume_invocation_args(session_id, socket);
             let title = resumed_window_title(session_id);
@@ -472,9 +472,9 @@ fn resumed_window_title(session_id: &str) -> String {
     if let Some(server_info) =
         crate::registry::find_server_by_socket_sync(&crate::server::socket_path())
     {
-        format!("{} jcode/{} {}", icon, server_info.name, session_label)
+        format!("{} minnal/{} {}", icon, server_info.name, session_label)
     } else {
-        format!("{} jcode {}", icon, session_label)
+        format!("{} minnal {}", icon, session_label)
     }
 }
 
@@ -573,7 +573,7 @@ pub(super) fn clipboard_image() -> Option<(String, String)> {
     // macOS: use osascript to check clipboard for images and save as PNG via temp file
     #[cfg(target_os = "macos")]
     {
-        let temp_path = std::env::temp_dir().join("jcode_clipboard.png");
+        let temp_path = std::env::temp_dir().join("minnal_clipboard.png");
         let script = format!(
             r#"use framework \"AppKit\"
             set pb to current application's NSPasteboard's generalPasteboard()

@@ -319,11 +319,11 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        let base = std::env::temp_dir().join(format!("jcode-test-{}", nonce));
+        let base = std::env::temp_dir().join(format!("minnal-test-{}", nonce));
         let _ = std::fs::create_dir_all(base.join("sessions"));
 
-        let previous_home = std::env::var("JCODE_HOME").ok();
-        crate::env::set_var("JCODE_HOME", &base);
+        let previous_home = std::env::var("MINNAL_HOME").ok();
+        crate::env::set_var("MINNAL_HOME", &base);
 
         let session_id = format!("test-session-{}", nonce);
         let mut session = Session::create_with_id(session_id.clone(), None, None);
@@ -347,9 +347,9 @@ mod tests {
 
     fn restore_env(base: std::path::PathBuf, previous_home: Option<String>) {
         if let Some(prev) = previous_home {
-            crate::env::set_var("JCODE_HOME", prev);
+            crate::env::set_var("MINNAL_HOME", prev);
         } else {
-            crate::env::remove_var("JCODE_HOME");
+            crate::env::remove_var("MINNAL_HOME");
         }
         let _ = std::fs::remove_dir_all(base);
     }

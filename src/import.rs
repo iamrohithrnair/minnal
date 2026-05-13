@@ -1,13 +1,13 @@
-//! Import Claude Code sessions into jcode
+//! Import Claude Code sessions into minnal
 //!
 //! This module handles discovering, parsing, and converting Claude Code sessions
-//! so they can be resumed within jcode.
+//! so they can be resumed within minnal.
 
 use crate::message::{ContentBlock, Role};
 use crate::session::{Session, SessionStatus, StoredMessage};
 use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
-use jcode_import_core::{
+use minnal_import_core::{
     ClaudeCodeContent, ClaudeCodeContentBlock, ClaudeCodeEntry, ClaudeCodeSessionInfo,
     SessionIndexEntry, SessionsIndex, claude_code_session_info_from_index,
     claude_text_from_content, clean_optional_text, codex_title_candidate, collect_files_recursive,
@@ -15,7 +15,7 @@ use jcode_import_core::{
     ordered_claude_code_message_entries, parse_rfc3339_json, parse_rfc3339_string,
     resolve_claude_session_path, truncate_title,
 };
-pub use jcode_import_core::{
+pub use minnal_import_core::{
     imported_claude_code_session_id, imported_codex_session_id, imported_opencode_session_id,
     imported_pi_session_id,
 };
@@ -321,7 +321,7 @@ fn find_session_file(session_id: &str) -> Result<PathBuf> {
     anyhow::bail!("Session {} not found", session_id);
 }
 
-/// Convert Claude Code content blocks to jcode ContentBlocks
+/// Convert Claude Code content blocks to minnal ContentBlocks
 fn convert_content_blocks(content: &ClaudeCodeContent) -> Vec<ContentBlock> {
     match content {
         ClaudeCodeContent::Empty => vec![],
@@ -379,7 +379,7 @@ pub fn imported_session_id_for_target(
     target: &crate::tui::session_picker::ResumeTarget,
 ) -> Option<String> {
     match target {
-        crate::tui::session_picker::ResumeTarget::JcodeSession { session_id } => {
+        crate::tui::session_picker::ResumeTarget::MinnalSession { session_id } => {
             Some(session_id.clone())
         }
         crate::tui::session_picker::ResumeTarget::ClaudeCodeSession { session_id, .. } => {
@@ -397,14 +397,14 @@ pub fn imported_session_id_for_target(
     }
 }
 
-pub fn resolve_resume_target_to_jcode(
+pub fn resolve_resume_target_to_minnal(
     target: &crate::tui::session_picker::ResumeTarget,
 ) -> Result<crate::tui::session_picker::ResumeTarget> {
     use crate::tui::session_picker::ResumeTarget;
 
     let session_id = match target {
-        ResumeTarget::JcodeSession { session_id } => {
-            return Ok(ResumeTarget::JcodeSession {
+        ResumeTarget::MinnalSession { session_id } => {
+            return Ok(ResumeTarget::MinnalSession {
                 session_id: session_id.clone(),
             });
         }
@@ -435,7 +435,7 @@ pub fn resolve_resume_target_to_jcode(
         }
     };
 
-    Ok(ResumeTarget::JcodeSession { session_id })
+    Ok(ResumeTarget::MinnalSession { session_id })
 }
 
 pub fn import_external_resume_id(resume_id: &str) -> Result<Option<String>> {
@@ -528,9 +528,9 @@ pub fn import_session_from_file(path: &Path, session_id: &str) -> Result<Session
                 .and_then(|s| s.summary.or(Some(s.first_prompt)))
         });
 
-    // Create jcode session
-    let jcode_session_id = imported_claude_code_session_id(session_id);
-    let mut session = Session::create_with_id(jcode_session_id, None, title);
+    // Create minnal session
+    let minnal_session_id = imported_claude_code_session_id(session_id);
+    let mut session = Session::create_with_id(minnal_session_id, None, title);
     session.provider_session_id = Some(session_id.to_string());
     session.provider_key = Some("claude-code".to_string());
     session.working_dir = working_dir;

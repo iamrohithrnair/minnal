@@ -42,38 +42,38 @@ impl App {
             );
             if let Some(target) = callback_target {
                 notices.push(format!(
-                    "Local callback target `{}` is unavailable, so jcode is using manual-safe paste completion instead.",
+                    "Local callback target `{}` is unavailable, so minnal is using manual-safe paste completion instead.",
                     target
                 ));
             } else {
                 notices.push(
-                    "The local callback listener is unavailable, so jcode is using manual-safe paste completion instead."
+                    "The local callback listener is unavailable, so minnal is using manual-safe paste completion instead."
                         .to_string(),
                 );
             }
         }
         if !notices.is_empty() {
             notices.push(format!(
-                "If login still fails, run `jcode auth doctor {}` for a guided diagnosis.",
+                "If login still fails, run `minnal auth doctor {}` for a guided diagnosis.",
                 provider_id
             ));
         }
         notices.join("\n")
     }
 
-    pub(super) fn show_jcode_subscription_status(&mut self) {
+    pub(super) fn show_minnal_subscription_status(&mut self) {
         let configured_key = crate::subscription_catalog::configured_api_key().is_some();
         let configured_base = crate::subscription_catalog::configured_api_base()
-            .unwrap_or_else(|| crate::subscription_catalog::DEFAULT_JCODE_API_BASE.to_string());
+            .unwrap_or_else(|| crate::subscription_catalog::DEFAULT_MINNAL_API_BASE.to_string());
         let runtime_mode = crate::subscription_catalog::is_runtime_mode_enabled();
 
-        let mut message = String::from("**Jcode Subscription Status**\n\n");
+        let mut message = String::from("**Minnal Subscription Status**\n\n");
         message.push_str(&format!(
             "- Credentials: {}\n",
             if configured_key {
                 "configured"
             } else {
-                "not configured (`/login jcode`)"
+                "not configured (`/login minnal`)"
             }
         ));
         message.push_str(&format!(
@@ -113,8 +113,8 @@ impl App {
 
         message.push_str("\n**Planned tiers**\n\n");
         for tier in [
-            crate::subscription_catalog::JcodeTier::Starter20,
-            crate::subscription_catalog::JcodeTier::Pro100,
+            crate::subscription_catalog::MinnalTier::Starter20,
+            crate::subscription_catalog::MinnalTier::Pro100,
         ] {
             message.push_str(&format!(
                 "- {} — ${}/mo retail, about ${:.2} usable inference budget\n",
@@ -125,7 +125,7 @@ impl App {
         }
 
         message.push_str(
-            "\nUsage/billing reporting is not live yet; this command is a scaffold for the curated jcode-managed subscription path.",
+            "\nUsage/billing reporting is not live yet; this command is a scaffold for the curated minnal-managed subscription path.",
         );
 
         self.push_display_message(DisplayMessage::system(message));
@@ -158,7 +158,7 @@ impl App {
             ));
         }
         message.push_str(
-            "\nUse `/login <provider>` to authenticate. `/login jcode` is for curated jcode subscription access; `/account` opens the provider/account management center, `/account <provider> settings` shows provider-specific controls, and `/auth doctor` or `/account <provider> doctor` shows recovery steps.",
+            "\nUse `/login <provider>` to authenticate. `/login minnal` is for curated minnal subscription access; `/account` opens the provider/account management center, `/account <provider> settings` shows provider-specific controls, and `/auth doctor` or `/account <provider> doctor` shows recovery steps.",
         );
         self.push_display_message(DisplayMessage::system(message));
     }
@@ -201,7 +201,7 @@ impl App {
                     }
                 }
             }
-            crate::provider_catalog::LoginProviderTarget::Jcode => self.start_jcode_login(),
+            crate::provider_catalog::LoginProviderTarget::Minnal => self.start_minnal_login(),
             crate::provider_catalog::LoginProviderTarget::Claude => self.start_claude_login(),
             crate::provider_catalog::LoginProviderTarget::OpenAi => self.start_openai_login(),
             crate::provider_catalog::LoginProviderTarget::OpenAiApiKey => {
@@ -227,7 +227,7 @@ impl App {
                     provider.auth_kind.label(),
                 );
                 self.push_display_message(DisplayMessage::error(
-                    "Google/Gmail login is only available from the CLI right now. Run `jcode login --provider google`."
+                    "Google/Gmail login is only available from the CLI right now. Run `minnal login --provider google`."
                         .to_string(),
                 ));
             }
@@ -247,16 +247,16 @@ impl App {
         self.start_claude_login_for_account(&label);
     }
 
-    fn start_jcode_login(&mut self) {
+    fn start_minnal_login(&mut self) {
         self.push_display_message(DisplayMessage::system(
-            "**Jcode Subscription Login**\n\n\
+            "**Minnal Subscription Login**\n\n\
              This doesn't exist yet.\n\n\
-             This would be a jcode subscription for a curated list of models chosen for good compatibility with jcode. It would work similarly to OpenRouter, but jcode would pick the best model/provider routes by balancing price, performance, KV cache support, latency, and throughput. Right now, the model of choice would be DeepSeek V4 Pro.\n\n\
-             The goal would be to maximize the amount of token usage you get for your subscription. The plan is to stay around zero profit until jcode can beat raw API prices while providing some level of competitive subsidization. This subscription would be required for the mobile app version.\n\n\
+             This would be a minnal subscription for a curated list of models chosen for good compatibility with minnal. It would work similarly to OpenRouter, but minnal would pick the best model/provider routes by balancing price, performance, KV cache support, latency, and throughput. Right now, the model of choice would be DeepSeek V4 Pro.\n\n\
+             The goal would be to maximize the amount of token usage you get for your subscription. The plan is to stay around zero profit until minnal can beat raw API prices while providing some level of competitive subsidization. This subscription would be required for the mobile app version.\n\n\
              If you are interested in this, please send feedback letting me know."
                 .to_string(),
         ));
-        self.set_status_notice("Login: jcode unavailable");
+        self.set_status_notice("Login: minnal unavailable");
     }
 
     pub(super) fn start_claude_login_for_account(&mut self, label: &str) {
@@ -921,7 +921,7 @@ impl App {
         let provider_id = openai_compatible_profile
             .map(|profile| profile.id.to_string())
             .unwrap_or_else(|| match key_name {
-                crate::subscription_catalog::JCODE_API_KEY_ENV => "jcode".to_string(),
+                crate::subscription_catalog::MINNAL_API_KEY_ENV => "minnal".to_string(),
                 "OPENROUTER_API_KEY" => "openrouter".to_string(),
                 _ => provider.to_ascii_lowercase().replace(' ', "-"),
             });
@@ -947,7 +947,7 @@ impl App {
     fn start_azure_login(&mut self) {
         self.push_display_message(DisplayMessage::system(
             "**Azure OpenAI Login**\n\n\
-             jcode uses Azure OpenAI's `/openai/v1` API with either Microsoft Entra ID or an API key.\n\n\
+             minnal uses Azure OpenAI's `/openai/v1` API with either Microsoft Entra ID or an API key.\n\n\
              Enter your Azure OpenAI endpoint, for example `https://your-resource.openai.azure.com`, or type `/cancel` to abort."
                 .to_string(),
         ));
@@ -962,7 +962,7 @@ impl App {
             "**Cursor API Key**\n\n\
              Get your API key from: https://cursor.com/settings\n\
              (Dashboard > Integrations > User API Keys)\n\n\
-             jcode will save it securely and use the native Cursor HTTPS transport.\n\n\
+             minnal will save it securely and use the native Cursor HTTPS transport.\n\n\
              **Paste your API key below**, or type `/cancel` to abort."
                 .to_string(),
         ));
@@ -1511,13 +1511,13 @@ impl App {
                                 )
                             }
                         })()
-                    } else if key_name == crate::subscription_catalog::JCODE_API_KEY_ENV {
+                    } else if key_name == crate::subscription_catalog::MINNAL_API_KEY_ENV {
                         (|| {
                             let mut content = format!("{}={}\n", key_name, key);
                             if let Some(base) = crate::subscription_catalog::configured_api_base() {
                                 content.push_str(&format!(
                                     "{}={}\n",
-                                    crate::subscription_catalog::JCODE_API_BASE_ENV,
+                                    crate::subscription_catalog::MINNAL_API_BASE_ENV,
                                     base
                                 ));
                             }
@@ -1551,7 +1551,7 @@ impl App {
                         if key_name == crate::provider::bedrock::API_KEY_ENV {
                             crate::cli::provider_init::lock_model_provider("bedrock");
                             if let Some(default_model) = default_model.as_deref() {
-                                crate::env::set_var("JCODE_BEDROCK_MODEL", default_model);
+                                crate::env::set_var("MINNAL_BEDROCK_MODEL", default_model);
                             }
                         }
 
@@ -1572,23 +1572,24 @@ impl App {
                         let model_hint = effective_default_model
                             .map(|m| format!("\nSuggested default model: `{}`", m))
                             .unwrap_or_default();
-                        let guidance = if key_name == crate::subscription_catalog::JCODE_API_KEY_ENV
+                        let guidance = if key_name
+                            == crate::subscription_catalog::MINNAL_API_KEY_ENV
                         {
                             format!(
-                                "Use `/login jcode` to access curated models via your router. If the model list looks stale, run `/refresh-model-list`.\nDocs: {}",
+                                "Use `/login minnal` to access curated models via your router. If the model list looks stale, run `/refresh-model-list`.\nDocs: {}",
                                 docs_url
                             )
                         } else if let Some(resolved) = resolved_openai_compatible.as_ref() {
                             if resolved.requires_api_key {
-                                "Fetching models now. Jcode will switch to an accessible model returned by the live catalog and show the catalog diff when discovery finishes. If the model list looks stale, run `/refresh-model-list`.".to_string()
+                                "Fetching models now. Minnal will switch to an accessible model returned by the live catalog and show the catalog diff when discovery finishes. If the model list looks stale, run `/refresh-model-list`.".to_string()
                             } else {
                                 format!(
-                                    "Local endpoint configured at `{}`. Fetching models now; Jcode will switch to an accessible model returned by the live catalog and show the catalog diff when discovery finishes. If the model list looks stale, run `/refresh-model-list`.",
+                                    "Local endpoint configured at `{}`. Fetching models now; Minnal will switch to an accessible model returned by the live catalog and show the catalog diff when discovery finishes. If the model list looks stale, run `/refresh-model-list`.",
                                     endpoint.as_deref().unwrap_or(resolved.api_base.as_str()),
                                 )
                             }
                         } else if key_name == crate::provider::bedrock::API_KEY_ENV {
-                            "You can now use `/model` to switch to Bedrock models. TUI onboarding saved region `us-east-2`; for a different region, run `jcode login --provider bedrock` from a terminal.".to_string()
+                            "You can now use `/model` to switch to Bedrock models. TUI onboarding saved region `us-east-2`; for a different region, run `minnal login --provider bedrock` from a terminal.".to_string()
                         } else if key_name == "OPENROUTER_API_KEY" {
                             "You can now use `/model` to switch to OpenRouter models. If the model list looks stale, run `/refresh-model-list`.".to_string()
                         } else {
@@ -1612,7 +1613,7 @@ impl App {
                             success: true,
                             message: format!(
                                 "**{}.**\n\n\
-                                 Stored at `~/.config/jcode/{}`.\n\
+                                 Stored at `~/.config/minnal/{}`.\n\
                                  {}{}",
                                 saved_label, env_file, guidance, model_hint
                             ),
@@ -1662,7 +1663,7 @@ impl App {
                         }
                     };
                     if let Err(err) = crate::provider_catalog::save_env_value_to_env_file(
-                        "JCODE_OPENAI_COMPAT_API_BASE",
+                        "MINNAL_OPENAI_COMPAT_API_BASE",
                         crate::provider_catalog::OPENAI_COMPAT_PROFILE.env_file,
                         Some(&normalized),
                     ) {
@@ -1797,8 +1798,8 @@ impl App {
                             provider: "cursor".to_string(),
                             success: true,
                             message: "**Cursor API key saved.**\n\n\
-                             Stored at `~/.config/jcode/cursor.env`.\n\
-                             jcode will use it with the native Cursor HTTPS transport."
+                             Stored at `~/.config/minnal/cursor.env`.\n\
+                             minnal will use it with the native Cursor HTTPS transport."
                                 .to_string(),
                         }));
                     }
@@ -1972,7 +1973,7 @@ impl App {
             crate::bus::UiActivity::catalog(
                 Some(self.session.id.clone()),
                 format!(
-                    "**{} Model Discovery Started**\n\nSaved credentials are active. Jcode is fetching the live model catalog, will only switch to a model returned by that catalog, and will show what changed when discovery finishes.",
+                    "**{} Model Discovery Started**\n\nSaved credentials are active. Minnal is fetching the live model catalog, will only switch to a model returned by that catalog, and will show what changed when discovery finishes.",
                     provider_label
                 ),
                 Some(format!("{}: fetching models...", provider_label)),
@@ -2087,7 +2088,7 @@ impl App {
                                 crate::bus::UiActivity::catalog(
                                     Some(session_id),
                                     format!(
-                                        "**{} Model Discovery Still Updating**\n\nSaved credentials are active, but this local refresh pass did not find a selectable {} route yet. Jcode is still processing the auth-change catalog refresh and will switch once provider routes are available. If the model list still looks stale after the auth catalog update, run `/refresh-model-list`.",
+                                        "**{} Model Discovery Still Updating**\n\nSaved credentials are active, but this local refresh pass did not find a selectable {} route yet. Minnal is still processing the auth-change catalog refresh and will switch once provider routes are available. If the model list still looks stale after the auth catalog update, run `/refresh-model-list`.",
                                         provider_label, provider_label
                                     ),
                                     Some(format!(
@@ -2103,7 +2104,7 @@ impl App {
                             crate::bus::UiActivity::catalog(
                                 Some(session_id),
                                 format!(
-                                    "**{} Model Discovery Still Updating**\n\nSaved credentials are active, but this local refresh pass failed before the server auth-change catalog refresh finished. Jcode is still processing the auth-change catalog refresh and will switch once provider routes are available. If the model list still looks stale after the auth catalog update, run `/refresh-model-list`.\n\nLocal refresh error: {}",
+                                    "**{} Model Discovery Still Updating**\n\nSaved credentials are active, but this local refresh pass failed before the server auth-change catalog refresh finished. Minnal is still processing the auth-change catalog refresh and will switch once provider routes are available. If the model list still looks stale after the auth catalog update, run `/refresh-model-list`.\n\nLocal refresh error: {}",
                                     provider_label, error
                                 ),
                                 Some(format!(
@@ -2303,7 +2304,7 @@ impl App {
             success: true,
             message: format!(
                 "**Azure OpenAI configuration saved.**\n\n\
-                 Stored at `~/.config/jcode/{}`.\n\
+                 Stored at `~/.config/minnal/{}`.\n\
                  {}\n\n\
                  Use `/model` after your Azure deployment exists. If the model list looks stale, run `/refresh-model-list`.",
                 crate::auth::azure::ENV_FILE,
@@ -2323,7 +2324,7 @@ fn save_tui_openai_compatible_api_base(
             anyhow::anyhow!("OpenAI-compatible API base must be https://... or http://localhost.")
         })?;
         crate::provider_catalog::save_env_value_to_env_file(
-            "JCODE_OPENAI_COMPAT_API_BASE",
+            "MINNAL_OPENAI_COMPAT_API_BASE",
             crate::provider_catalog::OPENAI_COMPAT_PROFILE.env_file,
             Some(&normalized),
         )?;

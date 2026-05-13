@@ -25,8 +25,8 @@ mod ui_diff;
 pub mod usage_overlay;
 pub mod visual_debug;
 pub mod workspace_client;
-pub use jcode_tui_workspace::workspace_map;
-pub use jcode_tui_workspace::workspace_map_widget;
+pub use minnal_tui_workspace::workspace_map;
+pub use minnal_tui_workspace::workspace_map_widget;
 
 pub use app::{App, CopyBadgeUiState, ProcessingStatus, RunResult};
 pub use generated_image::{
@@ -56,10 +56,10 @@ pub(crate) fn scheduled_notification_text(
 }
 
 pub(crate) use self::core::DisplayMessageRoleExt;
-pub use jcode_tui_core::{
+pub use minnal_tui_core::{
     CopySelectionPane, CopySelectionPoint, CopySelectionRange, CopySelectionStatus,
 };
-pub use jcode_tui_messages::DisplayMessage;
+pub use minnal_tui_messages::DisplayMessage;
 
 fn keyboard_enhancement_flags() -> crossterm::event::KeyboardEnhancementFlags {
     use crossterm::event::KeyboardEnhancementFlags;
@@ -376,7 +376,7 @@ pub fn cache_ttl_for_provider_model(provider: &str, model: Option<&str>) -> Opti
             }
         }
         "openrouter" => Some(300),
-        "jcode subscription" => Some(300),
+        "minnal subscription" => Some(300),
         "gemini" => Some(300),
         "copilot" => None,
         "cursor" => None,
@@ -444,7 +444,7 @@ fn supports_reliable_zero_cache_read_warning(
         return true;
     }
 
-    // OpenRouter/Jcode-subscription routes can only be treated as reliable for zero-read
+    // OpenRouter/Minnal-subscription routes can only be treated as reliable for zero-read
     // warnings once the upstream provider identifies a known cache-reporting family.
     // A bare OpenRouter route with cached_tokens=0 is not enough: some upstreams simply
     // do not implement prompt caching, and warning on those would make the UI untrustworthy.
@@ -1138,7 +1138,7 @@ pub(crate) fn subscribe_metadata() -> (Option<String>, Option<bool>) {
     if !selfdev && let Some(ref dir) = working_dir {
         let mut current = Some(dir.as_path());
         while let Some(path) = current {
-            if crate::build::is_jcode_repo(path) {
+            if crate::build::is_minnal_repo(path) {
                 selfdev = true;
                 break;
             }

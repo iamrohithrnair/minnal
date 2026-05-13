@@ -3,15 +3,15 @@
 # update the stable + current channel symlinks, and point the launcher at current.
 #
 # Paths after install:
-# - ~/.jcode/builds/versions/<hash>/jcode (immutable)
-# - ~/.jcode/builds/stable/jcode -> .../versions/<hash>/jcode
-# - ~/.jcode/builds/current/jcode -> .../versions/<hash>/jcode
-# - ~/.local/bin/jcode -> ~/.jcode/builds/current/jcode (launcher)
+# - ~/.minnal/builds/versions/<hash>/minnal (immutable)
+# - ~/.minnal/builds/stable/minnal -> .../versions/<hash>/minnal
+# - ~/.minnal/builds/current/minnal -> .../versions/<hash>/minnal
+# - ~/.local/bin/minnal -> ~/.minnal/builds/current/minnal (launcher)
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-profile="${JCODE_RELEASE_PROFILE:-release-lto}"
+profile="${MINNAL_RELEASE_PROFILE:-release-lto}"
 if [[ "${1:-}" == "--fast" ]]; then
   profile="release"
   shift
@@ -36,7 +36,7 @@ case "$profile" in
 esac
 
 cargo build --profile "$profile" --manifest-path "$repo_root/Cargo.toml"
-bin="$repo_root/target/$profile/jcode"
+bin="$repo_root/target/$profile/minnal"
 
 if [[ ! -x "$bin" ]]; then
   echo "Release binary not found: $bin" >&2
@@ -57,16 +57,16 @@ if [[ -z "$hash" ]]; then
   hash="$(date +%Y%m%d%H%M%S)"
 fi
 
-# Install versioned binary into ~/.jcode/builds/versions/<hash>/
-builds_dir="$HOME/.jcode/builds"
+# Install versioned binary into ~/.minnal/builds/versions/<hash>/
+builds_dir="$HOME/.minnal/builds"
 version_dir="$builds_dir/versions/$hash"
 mkdir -p "$version_dir"
-install -m 755 "$bin" "$version_dir/jcode"
+install -m 755 "$bin" "$version_dir/minnal"
 
 # Update stable symlink
 stable_dir="$builds_dir/stable"
 mkdir -p "$stable_dir"
-ln -sfn "$version_dir/jcode" "$stable_dir/jcode"
+ln -sfn "$version_dir/minnal" "$stable_dir/minnal"
 
 # Update stable-version marker
 printf '%s\n' "$hash" > "$builds_dir/stable-version"
@@ -74,18 +74,18 @@ printf '%s\n' "$hash" > "$builds_dir/stable-version"
 # Update current symlink + marker
 current_dir="$builds_dir/current"
 mkdir -p "$current_dir"
-ln -sfn "$version_dir/jcode" "$current_dir/jcode"
+ln -sfn "$version_dir/minnal" "$current_dir/minnal"
 printf '%s\n' "$hash" > "$builds_dir/current-version"
 
 # Update launcher path to current channel
-install_dir="${JCODE_INSTALL_DIR:-$HOME/.local/bin}"
+install_dir="${MINNAL_INSTALL_DIR:-$HOME/.local/bin}"
 mkdir -p "$install_dir"
-ln -sfn "$current_dir/jcode" "$install_dir/jcode"
+ln -sfn "$current_dir/minnal" "$install_dir/minnal"
 
-echo "Installed: $version_dir/jcode"
-echo "Updated stable symlink: $stable_dir/jcode -> $version_dir/jcode"
-echo "Updated current symlink: $current_dir/jcode -> $version_dir/jcode"
-echo "Updated launcher symlink: $install_dir/jcode -> $current_dir/jcode"
+echo "Installed: $version_dir/minnal"
+echo "Updated stable symlink: $stable_dir/minnal -> $version_dir/minnal"
+echo "Updated current symlink: $current_dir/minnal -> $version_dir/minnal"
+echo "Updated launcher symlink: $install_dir/minnal -> $current_dir/minnal"
 
 if ! echo "$PATH" | tr ':' '\n' | grep -qx "$install_dir"; then
   echo ""

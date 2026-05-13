@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Minnal Desktop
+GenericName=AI Development Workspace
+Comment=Minnal fullscreen desktop workspace prototype
+Exec=minnal-desktop
+Icon=minnal
+Terminal=false
+Categories=Development;IDE;
+StartupNotify=true
+Keywords=Minnal;AI;Agent;Development;Workspace;

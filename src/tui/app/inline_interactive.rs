@@ -104,7 +104,7 @@ impl App {
         self.input.clear();
         self.cursor_pos = 0;
 
-        if std::env::var("JCODE_LOG_MODEL_PICKER_TIMING").is_ok() {
+        if std::env::var("MINNAL_LOG_MODEL_PICKER_TIMING").is_ok() {
             crate::logging::info(&format!(
                 "[TIMING] model_picker_open: cache_hit=true, remote={}, simplified={}, routes={}, models={}, entries={}, total={}ms",
                 self.is_remote,
@@ -826,7 +826,7 @@ impl App {
         let entries_ms = entries_started.elapsed().as_millis();
         let total_ms = picker_started.elapsed().as_millis();
 
-        if total_ms >= 250 || std::env::var("JCODE_LOG_MODEL_PICKER_TIMING").is_ok() {
+        if total_ms >= 250 || std::env::var("MINNAL_LOG_MODEL_PICKER_TIMING").is_ok() {
             crate::logging::info(&format!(
                 "[TIMING] model_picker_open: remote={}, simplified={}, routes={}, models={}, entries={}, routes={}ms, grouping={}ms, timestamps={}ms, entries_sort={}ms, total={}ms",
                 self.is_remote,
@@ -1373,7 +1373,7 @@ impl App {
             let current_session_id = super::commands::active_session_id(self);
             let mut names = Vec::with_capacity(targets.len());
             for target in targets {
-                let ResumeTarget::JcodeSession { session_id } = target else {
+                let ResumeTarget::MinnalSession { session_id } = target else {
                     continue;
                 };
                 let queue_position = catchup_queue_position(&current_session_id, session_id);
@@ -1408,7 +1408,7 @@ impl App {
         }
 
         let default_cwd = std::env::current_dir().unwrap_or_default();
-        let socket = std::env::var("JCODE_SOCKET").ok();
+        let socket = std::env::var("MINNAL_SOCKET").ok();
         let mut spawned = 0usize;
         let mut failed = Vec::new();
         let mut names = Vec::with_capacity(targets.len());
@@ -1426,7 +1426,7 @@ impl App {
             }
 
             let name = match target {
-                ResumeTarget::JcodeSession { session_id } => {
+                ResumeTarget::MinnalSession { session_id } => {
                     crate::id::extract_session_name(session_id)
                         .map(|s| s.to_string())
                         .unwrap_or_else(|| session_id.to_string())
@@ -1446,7 +1446,7 @@ impl App {
                     format!("OpenCode {}", &session_id[..session_id.len().min(8)])
                 }
             };
-            let resolved_target = match crate::import::resolve_resume_target_to_jcode(target) {
+            let resolved_target = match crate::import::resolve_resume_target_to_minnal(target) {
                 Ok(target) => target,
                 Err(err) => {
                     failed.push(format!("failed to import {}: {}", name, err));
@@ -1511,7 +1511,7 @@ impl App {
         };
 
         let name = match target {
-            ResumeTarget::JcodeSession { session_id } => {
+            ResumeTarget::MinnalSession { session_id } => {
                 crate::id::extract_session_name(session_id)
                     .map(|s| s.to_string())
                     .unwrap_or_else(|| session_id.to_string())
@@ -1532,7 +1532,7 @@ impl App {
             }
         };
 
-        let resolved_target = match crate::import::resolve_resume_target_to_jcode(target) {
+        let resolved_target = match crate::import::resolve_resume_target_to_minnal(target) {
             Ok(target) => target,
             Err(err) => {
                 self.push_display_message(DisplayMessage::error(format!(
@@ -1543,7 +1543,7 @@ impl App {
             }
         };
 
-        let ResumeTarget::JcodeSession { session_id } = resolved_target else {
+        let ResumeTarget::MinnalSession { session_id } = resolved_target else {
             self.push_display_message(DisplayMessage::error(format!(
                 "Cannot resume {} in the current terminal.",
                 name
@@ -1585,7 +1585,7 @@ impl App {
 
         let exe = launch_client_executable();
         let cwd = std::env::current_dir().unwrap_or_default();
-        let socket = std::env::var("JCODE_SOCKET").ok();
+        let socket = std::env::var("MINNAL_SOCKET").ok();
         let mut spawned = 0usize;
         let mut failed = Vec::new();
 
@@ -1620,7 +1620,7 @@ impl App {
         } else if spawned > 0 {
             let manual: Vec<String> = failed
                 .iter()
-                .map(|id| format!("  jcode --resume {}", id))
+                .map(|id| format!("  minnal --resume {}", id))
                 .collect();
             self.push_display_message(DisplayMessage::system(format!(
                 "Restored {} session(s) in new windows. {} failed:\n```\n{}\n```",
@@ -1631,7 +1631,7 @@ impl App {
         } else {
             let manual: Vec<String> = recovered
                 .iter()
-                .map(|id| format!("  jcode --resume {}", id))
+                .map(|id| format!("  minnal --resume {}", id))
                 .collect();
             self.push_display_message(DisplayMessage::system(format!(
                 "No terminal found. Resume manually:\n```\n{}\n```",

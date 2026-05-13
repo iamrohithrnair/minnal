@@ -1,7 +1,7 @@
 //! Local Copilot usage tracking
 //!
 //! Tracks request counts and token usage locally since GitHub Copilot
-//! doesn't expose a usage API. Data persists to ~/.jcode/copilot_usage.json.
+//! doesn't expose a usage API. Data persists to ~/.minnal/copilot_usage.json.
 
 use chrono::{Datelike, Utc};
 use std::path::PathBuf;
@@ -10,12 +10,12 @@ use std::sync::Mutex;
 static TRACKER: Mutex<Option<CopilotUsageTracker>> = Mutex::new(None);
 
 fn usage_path() -> PathBuf {
-    crate::storage::jcode_dir()
-        .unwrap_or_else(|_| PathBuf::from(".").join(".jcode"))
+    crate::storage::minnal_dir()
+        .unwrap_or_else(|_| PathBuf::from(".").join(".minnal"))
         .join("copilot_usage.json")
 }
 
-pub use jcode_usage_types::{AllTimeUsage, CopilotUsageTracker, DayUsage, MonthUsage};
+pub use minnal_usage_types::{AllTimeUsage, CopilotUsageTracker, DayUsage, MonthUsage};
 
 fn roll_if_needed(tracker: &mut CopilotUsageTracker) {
     let now = Utc::now();
@@ -147,21 +147,21 @@ mod tests {
     }
 
     #[test]
-    fn usage_path_respects_jcode_home() {
+    fn usage_path_respects_minnal_home() {
         let _env_lock = lock_env();
         clear_tracker();
         let temp = tempfile::tempdir().expect("tempdir");
-        let _home = EnvVarGuard::set("JCODE_HOME", temp.path().as_os_str());
+        let _home = EnvVarGuard::set("MINNAL_HOME", temp.path().as_os_str());
 
         assert_eq!(usage_path(), temp.path().join("copilot_usage.json"));
     }
 
     #[test]
-    fn save_and_load_roundtrip_under_jcode_home() {
+    fn save_and_load_roundtrip_under_minnal_home() {
         let _env_lock = lock_env();
         clear_tracker();
         let temp = tempfile::tempdir().expect("tempdir");
-        let _home = EnvVarGuard::set("JCODE_HOME", temp.path().as_os_str());
+        let _home = EnvVarGuard::set("MINNAL_HOME", temp.path().as_os_str());
 
         let tracker = CopilotUsageTracker {
             today: DayUsage {

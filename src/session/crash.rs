@@ -10,7 +10,7 @@ use std::collections::HashSet;
 /// Recover crashed sessions from the most recent crash window (text-only).
 /// Returns new recovery session IDs (most recent first).
 pub fn recover_crashed_sessions() -> Result<Vec<String>> {
-    let sessions_dir = storage::jcode_dir()?.join("sessions");
+    let sessions_dir = storage::minnal_dir()?.join("sessions");
     if !sessions_dir.exists() {
         return Ok(Vec::new());
     }
@@ -130,7 +130,7 @@ pub struct CrashedSessionsInfo {
 /// Returns info about crashed sessions within the crash window (60 seconds),
 /// excluding any that have already been recovered.
 pub fn detect_crashed_sessions() -> Result<Option<CrashedSessionsInfo>> {
-    let sessions_dir = storage::jcode_dir()?.join("sessions");
+    let sessions_dir = storage::minnal_dir()?.join("sessions");
     if !sessions_dir.exists() {
         return Ok(None);
     }
@@ -238,7 +238,7 @@ impl SessionHeader {
 
 /// Find recent crashed sessions for showing resume hints.
 ///
-/// Uses a fast O(n) scan of `~/.jcode/active_pids/` (typically 0-5 files)
+/// Uses a fast O(n) scan of `~/.minnal/active_pids/` (typically 0-5 files)
 /// instead of scanning the full sessions directory (tens of thousands).
 /// Each file in active_pids/ contains a PID; if that PID is dead, the
 /// session crashed. We then load only those specific session files.
@@ -319,7 +319,7 @@ fn find_crashed_via_pid_files() -> Option<Vec<(String, String)>> {
 /// Legacy fallback: scan the full sessions directory.
 /// Used only on the first launch after upgrading to the active_pids system.
 fn find_crashed_legacy_scan() -> Vec<(String, String)> {
-    let sessions_dir = match storage::jcode_dir() {
+    let sessions_dir = match storage::minnal_dir() {
         Ok(d) => d.join("sessions"),
         Err(_) => return Vec::new(),
     };
@@ -439,7 +439,7 @@ pub(super) fn is_pid_running(pid: u32) -> bool {
 // ---------------------------------------------------------------------------
 // Active PID tracking
 // ---------------------------------------------------------------------------
-// Lightweight files in ~/.jcode/active_pids/<session_id> containing the PID.
+// Lightweight files in ~/.minnal/active_pids/<session_id> containing the PID.
 // Written on mark_active(), removed on mark_closed()/mark_crashed().
 // On startup we only need to scan this tiny directory (usually 0-5 files)
 // instead of the entire sessions/ directory (tens of thousands of files).
@@ -484,7 +484,7 @@ pub fn find_session_by_name_or_id(name_or_id: &str) -> Result<String> {
     }
 
     // Otherwise, search for a session with matching short name or title.
-    let sessions_dir = storage::jcode_dir()?.join("sessions");
+    let sessions_dir = storage::minnal_dir()?.join("sessions");
     if !sessions_dir.exists() {
         anyhow::bail!("No sessions found");
     }
@@ -558,7 +558,7 @@ mod batch_crash_tests {
     fn find_session_by_name_or_id_matches_custom_title() {
         let _guard = crate::storage::lock_test_env();
         let temp = tempfile::tempdir().expect("tempdir");
-        crate::env::set_var("JCODE_HOME", temp.path());
+        crate::env::set_var("MINNAL_HOME", temp.path());
 
         let session_id = "session_renamecli_1770000000000";
         let mut session = Session::create_with_id(
@@ -579,14 +579,14 @@ mod batch_crash_tests {
             session_id
         );
 
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 
     #[test]
     fn find_session_by_name_or_id_accepts_imported_session_ids() -> anyhow::Result<()> {
         let _guard = crate::storage::lock_test_env();
         let temp = tempfile::tempdir()?;
-        crate::env::set_var("JCODE_HOME", temp.path());
+        crate::env::set_var("MINNAL_HOME", temp.path());
 
         let imported_id = "imported_codex_test_resume";
         let mut session =
@@ -597,7 +597,7 @@ mod batch_crash_tests {
         let resolved = find_session_by_name_or_id(imported_id)?;
         assert_eq!(resolved, imported_id);
 
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
         Ok(())
     }
 }

@@ -39,9 +39,9 @@ case "$OS" in
 esac
 
 if [ "$IS_WINDOWS" = true ]; then
-  INSTALL_DIR="${JCODE_INSTALL_DIR:-$LOCALAPPDATA/jcode/bin}"
+  INSTALL_DIR="${MINNAL_INSTALL_DIR:-$LOCALAPPDATA/minnal/bin}"
 else
-  INSTALL_DIR="${JCODE_INSTALL_DIR:-$HOME/.local/bin}"
+  INSTALL_DIR="${MINNAL_INSTALL_DIR:-$HOME/.local/bin}"
 fi
 
 VERSION=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name"' | cut -d'"' -f4)
@@ -52,15 +52,15 @@ URL_BIN="https://github.com/$REPO/releases/download/$VERSION/$ARTIFACT"
 
 if [ "$IS_WINDOWS" = true ]; then
   EXE=".exe"
-  builds_dir="$LOCALAPPDATA/jcode/builds"
+  builds_dir="$LOCALAPPDATA/minnal/builds"
 else
   EXE=""
-  builds_dir="$HOME/.jcode/builds"
+  builds_dir="$HOME/.minnal/builds"
 fi
 stable_dir="$builds_dir/stable"
 current_dir="$builds_dir/current"
 version_dir="$builds_dir/versions"
-launcher_path="$INSTALL_DIR/jcode${EXE}"
+launcher_path="$INSTALL_DIR/minnal${EXE}"
 
 EXISTING=""
 if [ -x "$launcher_path" ]; then
@@ -69,12 +69,12 @@ fi
 
 if [ -n "$EXISTING" ]; then
   if echo "$EXISTING" | grep -qF "${VERSION#v}"; then
-    info "jcode $VERSION is already installed — reinstalling"
+    info "minnal $VERSION is already installed — reinstalling"
   else
-    info "Updating jcode $EXISTING → $VERSION"
+    info "Updating minnal $EXISTING → $VERSION"
   fi
 else
-  info "Installing jcode $VERSION"
+  info "Installing minnal $VERSION"
 fi
 info "  launcher: $launcher_path"
 
@@ -82,9 +82,9 @@ tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
 
 download_mode=""
-if curl -fsSL "$URL_TGZ" -o "$tmpdir/jcode.download" 2>/dev/null; then
+if curl -fsSL "$URL_TGZ" -o "$tmpdir/minnal.download" 2>/dev/null; then
   download_mode="tar"
-elif curl -fsSL "$URL_BIN" -o "$tmpdir/jcode.download" 2>/dev/null; then
+elif curl -fsSL "$URL_BIN" -o "$tmpdir/minnal.download" 2>/dev/null; then
   download_mode="bin"
 fi
 
@@ -94,23 +94,23 @@ version="${VERSION#v}"
 dest_version_dir="$version_dir/$version"
 mkdir -p "$dest_version_dir"
 
-bin_name="jcode${EXE}"
+bin_name="minnal${EXE}"
 
 if [ "$download_mode" = "tar" ]; then
-  tar xzf "$tmpdir/jcode.download" -C "$tmpdir"
+  tar xzf "$tmpdir/minnal.download" -C "$tmpdir"
   src_bin="$tmpdir/${ARTIFACT}${EXE}"
   [ -f "$src_bin" ] || err "Downloaded archive did not contain expected binary: ${ARTIFACT}${EXE}"
   find "$tmpdir" -maxdepth 1 -type f \( -name "${ARTIFACT}${EXE}.bin" -o -name 'libssl.so*' -o -name 'libcrypto.so*' \) \
     -exec cp -f {} "$dest_version_dir/" \;
   mv "$src_bin" "$dest_version_dir/$bin_name"
 elif [ "$download_mode" = "bin" ]; then
-  mv "$tmpdir/jcode.download" "$dest_version_dir/$bin_name"
+  mv "$tmpdir/minnal.download" "$dest_version_dir/$bin_name"
 else
   info "No prebuilt asset found for $ARTIFACT in $VERSION; building from source..."
   command -v git >/dev/null 2>&1 || err "git is required to build from source"
   command -v cargo >/dev/null 2>&1 || err "cargo is required to build from source"
 
-  src_dir="$tmpdir/jcode-src"
+  src_dir="$tmpdir/minnal-src"
   git clone --depth 1 --branch "$VERSION" "https://github.com/$REPO.git" "$src_dir" \
     || err "Failed to clone $REPO at $VERSION"
   cargo build --release --manifest-path "$src_dir/Cargo.toml" \
@@ -148,16 +148,16 @@ fi
 if [ "$IS_WINDOWS" = true ]; then
   win_install_dir=$(cygpath -w "$INSTALL_DIR" 2>/dev/null || echo "$INSTALL_DIR")
   echo ""
-  info "✅ jcode $VERSION installed successfully!"
+  info "✅ minnal $VERSION installed successfully!"
   echo ""
-  if command -v jcode >/dev/null 2>&1; then
-    info "Run 'jcode' to get started."
+  if command -v minnal >/dev/null 2>&1; then
+    info "Run 'minnal' to get started."
   else
-    echo "  To start using jcode right now, run:"
+    echo "  To start using minnal right now, run:"
     echo ""
-    printf '    \033[1;32mexport PATH="%s:$PATH" && jcode\033[0m\n' "$INSTALL_DIR"
+    printf '    \033[1;32mexport PATH="%s:$PATH" && minnal\033[0m\n' "$INSTALL_DIR"
     echo ""
-    echo "  To add jcode to PATH permanently (PowerShell):"
+    echo "  To add minnal to PATH permanently (PowerShell):"
     echo ""
     printf '    \033[1;32m[Environment]::SetEnvironmentVariable("Path", "%s;" + [Environment]::GetEnvironmentVariable("Path", "User"), "User")\033[0m\n' "$win_install_dir"
   fi
@@ -177,7 +177,7 @@ else
 
     if [ "$(uname -s)" = "Darwin" ] || [ "$SHELL_NAME" = "zsh" ]; then
       # Keep PATH available for non-interactive zsh invocations too, such as
-      # `ssh host 'jcode --version'`, without depending on .zshrc/.zprofile.
+      # `ssh host 'minnal --version'`, without depending on .zshrc/.zprofile.
       path_files+=("$HOME/.zshenv")
     fi
 
@@ -191,7 +191,7 @@ else
 
     for rc in "${path_files[@]}"; do
       if [ ! -f "$rc" ] || ! grep -qF "$INSTALL_DIR" "$rc" 2>/dev/null; then
-        printf '\n# Added by jcode installer\n%s\n' "$PATH_LINE" >> "$rc"
+        printf '\n# Added by minnal installer\n%s\n' "$PATH_LINE" >> "$rc"
         added_to="$added_to $rc"
       fi
     done
@@ -200,24 +200,24 @@ else
   fi
 
   echo ""
-  info "✅ jcode $VERSION installed successfully!"
+  info "✅ minnal $VERSION installed successfully!"
   echo ""
 
   if [ "$(uname -s)" = "Darwin" ]; then
     if [ "${mac_hotkey_ready:-false}" = true ]; then
-      info "Global hotkey ready: Alt+; opens jcode in your preferred terminal"
+      info "Global hotkey ready: Alt+; opens minnal in your preferred terminal"
     else
-      info "Tip: run 'jcode setup-hotkey' to enable Alt+; launch on macOS"
+      info "Tip: run 'minnal setup-hotkey' to enable Alt+; launch on macOS"
     fi
   fi
 
-  if command -v jcode >/dev/null 2>&1; then
-    info "Run 'jcode' to get started."
+  if command -v minnal >/dev/null 2>&1; then
+    info "Run 'minnal' to get started."
   else
-    echo "  To start using jcode right now, run:"
+    echo "  To start using minnal right now, run:"
     echo ""
-    printf '    \033[1;32mexport PATH="%s:\$PATH" && jcode\033[0m\n' "$INSTALL_DIR"
+    printf '    \033[1;32mexport PATH="%s:\$PATH" && minnal\033[0m\n' "$INSTALL_DIR"
     echo ""
-    echo "  Future terminal sessions will have jcode on PATH automatically."
+    echo "  Future terminal sessions will have minnal on PATH automatically."
   fi
 fi

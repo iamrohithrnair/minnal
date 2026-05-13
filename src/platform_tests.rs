@@ -18,8 +18,8 @@ fn spawn_detached_creates_new_session() {
 
     let mut cmd = std::process::Command::new("sh");
     cmd.arg("-c")
-        .arg("ps -o sid= -p $$ > \"$JCODE_TEST_OUTPUT\"")
-        .env("JCODE_TEST_OUTPUT", &output_path)
+        .arg("ps -o sid= -p $$ > \"$MINNAL_TEST_OUTPUT\"")
+        .env("MINNAL_TEST_OUTPUT", &output_path)
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null());
 

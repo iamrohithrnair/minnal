@@ -3,22 +3,22 @@ use super::{
     save_tui_openai_compatible_key,
 };
 
-fn with_temp_jcode_home<T>(f: impl FnOnce() -> T) -> T {
+fn with_temp_minnal_home<T>(f: impl FnOnce() -> T) -> T {
     let _env_guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
     let saved_env = [
-        "JCODE_HOME",
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_SETUP_URL",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
-        "JCODE_OPENAI_COMPAT_LOCAL_ENABLED",
+        "MINNAL_HOME",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_SETUP_URL",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_LOCAL_ENABLED",
         "OPENAI_COMPAT_API_KEY",
     ]
     .map(|key| (key, std::env::var_os(key)));
 
-    crate::env::set_var("JCODE_HOME", temp.path());
+    crate::env::set_var("MINNAL_HOME", temp.path());
     for (key, _) in saved_env.iter().skip(1) {
         crate::env::remove_var(key);
     }
@@ -72,7 +72,7 @@ fn oauth_preflight_mentions_manual_safe_callback_mode() {
 
 #[test]
 fn tui_openai_compatible_api_base_accepts_localhost_override() -> anyhow::Result<()> {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let resolved = save_tui_openai_compatible_api_base("http://localhost:11434/v1")?;
         assert_eq!(resolved.api_base, "http://localhost:11434/v1");
         assert!(!resolved.requires_api_key);
@@ -81,12 +81,12 @@ fn tui_openai_compatible_api_base_accepts_localhost_override() -> anyhow::Result
 }
 
 #[test]
-fn tui_openai_compatible_api_base_keeps_jcode_docs_and_remote_endpoint() -> anyhow::Result<()> {
-    with_temp_jcode_home(|| {
+fn tui_openai_compatible_api_base_keeps_minnal_docs_and_remote_endpoint() -> anyhow::Result<()> {
+    with_temp_minnal_home(|| {
         let resolved = save_tui_openai_compatible_api_base("https://api.deepseek.com/")?;
         assert_eq!(resolved.api_base, "https://api.deepseek.com");
         assert!(resolved.requires_api_key);
-        assert!(resolved.setup_url.contains("github.com/1jehuang/jcode"));
+        assert!(resolved.setup_url.contains("github.com/1jehuang/minnal"));
         assert!(!resolved.setup_url.contains("opencode.ai"));
         Ok(())
     })
@@ -94,7 +94,7 @@ fn tui_openai_compatible_api_base_keeps_jcode_docs_and_remote_endpoint() -> anyh
 
 #[test]
 fn tui_openai_compatible_key_save_persists_key_for_current_session() -> anyhow::Result<()> {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let resolved = save_tui_openai_compatible_api_base("https://api.example.com/v1")?;
         let resolved = save_tui_openai_compatible_key(
             crate::provider_catalog::OPENAI_COMPAT_PROFILE,
@@ -121,7 +121,7 @@ fn tui_openai_compatible_key_save_persists_key_for_current_session() -> anyhow::
 
 #[test]
 fn tui_openai_compatible_local_key_save_allows_empty_key() -> anyhow::Result<()> {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let resolved = save_tui_openai_compatible_key(crate::provider_catalog::OLLAMA_PROFILE, "")?;
         assert_eq!(resolved.api_base, "http://localhost:11434/v1");
         assert!(

@@ -346,7 +346,7 @@ fn test_recover_session_without_tools_preserves_debug_and_canary_flags() {
     app.session.is_debug = true;
     app.session.is_canary = true;
     app.session.testing_build = Some("self-dev".to_string());
-    app.session.working_dir = Some("/tmp/jcode-test".to_string());
+    app.session.working_dir = Some("/tmp/minnal-test".to_string());
     let old_session_id = app.session.id.clone();
 
     app.recover_session_without_tools();
@@ -359,7 +359,7 @@ fn test_recover_session_without_tools_preserves_debug_and_canary_flags() {
     assert!(app.session.is_debug);
     assert!(app.session.is_canary);
     assert_eq!(app.session.testing_build.as_deref(), Some("self-dev"));
-    assert_eq!(app.session.working_dir.as_deref(), Some("/tmp/jcode-test"));
+    assert_eq!(app.session.working_dir.as_deref(), Some("/tmp/minnal-test"));
 
     let _ = std::fs::remove_file(crate::session::session_path(&app.session.id).unwrap());
 }
@@ -499,12 +499,12 @@ fn test_background_rebuild_status_uses_compact_rebuild_card() {
 fn test_selfdev_command_spawns_session_in_test_mode() {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    let prev_test = std::env::var_os("JCODE_TEST_SESSION");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
-    crate::env::set_var("JCODE_TEST_SESSION", "1");
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    let prev_test = std::env::var_os("MINNAL_TEST_SESSION");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
+    crate::env::set_var("MINNAL_TEST_SESSION", "1");
 
-    let repo = create_jcode_repo_fixture();
+    let repo = create_minnal_repo_fixture();
     let mut app = create_test_app();
     app.session.working_dir = Some(repo.path().display().to_string());
 
@@ -519,7 +519,7 @@ fn test_selfdev_command_spawns_session_in_test_mode() {
     );
     assert_eq!(app.status_notice(), Some("Self-dev".to_string()));
 
-    let sessions_dir = crate::storage::jcode_dir().unwrap().join("sessions");
+    let sessions_dir = crate::storage::minnal_dir().unwrap().join("sessions");
     let entries: Vec<_> = std::fs::read_dir(&sessions_dir)
         .expect("sessions dir")
         .flatten()
@@ -530,14 +530,14 @@ fn test_selfdev_command_spawns_session_in_test_mode() {
     );
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
     if let Some(prev_test) = prev_test {
-        crate::env::set_var("JCODE_TEST_SESSION", prev_test);
+        crate::env::set_var("MINNAL_TEST_SESSION", prev_test);
     } else {
-        crate::env::remove_var("JCODE_TEST_SESSION");
+        crate::env::remove_var("MINNAL_TEST_SESSION");
     }
 }
 
@@ -590,7 +590,7 @@ fn test_new_for_remote_restored_queued_messages_stay_queued_until_remote_idle() 
 
 #[test]
 fn test_save_and_restore_startup_submission_preserves_pending_images() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let session_id = "session_startup_prompt";
         App::save_startup_submission_for_session(
             session_id,
@@ -766,8 +766,8 @@ fn test_new_for_remote_restores_split_view_from_reload_state() {
 #[test]
 fn test_restore_reload_state_supports_legacy_input_format() {
     let session_id = format!("test-reload-legacy-{}", std::process::id());
-    let jcode_dir = crate::storage::jcode_dir().unwrap();
-    let path = jcode_dir.join(format!("client-input-{}", session_id));
+    let minnal_dir = crate::storage::minnal_dir().unwrap();
+    let path = minnal_dir.join(format!("client-input-{}", session_id));
     std::fs::write(&path, "2\nhello").unwrap();
 
     let restored =

@@ -1,11 +1,11 @@
-# jcode iOS Client
+# minnal iOS Client
 
 > **Status:** Phase 1 Swift app shell + SDK exists, but the product direction is
 > Rust-first shared mobile app core with a Linux-native, agent-native app
 > simulator. See [`MOBILE_AGENT_SIMULATOR.md`](MOBILE_AGENT_SIMULATOR.md).
 > **Updated:** 2026-02-23
 
-A native iOS application that connects to a jcode server running on the user's laptop or desktop. The phone is a rich, touch-optimized client; all heavy lifting (LLM calls, tool execution, file I/O, git, MCP) stays on the server.
+A native iOS application that connects to a minnal server running on the user's laptop or desktop. The phone is a rich, touch-optimized client; all heavy lifting (LLM calls, tool execution, file I/O, git, MCP) stays on the server.
 
 The current Swift implementation is useful as a prototype and platform shell,
 but it should not remain the source of truth for app behavior. Shared mobile
@@ -51,7 +51,7 @@ graph TB
             AUTH[🎫 Token Auth]
             PUSH[📨 APNs Push Sender]
         end
-        subgraph Srv ["jcode Server (Rust)"]
+        subgraph Srv ["minnal Server (Rust)"]
             AG[🤖 Agent Engine]
             LLM["☁️ LLM Providers\n(Claude / OpenRouter)"]
             TOOLS["🔧 Tools\n(bash, files, git)"]
@@ -100,11 +100,11 @@ sequenceDiagram
     participant U as 👤 User
     participant T as 📱 iOS App
     participant TS as 🔒 Tailscale
-    participant S as 💻 jcode Server
+    participant S as 💻 minnal Server
     participant A as ☁️ Apple APNs
 
     Note over U,S: One-time Pairing
-    U->>S: jcode pair
+    U->>S: minnal pair
     S->>S: Generate 6-digit code (5 min TTL)
     S->>U: Display code in terminal
     U->>T: Enter code + Tailscale hostname
@@ -134,10 +134,10 @@ sequenceDiagram
 
 ## Why This Architecture
 
-jcode's value is **tool execution**: running shell commands, editing files, managing git repos, connecting to MCP servers. None of that is possible inside iOS's sandbox. So the server must exist regardless.
+minnal's value is **tool execution**: running shell commands, editing files, managing git repos, connecting to MCP servers. None of that is possible inside iOS's sandbox. So the server must exist regardless.
 
 What the phone adds:
-- **Mobility** - interact with jcode from the couch, on the bus, in a meeting
+- **Mobility** - interact with minnal from the couch, on the bus, in a meeting
 - **Ambient display** - phone on desk showing agent progress, task status, memory activity
 - **Push notifications** - know when a task finishes, approve tool calls from lock screen
 - **Touch UX** - purpose-built interface instead of terminal emulation
@@ -152,7 +152,7 @@ What the phone does NOT do:
 
 ## Server-Side Changes
 
-The jcode server currently speaks newline-delimited JSON over Unix sockets. The iOS client needs the same protocol over a network transport. Changes required:
+The minnal server currently speaks newline-delimited JSON over Unix sockets. The iOS client needs the same protocol over a network transport. Changes required:
 
 ### 1. WebSocket Gateway
 
@@ -160,7 +160,7 @@ A new network listener alongside the existing Unix socket. Same protocol, differ
 
 ```
                   ┌─────────────────────────┐
-                  │      jcode server        │
+                  │      minnal server        │
                   │                          │
    Unix socket ──►│  session manager         │◄── WebSocket (new)
    (TUI client)   │  agent engine            │    (iOS client)
@@ -189,22 +189,22 @@ Unix sockets are authenticated by filesystem permissions. Network sockets need e
 
 ```
 Pairing Flow:
-                                                         
-  1. User runs: jcode pair                               
-     → Server generates a 6-digit pairing code           
-     → Displays it in terminal                           
-     → Code valid for 5 minutes                          
-                                                         
-  2. User enters code in iOS app                         
-     → App sends code + device ID to server              
-     → Server validates, returns a long-lived auth token  
-     → Token stored in iOS Keychain                      
-                                                         
-  3. All subsequent connections use Bearer token          
-     → Token included in `Authorization: Bearer <token>` on WebSocket upgrade request       
-     → Server validates against stored device list        
 
-  Config: ~/.jcode/devices.json
+  1. User runs: minnal pair
+     → Server generates a 6-digit pairing code
+     → Displays it in terminal
+     → Code valid for 5 minutes
+
+  2. User enters code in iOS app
+     → App sends code + device ID to server
+     → Server validates, returns a long-lived auth token
+     → Token stored in iOS Keychain
+
+  3. All subsequent connections use Bearer token
+     → Token included in `Authorization: Bearer <token>` on WebSocket upgrade request
+     → Server validates against stored device list
+
+  Config: ~/.minnal/devices.json
   [
     {
       "id": "iphone-14-jeremy",
@@ -218,7 +218,7 @@ Pairing Flow:
 
 ### 3. Connectivity (Tailscale-first)
 
-The iOS app connects to the jcode server over **Tailscale** as the primary transport. No LAN-only discovery, no mDNS fragility, no port forwarding.
+The iOS app connects to the minnal server over **Tailscale** as the primary transport. No LAN-only discovery, no mDNS fragility, no port forwarding.
 
 **Why Tailscale-first:**
 - Works from anywhere - home, coffee shop, cellular, different country
@@ -231,7 +231,7 @@ The iOS app connects to the jcode server over **Tailscale** as the primary trans
 iPhone                     Tailscale Network              Laptop
 (Tailscale app)            (WireGuard mesh)               (tailscaled)
      │                            │                           │
-     │  jcode iOS app connects to laptop.tail1234.ts.net:7643 │
+     │  minnal iOS app connects to laptop.tail1234.ts.net:7643 │
      │────────────── encrypted WireGuard tunnel ──────────────►│
      │                                                        │
      │◄───────── WebSocket (plain, tunnel is encrypted) ─────►│
@@ -239,7 +239,7 @@ iPhone                     Tailscale Network              Laptop
 
 **Setup flow:**
 1. User installs Tailscale on both phone and laptop (most devs already have this)
-2. jcode server binds to Tailscale IP (or `0.0.0.0` and Tailscale handles routing)
+2. minnal server binds to Tailscale IP (or `0.0.0.0` and Tailscale handles routing)
 3. iOS app asks for Tailscale hostname on first launch (e.g. `laptop` or `100.88.154.108`)
 4. Connection goes through WireGuard tunnel - encrypted, works everywhere
 5. Server can also use Tailscale's MagicDNS for human-friendly names
@@ -250,33 +250,33 @@ iPhone                     Tailscale Network              Laptop
 - **LAN Bonjour** - possible future addition, but not worth the complexity upfront.
   mDNS is flaky on corporate/guest WiFi and only works on same network.
 
-**No cloud relay needed** - Tailscale is peer-to-peer. Traffic goes directly between phone and laptop, even across networks. No jcode server in the cloud.
+**No cloud relay needed** - Tailscale is peer-to-peer. Traffic goes directly between phone and laptop, even across networks. No minnal server in the cloud.
 
 ### 4. Push Notifications (APNs)
 
 Native push notifications via Apple Push Notification Service. Since we're building a native iOS app, we use APNs directly - no third-party services in the loop.
 
 ```
-jcode server                     Apple APNs              iPhone
-(your laptop)                    (Apple cloud)           (jcode app)
+minnal server                     Apple APNs              iPhone
+(your laptop)                    (Apple cloud)           (minnal app)
 
 Event fires ───► HTTP/2 POST ──► Routes push ──► 🔔 Native push
                  to APNs with    to device        notification
-                 device token                     in jcode app
+                 device token                     in minnal app
                  + JWT signing
 ```
 
 **How it works:**
 - Apple Developer Account provides an APNs key (.p8 file)
-- The .p8 key is stored on the jcode server (`~/.jcode/apns/`)
+- The .p8 key is stored on the minnal server (`~/.minnal/apns/`)
 - iOS app registers for push on launch, gets a device token from Apple
-- Device token is sent to jcode server during pairing (stored in `devices.json`)
-- To send a push: jcode server signs a JWT with the .p8 key, POSTs to `api.push.apple.com`
+- Device token is sent to minnal server during pairing (stored in `devices.json`)
+- To send a push: minnal server signs a JWT with the .p8 key, POSTs to `api.push.apple.com`
 - Rust crate: `a2` (APNs client) or raw HTTP/2 via `hyper`/`reqwest`
 
 **Pairing flow handles token exchange naturally:**
 ```
-iPhone                              jcode server
+iPhone                              minnal server
   │                                      │
   │  Register for push with Apple        │
   │◄──── device token ────────────────   │
@@ -382,7 +382,7 @@ Redesigned for touch. NOT a terminal emulator.
 │                                      │
 ├──────────────────────────────────────┤
 │ ┌──────────────────────────┐  📎 🎤 │  ← Input bar
-│ │ Message jcode...         │  ⬆️    │
+│ │ Message minnal...         │  ⬆️    │
 │ └──────────────────────────┘        │
 └──────────────────────────────────────┘
 ```
@@ -398,7 +398,7 @@ Redesigned for touch. NOT a terminal emulator.
 
 ### Ambient Dashboard
 
-The killer feature for iOS. Shows what jcode is doing autonomously.
+The killer feature for iOS. Shows what minnal is doing autonomously.
 
 ```
 ┌──────────────────────────────────────┐
@@ -447,7 +447,7 @@ When the safety system requires approval for a Tier 2 action:
 
 ```
 ┌──────────────────────────────────────┐
-│  🔔 jcode needs approval            │
+│  🔔 minnal needs approval            │
 │                                      │
 │  🦊 fox wants to run:               │
 │                                      │
@@ -578,20 +578,20 @@ AmbientCycleDone {
 
 No Mac needed. Build and test entirely on Linux.
 
-1. Add WebSocket listener to jcode server (`src/gateway.rs`)
+1. Add WebSocket listener to minnal server (`src/gateway.rs`)
    - Depends on: `tokio-tungstenite` (already in Cargo.toml)
    - Listen on configurable TCP port (default: `7643`)
    - Bridge WebSocket frames to existing Unix socket protocol
 2. Add token-based authentication
-   - Pairing command: `jcode pair`
-   - Device registry: `~/.jcode/devices.json`
+   - Pairing command: `minnal pair`
+   - Device registry: `~/.minnal/devices.json`
 3. Tailscale connectivity
    - Bind to `0.0.0.0` (Tailscale routes traffic through WireGuard)
    - Optionally bind only to Tailscale interface for security
    - Document setup: install Tailscale on phone + laptop
 4. Test with `websocat` or a simple Python script over Tailscale
 
-**Deliverable:** Any WebSocket client can connect to jcode server over Tailscale, authenticate, and interact with sessions. Testable from Linux with CLI tools.
+**Deliverable:** Any WebSocket client can connect to minnal server over Tailscale, authenticate, and interact with sessions. Testable from Linux with CLI tools.
 
 ### Phase 1: Minimal iOS Client (needs Mac)
 
@@ -611,7 +611,7 @@ Borrow the MacBook for initial setup, then iterate.
 4. Session management
    - List sessions, create new, resume existing
 
-**Deliverable:** Working iOS app that can chat with jcode.
+**Deliverable:** Working iOS app that can chat with minnal.
 
 ### Phase 2: Rich UX
 
@@ -684,7 +684,7 @@ Borrow the MacBook for initial setup, then iterate.
 - **Tailscale provides encryption** - WireGuard tunnel encrypts all traffic. TLS only needed for non-Tailscale fallback connections.
 - **Auth tokens** stored in iOS Keychain, server stores only hashes
 - **Pairing codes** are time-limited (5 min) and single-use
-- **Device revocation** via `jcode pair --revoke <name-or-id>`
+- **Device revocation** via `minnal pair --revoke <name-or-id>`
 - **No credentials on the phone** - API keys, OAuth tokens stay on the server
 - **Tool approval** for destructive actions even when triggered from iOS
 - **Rate limiting** on the WebSocket gateway to prevent abuse
@@ -693,9 +693,9 @@ Borrow the MacBook for initial setup, then iterate.
 
 ## Practical Setup: iPhone -> yashmacbook -> Xcode
 
-For the current implementation, the iOS side in this repo is `JCodeKit` (networking + protocol layer), and the server-side gateway/pairing flow is live. Use this sequence to get reliable access to your Mac from iPhone:
+For the current implementation, the iOS side in this repo is `MinnalKit` (networking + protocol layer), and the server-side gateway/pairing flow is live. Use this sequence to get reliable access to your Mac from iPhone:
 
-1. On `yashmacbook`, enable gateway in `~/.jcode/config.toml`:
+1. On `yashmacbook`, enable gateway in `~/.minnal/config.toml`:
 
 ```toml
 [gateway]
@@ -704,29 +704,29 @@ port = 7643
 bind_addr = "0.0.0.0"
 ```
 
-2. Restart jcode server on `yashmacbook`.
+2. Restart minnal server on `yashmacbook`.
 3. Ensure Tailscale is logged in on both iPhone and `yashmacbook`.
 4. Generate pairing code on `yashmacbook`:
 
 ```bash
-jcode pair
+minnal pair
 ```
 
-5. In iOS client, connect to the host printed by `jcode pair` (or set `JCODE_GATEWAY_HOST` on Mac to force the exact hostname shown).
+5. In iOS client, connect to the host printed by `minnal pair` (or set `MINNAL_GATEWAY_HOST` on Mac to force the exact hostname shown).
 6. Pair with the 6-digit code, then connect over WebSocket.
-7. Ask jcode to run Xcode workflows on the Mac via tools, for example:
+7. Ask minnal to run Xcode workflows on the Mac via tools, for example:
    - `xcodebuild -list`
    - `xcodebuild -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone 15' build`
    - `xed .` (open current project in Xcode)
 
-Because jcode executes tools on `yashmacbook`, this gives you "use Xcode through iPhone" behavior: the phone is the control surface, Mac runs Xcode/build commands.
+Because minnal executes tools on `yashmacbook`, this gives you "use Xcode through iPhone" behavior: the phone is the control surface, Mac runs Xcode/build commands.
 
 ### Current in-repo iOS implementation (Phase 1)
 
 The repo now includes both:
 
-- `JCodeKit` (`ios/Sources/JCodeKit`) - transport/protocol SDK
-- `JCodeMobile` (`ios/Sources/JCodeMobile`) - SwiftUI app shell for pairing + chat
+- `MinnalKit` (`ios/Sources/MinnalKit`) - transport/protocol SDK
+- `MinnalMobile` (`ios/Sources/MinnalMobile`) - SwiftUI app shell for pairing + chat
 
 Implemented app flow:
 
@@ -759,20 +759,20 @@ cd ios
 xcodegen generate
 ```
 
-3. Open `ios/JCodeMobile.xcodeproj` in Xcode.
+3. Open `ios/MinnalMobile.xcodeproj` in Xcode.
 
-If you don't want to install XcodeGen, manually create an iOS app target in Xcode and add `../ios` as a local Swift Package dependency (product: `JCodeKit`).
+If you don't want to install XcodeGen, manually create an iOS app target in Xcode and add `../ios` as a local Swift Package dependency (product: `MinnalKit`).
 
-4. Select the `JCodeMobile` scheme and an iPhone simulator or your device.
+4. Select the `MinnalMobile` scheme and an iPhone simulator or your device.
 5. Build and run.
 
-`project.yml` already wires the app target (`JCodeMobile`) to the local `JCodeKit` package product.
+`project.yml` already wires the app target (`MinnalMobile`) to the local `MinnalKit` package product.
 
 
 ### End-to-end checklist for your goal (iPhone -> yashmacbook -> Xcode commands)
 
-1. On Mac: enable and restart jcode gateway.
-2. On Mac: run `jcode pair` and copy the code.
+1. On Mac: enable and restart minnal gateway.
+2. On Mac: run `minnal pair` and copy the code.
 3. On iPhone app: pair to `yashmacbook` (or its Tailscale DNS name).
 4. Connect and send command requests like:
    - `xcodebuild -list`

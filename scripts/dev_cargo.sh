@@ -6,7 +6,7 @@ cd "$repo_root"
 
 # shellcheck source=scripts/remote_config.sh
 source "$repo_root/scripts/remote_config.sh"
-jcode_load_remote_config
+minnal_load_remote_config
 
 log() {
   printf 'dev_cargo: %s\n' "$*" >&2
@@ -112,19 +112,19 @@ feature_args_from_profile() {
 }
 
 validate_feature_profile() {
-  local profile="${JCODE_DEV_FEATURE_PROFILE:-default}"
+  local profile="${MINNAL_DEV_FEATURE_PROFILE:-default}"
   case "$profile" in
     ""|default|minimal|none|pdf|embeddings|full)
       ;;
     *)
-      printf 'error: unsupported JCODE_DEV_FEATURE_PROFILE=%s (expected default|minimal|pdf|embeddings|full)\n' "$profile" >&2
+      printf 'error: unsupported MINNAL_DEV_FEATURE_PROFILE=%s (expected default|minimal|pdf|embeddings|full)\n' "$profile" >&2
       exit 1
       ;;
   esac
 }
 
 build_cargo_argv() {
-  local profile="${JCODE_DEV_FEATURE_PROFILE:-default}"
+  local profile="${MINNAL_DEV_FEATURE_PROFILE:-default}"
   if [[ "$profile" == "default" || -z "$profile" ]]; then
     feature_profile_status="default"
     printf '%s\0' "$@"
@@ -173,7 +173,7 @@ selfdev_low_memory_default_needed() {
   swap_total_kib=$(meminfo_kib SwapTotal)
   [[ -n "$mem_total_kib" && -n "$mem_available_kib" && -n "$swap_total_kib" ]] || return 1
 
-  # On small no-swap machines, earlyoom can terminate the root jcode rustc
+  # On small no-swap machines, earlyoom can terminate the root minnal rustc
   # around 1 GiB RSS before the kernel OOM killer would report anything.
   # Keep this adaptive so larger workstations, and currently-idle smaller
   # workstations with enough headroom, retain the faster inherited selfdev
@@ -187,7 +187,7 @@ maybe_configure_low_memory_selfdev() {
     return
   fi
 
-  local mode="${JCODE_SELFDEV_LOW_MEMORY:-auto}"
+  local mode="${MINNAL_SELFDEV_LOW_MEMORY:-auto}"
   case "$mode" in
     1|true|yes|on|force)
       ;;
@@ -202,7 +202,7 @@ maybe_configure_low_memory_selfdev() {
       fi
       ;;
     *)
-      printf 'error: unsupported JCODE_SELFDEV_LOW_MEMORY=%s (expected auto|on|off)\n' "$mode" >&2
+      printf 'error: unsupported MINNAL_SELFDEV_LOW_MEMORY=%s (expected auto|on|off)\n' "$mode" >&2
       exit 1
       ;;
   esac
@@ -215,7 +215,7 @@ maybe_configure_low_memory_selfdev() {
 }
 
 configure_linux_linker() {
-  local requested_mode="${JCODE_FAST_LINKER:-auto}"
+  local requested_mode="${MINNAL_FAST_LINKER:-auto}"
   local mode="$requested_mode"
 
   case "$mode" in
@@ -231,7 +231,7 @@ configure_linux_linker() {
     lld|mold|system)
       ;;
     *)
-      printf 'error: unsupported JCODE_FAST_LINKER=%s (expected auto|lld|mold|system)\n' "$mode" >&2
+      printf 'error: unsupported MINNAL_FAST_LINKER=%s (expected auto|lld|mold|system)\n' "$mode" >&2
       exit 1
       ;;
   esac
@@ -262,8 +262,8 @@ configure_linux_linker() {
 }
 
 print_setup() {
-  if [[ -n "${JCODE_DEV_FEATURE_PROFILE:-}" && "${JCODE_DEV_FEATURE_PROFILE}" != "default" ]]; then
-    feature_profile_status="${JCODE_DEV_FEATURE_PROFILE}"
+  if [[ -n "${MINNAL_DEV_FEATURE_PROFILE:-}" && "${MINNAL_DEV_FEATURE_PROFILE}" != "default" ]]; then
+    feature_profile_status="${MINNAL_DEV_FEATURE_PROFILE}"
   fi
   cat <<EOF
 repo_root=$repo_root
@@ -298,7 +298,7 @@ while IFS= read -r -d '' arg; do
   cargo_argv+=("$arg")
 done < <(build_cargo_argv "$@")
 
-if [[ "${JCODE_REMOTE_CARGO:-0}" == "1" ]]; then
+if [[ "${MINNAL_REMOTE_CARGO:-0}" == "1" ]]; then
   log "using remote cargo via scripts/remote_build.sh"
   exec "$repo_root/scripts/remote_build.sh" "${cargo_argv[@]}"
 fi

@@ -10,11 +10,11 @@ impl Config {
             std::fs::create_dir_all(parent)?;
         }
 
-        let default_content = r#"# jcode configuration file
-# Location: ~/.jcode/config.toml
+        let default_content = r#"# minnal configuration file
+# Location: ~/.minnal/config.toml
 #
 # Environment variables override these settings.
-# Run `/config` in jcode to see current settings.
+# Run `/config` in minnal to see current settings.
 
 [keybindings]
 # Scroll keys (vim-style by default)
@@ -69,7 +69,7 @@ session_picker_enter = "new-terminal"
 # command = "~/.local/bin/my-whisper-script --grammar-target code"
 command = ""
 
-# How to apply the transcript inside jcode: insert|append|replace|send
+# How to apply the transcript inside minnal: insert|append|replace|send
 mode = "send"
 
 # Optional in-app hotkey to trigger dictation. Set to "off" to disable.
@@ -211,7 +211,7 @@ bind_addr = "0.0.0.0"
 # Notification settings for ambient mode events
 
 # ntfy.sh push notifications (free, phone app: https://ntfy.sh)
-# ntfy_topic = "jcode-ambient-your-secret-topic"
+# ntfy_topic = "minnal-ambient-your-secret-topic"
 # ntfy_server = "https://ntfy.sh"
 
 # Desktop notifications via notify-send (default: true)
@@ -220,10 +220,10 @@ desktop_notifications = true
 # Email notifications via SMTP
 # email_enabled = false
 # email_to = "you@example.com"
-# email_from = "jcode@example.com"
+# email_from = "minnal@example.com"
 # email_smtp_host = "smtp.gmail.com"
 # email_smtp_port = 587
-# Password via env: JCODE_SMTP_PASSWORD (preferred) or config below
+# Password via env: MINNAL_SMTP_PASSWORD (preferred) or config below
 # email_password = ""
 
 # IMAP for email replies (reply to ambient emails to send directives)
@@ -233,13 +233,13 @@ desktop_notifications = true
 
 # Telegram notifications via Bot API (free, https://telegram.org)
 # telegram_enabled = false
-# telegram_bot_token = ""  # From @BotFather (prefer JCODE_TELEGRAM_BOT_TOKEN env var)
+# telegram_bot_token = ""  # From @BotFather (prefer MINNAL_TELEGRAM_BOT_TOKEN env var)
 # telegram_chat_id = ""    # Your user/chat ID
 # telegram_reply_enabled = false  # Reply to bot messages to send directives
 
 # Discord notifications via Bot API (https://discord.com/developers)
 # discord_enabled = false
-# discord_bot_token = ""     # From Discord Developer Portal (prefer JCODE_DISCORD_BOT_TOKEN env var)
+# discord_bot_token = ""     # From Discord Developer Portal (prefer MINNAL_DISCORD_BOT_TOKEN env var)
 # discord_channel_id = ""    # Channel ID to post in
 # discord_bot_user_id = ""   # Bot's user ID (for filtering own messages)
 # discord_reply_enabled = false  # Messages in channel become agent directives

@@ -28,8 +28,8 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
         .filter(|value| !value.is_empty())
     {
         provider_catalog::apply_named_provider_profile_env(profile_name)?;
-        crate::env::set_var("JCODE_PROVIDER_PROFILE_NAME", profile_name);
-        crate::env::set_var("JCODE_PROVIDER_PROFILE_ACTIVE", "1");
+        crate::env::set_var("MINNAL_PROVIDER_PROFILE_NAME", profile_name);
+        crate::env::set_var("MINNAL_PROVIDER_PROFILE_ACTIVE", "1");
         args.provider = ProviderChoice::OpenaiCompatible;
     }
 
@@ -40,7 +40,7 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             temp_idle_timeout_secs,
         }) => {
             let serve_start = Instant::now();
-            crate::env::set_var("JCODE_NON_INTERACTIVE", "1");
+            crate::env::set_var("MINNAL_NON_INTERACTIVE", "1");
             if temporary_server {
                 server::configure_temporary_server(owner_pid, temp_idle_timeout_secs);
             }
@@ -348,7 +348,7 @@ fn resolve_resume_arg(args: &mut Args) -> Result<()> {
             Err(e) => {
                 eprintln!("Error: {}", e);
                 if !output::quiet_enabled() {
-                    eprintln!("\nUse `jcode --resume` to list available sessions.");
+                    eprintln!("\nUse `minnal --resume` to list available sessions.");
                 }
                 std::process::exit(1);
             }
@@ -436,12 +436,12 @@ async fn run_default_command(args: Args) -> Result<()> {
     startup_profile::mark("crash_resume_hint");
 
     let cwd = std::env::current_dir()?;
-    let in_jcode_repo = build::is_jcode_repo(&cwd);
-    startup_profile::mark("is_jcode_repo");
+    let in_minnal_repo = build::is_minnal_repo(&cwd);
+    startup_profile::mark("is_minnal_repo");
     let already_in_selfdev = crate::cli::selfdev::client_selfdev_requested();
 
-    if in_jcode_repo && !already_in_selfdev && !args.no_selfdev {
-        output::stderr_info("📍 Detected jcode repository - enabling self-dev mode");
+    if in_minnal_repo && !already_in_selfdev && !args.no_selfdev {
+        output::stderr_info("📍 Detected minnal repository - enabling self-dev mode");
         output::stderr_info("   Using shared server with self-dev session mode");
         output::stderr_info("   (use --no-selfdev to disable auto-detection)");
         output::stderr_blank_line();
@@ -462,7 +462,7 @@ async fn run_default_command(args: Args) -> Result<()> {
         server_running = wait_for_existing_reload_server("client startup").await;
     }
 
-    if !server_running && std::env::var("JCODE_RESUMING").is_ok() {
+    if !server_running && std::env::var("MINNAL_RESUMING").is_ok() {
         server_running = wait_for_resuming_server(
             "client startup without reload marker",
             std::time::Duration::from_secs(5),
@@ -495,7 +495,7 @@ async fn run_default_command(args: Args) -> Result<()> {
     }
 
     startup_profile::mark("pre_tui_client");
-    if std::env::var("JCODE_RESUMING").is_err() && server_running {
+    if std::env::var("MINNAL_RESUMING").is_err() && server_running {
         output::stderr_info("Connecting to server...");
     }
     tui_launch::run_tui_client(
@@ -755,7 +755,7 @@ pub(crate) async fn spawn_server(
     let mut cmd = ProcessCommand::new(&exe);
     cmd.env_remove(selfdev::CLIENT_SELFDEV_ENV);
     if client_requested_selfdev {
-        cmd.env("JCODE_DEBUG_CONTROL", "1");
+        cmd.env("MINNAL_DEBUG_CONTROL", "1");
     }
     cmd.arg("--provider").arg(provider_choice.as_arg_value());
     if let Some(provider_profile) = provider_profile {

@@ -1,1 +1,1 @@
-pub use jcode_core::env::*;
+pub use minnal_core::env::*;

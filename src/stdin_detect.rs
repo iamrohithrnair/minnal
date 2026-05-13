@@ -1,1 +1,1 @@
-pub use jcode_core::stdin_detect::*;
+pub use minnal_core::stdin_detect::*;

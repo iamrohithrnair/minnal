@@ -4,32 +4,32 @@ use crate::provider::models::{ensure_model_allowed_for_subscription, filtered_di
 fn with_clean_provider_test_env<T>(f: impl FnOnce() -> T) -> T {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::tempdir().expect("tempdir");
-    let prev_home = std::env::var_os("JCODE_HOME");
+    let prev_home = std::env::var_os("MINNAL_HOME");
     let prev_subscription =
-        std::env::var_os(crate::subscription_catalog::JCODE_SUBSCRIPTION_ACTIVE_ENV);
+        std::env::var_os(crate::subscription_catalog::MINNAL_SUBSCRIPTION_ACTIVE_ENV);
     let mut profile_env_keys = vec![
         "OPENROUTER_API_KEY",
         "DEEPSEEK_API_KEY",
         "KIMI_API_KEY",
-        "JCODE_OPENROUTER_API_BASE",
-        "JCODE_OPENROUTER_API_KEY_NAME",
-        "JCODE_OPENROUTER_ENV_FILE",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
-        "JCODE_OPENROUTER_PROVIDER_FEATURES",
-        "JCODE_OPENROUTER_ALLOW_NO_AUTH",
-        "JCODE_OPENROUTER_MODEL_CATALOG",
-        "JCODE_OPENROUTER_MODEL",
-        "JCODE_OPENROUTER_STATIC_MODELS",
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
-        "JCODE_OPENAI_COMPAT_LOCAL_ENABLED",
+        "MINNAL_OPENROUTER_API_BASE",
+        "MINNAL_OPENROUTER_API_KEY_NAME",
+        "MINNAL_OPENROUTER_ENV_FILE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_PROVIDER_FEATURES",
+        "MINNAL_OPENROUTER_ALLOW_NO_AUTH",
+        "MINNAL_OPENROUTER_MODEL_CATALOG",
+        "MINNAL_OPENROUTER_MODEL",
+        "MINNAL_OPENROUTER_STATIC_MODELS",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_LOCAL_ENABLED",
         "OPENAI_COMPAT_API_KEY",
         "OPENAI_API_KEY",
-        "JCODE_NAMED_PROVIDER_PROFILE",
-        "JCODE_PROVIDER_PROFILE_ACTIVE",
-        "JCODE_PROVIDER_PROFILE_NAME",
+        "MINNAL_NAMED_PROVIDER_PROFILE",
+        "MINNAL_PROVIDER_PROFILE_ACTIVE",
+        "MINNAL_PROVIDER_PROFILE_NAME",
     ];
     for profile in crate::provider_catalog::openai_compatible_profiles() {
         if !profile_env_keys.contains(&profile.api_key_env) {
@@ -40,7 +40,7 @@ fn with_clean_provider_test_env<T>(f: impl FnOnce() -> T) -> T {
         .into_iter()
         .map(|key| (key, std::env::var_os(key)))
         .collect::<Vec<_>>();
-    crate::env::set_var("JCODE_HOME", temp.path());
+    crate::env::set_var("MINNAL_HOME", temp.path());
     for (key, _) in &saved_profile_env {
         crate::env::remove_var(key);
     }
@@ -53,17 +53,17 @@ fn with_clean_provider_test_env<T>(f: impl FnOnce() -> T) -> T {
     crate::auth::claude::set_active_account_override(None);
     crate::auth::codex::set_active_account_override(None);
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
     if let Some(prev_subscription) = prev_subscription {
         crate::env::set_var(
-            crate::subscription_catalog::JCODE_SUBSCRIPTION_ACTIVE_ENV,
+            crate::subscription_catalog::MINNAL_SUBSCRIPTION_ACTIVE_ENV,
             prev_subscription,
         );
     } else {
-        crate::env::remove_var(crate::subscription_catalog::JCODE_SUBSCRIPTION_ACTIVE_ENV);
+        crate::env::remove_var(crate::subscription_catalog::MINNAL_SUBSCRIPTION_ACTIVE_ENV);
     }
     for (key, value) in saved_profile_env {
         if let Some(value) = value {
@@ -98,7 +98,7 @@ fn with_env_var<T>(key: &str, value: &str, f: impl FnOnce() -> T) -> T {
 fn save_test_openai_compatible_login_config(default_model: &str) {
     let env_file = crate::provider_catalog::OPENAI_COMPAT_PROFILE.env_file;
     crate::provider_catalog::save_env_value_to_env_file(
-        "JCODE_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
         env_file,
         Some("https://example-openai-compatible.test/v1"),
     )
@@ -110,7 +110,7 @@ fn save_test_openai_compatible_login_config(default_model: &str) {
     )
     .expect("save api key");
     crate::provider_catalog::save_env_value_to_env_file(
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
         env_file,
         Some(default_model),
     )
@@ -119,13 +119,13 @@ fn save_test_openai_compatible_login_config(default_model: &str) {
 
 fn clear_openai_compatible_runtime_env() {
     for key in [
-        "JCODE_OPENAI_COMPAT_API_BASE",
-        "JCODE_OPENAI_COMPAT_API_KEY_NAME",
-        "JCODE_OPENAI_COMPAT_ENV_FILE",
-        "JCODE_OPENAI_COMPAT_DEFAULT_MODEL",
-        "JCODE_OPENAI_COMPAT_LOCAL_ENABLED",
+        "MINNAL_OPENAI_COMPAT_API_BASE",
+        "MINNAL_OPENAI_COMPAT_API_KEY_NAME",
+        "MINNAL_OPENAI_COMPAT_ENV_FILE",
+        "MINNAL_OPENAI_COMPAT_DEFAULT_MODEL",
+        "MINNAL_OPENAI_COMPAT_LOCAL_ENABLED",
         "OPENAI_COMPAT_API_KEY",
-        "JCODE_OPENROUTER_CACHE_NAMESPACE",
+        "MINNAL_OPENROUTER_CACHE_NAMESPACE",
     ] {
         crate::env::remove_var(key);
     }

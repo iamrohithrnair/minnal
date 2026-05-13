@@ -28,7 +28,7 @@ pub(super) fn persist_vector_mode_label(mode: PersistVectorMode) -> &'static str
 }
 
 pub fn session_path(session_id: &str) -> Result<PathBuf> {
-    let base = storage::jcode_dir()?;
+    let base = storage::minnal_dir()?;
     Ok(session_path_in_dir(&base, session_id))
 }
 

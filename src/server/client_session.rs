@@ -17,7 +17,7 @@ use crate::provider::Provider;
 use crate::tool::Registry;
 use crate::transport::WriteHalf;
 use anyhow::Result;
-use jcode_agent_runtime::InterruptSignal;
+use minnal_agent_runtime::InterruptSignal;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -98,7 +98,7 @@ pub(super) fn restored_session_was_interrupted(
 fn mark_remote_reload_started(request_id: &str) {
     crate::server::write_reload_state(
         request_id,
-        env!("JCODE_VERSION"),
+        env!("MINNAL_VERSION"),
         crate::server::ReloadPhase::Starting,
         None,
     );
@@ -612,7 +612,7 @@ pub(super) async fn handle_reload(
         let _ = client_event_tx.send(ServerEvent::Reloading { new_socket: None });
     }
 
-    let hash = env!("JCODE_GIT_HASH").to_string();
+    let hash = env!("MINNAL_GIT_HASH").to_string();
     let signal_request_id =
         crate::server::send_reload_signal(hash, triggering_session.clone(), prefer_selfdev_binary);
 

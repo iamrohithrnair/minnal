@@ -139,7 +139,7 @@ fn available_models_display_prefers_discovered_models_and_current_model() {
 fn available_models_display_without_discovery_uses_current_model_only() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().expect("tempdir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let provider = GeminiProvider::new();
     provider.set_model("gemini-4-pro-preview").unwrap();
@@ -154,7 +154,7 @@ fn available_models_display_without_discovery_uses_current_model_only() {
 fn available_models_display_seeds_from_persisted_catalog() {
     let _guard = crate::storage::lock_test_env();
     let temp = tempfile::TempDir::new().expect("tempdir");
-    let _home = EnvVarGuard::set_path("JCODE_HOME", temp.path());
+    let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
 
     let path = GeminiProvider::persisted_catalog_path().expect("catalog path");
     crate::storage::write_json(

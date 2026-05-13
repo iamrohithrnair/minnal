@@ -51,7 +51,7 @@ const AUTH_STATUS_CACHE_TTL_SECS: u64 = 30;
 const AUTH_STATUS_FAST_CACHE_TTL_SECS: u64 = 5;
 
 /// Per-process cache for command existence lookups.
-/// CLI tools don't get installed/uninstalled while jcode is running, so caching
+/// CLI tools don't get installed/uninstalled while minnal is running, so caching
 /// indefinitely per process is correct and avoids repeated PATH scans.
 static COMMAND_EXISTS_CACHE: std::sync::LazyLock<Mutex<HashMap<String, bool>>> =
     std::sync::LazyLock::new(|| Mutex::new(HashMap::new()));
@@ -63,7 +63,7 @@ enum AuthProbeMode {
 }
 
 pub fn browser_suppressed(cli_no_browser: bool) -> bool {
-    cli_no_browser || env_truthy("NO_BROWSER") || env_truthy("JCODE_NO_BROWSER")
+    cli_no_browser || env_truthy("NO_BROWSER") || env_truthy("MINNAL_NO_BROWSER")
 }
 
 fn env_truthy(key: &str) -> bool {
@@ -77,7 +77,7 @@ fn env_truthy(key: &str) -> bool {
 }
 
 fn auth_timing_logging_enabled() -> bool {
-    env_truthy("JCODE_AUTH_TIMING")
+    env_truthy("MINNAL_AUTH_TIMING")
 }
 
 fn openai_api_key_configured() -> bool {
@@ -103,7 +103,7 @@ fn log_auth_status_snapshot(event: &str, status: &AuthStatus) {
         event,
         "all",
         &[
-            ("jcode", auth_state_label(status.jcode)),
+            ("minnal", auth_state_label(status.minnal)),
             ("claude", auth_state_label(status.anthropic.state)),
             ("openai", auth_state_label(status.openai)),
             ("openrouter", auth_state_label(status.openrouter)),
@@ -227,7 +227,7 @@ impl AuthStatus {
     /// Returns true if at least one provider has usable credentials.
     pub fn has_any_available(&self) -> bool {
         self.anthropic.state == AuthState::Available
-            || self.jcode == AuthState::Available
+            || self.minnal == AuthState::Available
             || self.openai == AuthState::Available
             || self.openrouter == AuthState::Available
             || self.azure == AuthState::Available
@@ -256,7 +256,7 @@ impl AuthStatus {
                     AuthState::NotConfigured
                 }
             }
-            LoginProviderAuthStateKey::Jcode => self.jcode,
+            LoginProviderAuthStateKey::Minnal => self.minnal,
             LoginProviderAuthStateKey::Anthropic => self.anthropic.state,
             LoginProviderAuthStateKey::OpenAi => self.openai,
             LoginProviderAuthStateKey::Azure => self.azure,
@@ -279,7 +279,7 @@ impl AuthStatus {
                     AuthState::NotConfigured
                 }
             }
-            crate::provider_catalog::LoginProviderTarget::Jcode => {
+            crate::provider_catalog::LoginProviderTarget::Minnal => {
                 if crate::subscription_catalog::has_credentials() {
                     AuthState::Available
                 } else {
@@ -334,17 +334,17 @@ impl AuthStatus {
                     "No importable external logins found".to_string()
                 }
             }
-            crate::provider_catalog::LoginProviderTarget::Jcode => {
+            crate::provider_catalog::LoginProviderTarget::Minnal => {
                 if self.state_for_provider(provider) == AuthState::Available {
                     if crate::subscription_catalog::has_router_base() {
                         format!(
                             "API key (`{}`) + router base",
-                            crate::subscription_catalog::JCODE_API_KEY_ENV
+                            crate::subscription_catalog::MINNAL_API_KEY_ENV
                         )
                     } else {
                         format!(
                             "API key (`{}`), router base pending",
-                            crate::subscription_catalog::JCODE_API_KEY_ENV
+                            crate::subscription_catalog::MINNAL_API_KEY_ENV
                         )
                     }
                 } else {
@@ -496,13 +496,13 @@ impl AuthStatus {
                 AuthRefreshSupport::ExternalManaged,
                 AuthValidationMethod::TrustedImportScan,
             ),
-            crate::provider_catalog::LoginProviderTarget::Jcode => {
+            crate::provider_catalog::LoginProviderTarget::Minnal => {
                 let (source, detail) = summarize_sources(vec![
-                    env_source(crate::subscription_catalog::JCODE_API_KEY_ENV),
+                    env_source(crate::subscription_catalog::MINNAL_API_KEY_ENV),
                     config_source(
-                        crate::subscription_catalog::JCODE_API_KEY_ENV,
-                        crate::subscription_catalog::JCODE_ENV_FILE,
-                        "~/.config/jcode/jcode-subscription.env",
+                        crate::subscription_catalog::MINNAL_API_KEY_ENV,
+                        crate::subscription_catalog::MINNAL_ENV_FILE,
+                        "~/.config/minnal/minnal-subscription.env",
                     ),
                 ]);
                 (
@@ -519,7 +519,7 @@ impl AuthStatus {
                     config_source(
                         "OPENROUTER_API_KEY",
                         "openrouter.env",
-                        "~/.config/jcode/openrouter.env",
+                        "~/.config/minnal/openrouter.env",
                     ),
                     external_api_key_source("OPENROUTER_API_KEY"),
                 ]);
@@ -534,7 +534,11 @@ impl AuthStatus {
             crate::provider_catalog::LoginProviderTarget::OpenAiApiKey => {
                 let (source, detail) = summarize_sources(vec![
                     env_source("OPENAI_API_KEY"),
-                    config_source("OPENAI_API_KEY", "openai.env", "~/.config/jcode/openai.env"),
+                    config_source(
+                        "OPENAI_API_KEY",
+                        "openai.env",
+                        "~/.config/minnal/openai.env",
+                    ),
                     external_api_key_source("OPENAI_API_KEY"),
                 ]);
                 (
@@ -552,7 +556,7 @@ impl AuthStatus {
                     config_source(
                         crate::auth::azure::API_KEY_ENV,
                         crate::auth::azure::ENV_FILE,
-                        "~/.config/jcode/azure-openai.env",
+                        "~/.config/minnal/azure-openai.env",
                     ),
                 ]);
                 (
@@ -573,10 +577,10 @@ impl AuthStatus {
                     config_source(
                         crate::provider::bedrock::API_KEY_ENV,
                         crate::provider::bedrock::ENV_FILE,
-                        "~/.config/jcode/bedrock.env",
+                        "~/.config/minnal/bedrock.env",
                     ),
                     env_source("AWS_PROFILE"),
-                    env_source("JCODE_BEDROCK_PROFILE"),
+                    env_source("MINNAL_BEDROCK_PROFILE"),
                     env_source("AWS_ACCESS_KEY_ID"),
                 ]);
                 (
@@ -594,7 +598,7 @@ impl AuthStatus {
                     config_source(
                         &resolved.api_key_env,
                         &resolved.env_file,
-                        format!("~/.config/jcode/{}", resolved.env_file),
+                        format!("~/.config/minnal/{}", resolved.env_file),
                     ),
                     external_api_key_source(&resolved.api_key_env),
                 ]);
@@ -667,7 +671,7 @@ fn build_auth_status_uncached(mode: AuthProbeMode) -> (AuthStatus, Vec<(&'static
     let mut status = AuthStatus::default();
     let mut timings = Vec::new();
 
-    record_auth_probe_step(&mut timings, "jcode", || probe_jcode_status(&mut status));
+    record_auth_probe_step(&mut timings, "minnal", || probe_minnal_status(&mut status));
     record_auth_probe_step(&mut timings, "anthropic", || {
         probe_anthropic_status(&mut status)
     });
@@ -720,9 +724,9 @@ fn token_state(result: anyhow::Result<bool>) -> AuthState {
     }
 }
 
-fn probe_jcode_status(status: &mut AuthStatus) {
+fn probe_minnal_status(status: &mut AuthStatus) {
     if crate::subscription_catalog::has_credentials() {
-        status.jcode = AuthState::Available;
+        status.minnal = AuthState::Available;
     }
 }
 
@@ -989,7 +993,7 @@ fn assessment_for_key(
                 AuthValidationMethod::TimestampCheck,
             )
         }
-        LoginProviderAuthStateKey::Jcode
+        LoginProviderAuthStateKey::Minnal
         | LoginProviderAuthStateKey::Azure
         | LoginProviderAuthStateKey::Bedrock
         | LoginProviderAuthStateKey::OpenRouterLike
@@ -1082,8 +1086,8 @@ fn anthropic_oauth_source(status: &AuthStatus) -> Option<(AuthCredentialSource, 
         .is_empty()
     {
         return Some((
-            AuthCredentialSource::JcodeManagedFile,
-            "~/.jcode/auth.json".to_string(),
+            AuthCredentialSource::MinnalManagedFile,
+            "~/.minnal/auth.json".to_string(),
         ));
     }
     if let Some(source) = crate::auth::claude::preferred_external_auth_source()
@@ -1113,8 +1117,8 @@ fn openai_oauth_source(status: &AuthStatus) -> Option<(AuthCredentialSource, Str
         .is_empty()
     {
         return Some((
-            AuthCredentialSource::JcodeManagedFile,
-            "~/.jcode/openai-auth.json".to_string(),
+            AuthCredentialSource::MinnalManagedFile,
+            "~/.minnal/openai-auth.json".to_string(),
         ));
     }
     if crate::auth::codex::legacy_auth_allowed() && crate::auth::codex::legacy_auth_source_exists()
@@ -1154,7 +1158,7 @@ fn gemini_source() -> Option<(AuthCredentialSource, String)> {
         && path.exists()
     {
         return Some((
-            AuthCredentialSource::JcodeManagedFile,
+            AuthCredentialSource::MinnalManagedFile,
             format!("{}", path.display()),
         ));
     }
@@ -1183,7 +1187,7 @@ fn antigravity_source() -> Option<(AuthCredentialSource, String)> {
         && path.exists()
     {
         return Some((
-            AuthCredentialSource::JcodeManagedFile,
+            AuthCredentialSource::MinnalManagedFile,
             format!("{}", path.display()),
         ));
     }
@@ -1203,7 +1207,7 @@ fn google_source() -> Option<(AuthCredentialSource, String)> {
         && credentials_path.exists()
     {
         return Some((
-            AuthCredentialSource::JcodeManagedFile,
+            AuthCredentialSource::MinnalManagedFile,
             format!("{} + {}", credentials_path.display(), tokens_path.display()),
         ));
     }
@@ -1241,8 +1245,18 @@ fn cursor_source() -> Option<(AuthCredentialSource, String)> {
             format!("trusted Cursor app state ({})", path.display()),
         ));
     }
-    if config_source("CURSOR_API_KEY", "cursor.env", "~/.config/jcode/cursor.env").is_some() {
-        return config_source("CURSOR_API_KEY", "cursor.env", "~/.config/jcode/cursor.env");
+    if config_source(
+        "CURSOR_API_KEY",
+        "cursor.env",
+        "~/.config/minnal/cursor.env",
+    )
+    .is_some()
+    {
+        return config_source(
+            "CURSOR_API_KEY",
+            "cursor.env",
+            "~/.config/minnal/cursor.env",
+        );
     }
     None
 }

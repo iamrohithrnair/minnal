@@ -302,8 +302,8 @@ fn test_handle_server_event_history_session_change_clears_pending_interleaves() 
 fn test_handle_post_connect_marker_without_reload_context_does_not_queue_selfdev_continuation() {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("create temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let mut app = create_test_app();
     let rt = tokio::runtime::Runtime::new().unwrap();
@@ -314,9 +314,9 @@ fn test_handle_post_connect_marker_without_reload_context_does_not_queue_selfdev
     remote.mark_history_loaded();
 
     let session_id = "session_marker_only";
-    let jcode_dir = crate::storage::jcode_dir().expect("jcode dir");
+    let minnal_dir = crate::storage::minnal_dir().expect("minnal dir");
     std::fs::write(
-        jcode_dir.join(format!("client-reload-pending-{}", session_id)),
+        minnal_dir.join(format!("client-reload-pending-{}", session_id)),
         "Reloaded with build test123\n",
     )
     .expect("write client reload marker");
@@ -351,9 +351,9 @@ fn test_handle_post_connect_marker_without_reload_context_does_not_queue_selfdev
     );
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -361,8 +361,8 @@ fn test_handle_post_connect_marker_without_reload_context_does_not_queue_selfdev
 fn test_handle_post_connect_defers_reload_followup_to_server_history_payload() {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("create temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let session_id = "session_hidden_reload_followup";
     crate::tool::selfdev::ReloadContext {
@@ -407,9 +407,9 @@ fn test_handle_post_connect_defers_reload_followup_to_server_history_payload() {
 
     cleanup_reload_context_file(session_id);
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -417,8 +417,8 @@ fn test_handle_post_connect_defers_reload_followup_to_server_history_payload() {
 fn test_handle_post_connect_clears_deferred_dispatch_before_reload_followup() {
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("create temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let session_id = "session_reload_deferred_dispatch";
     crate::tool::selfdev::ReloadContext {
@@ -472,9 +472,9 @@ fn test_handle_post_connect_clears_deferred_dispatch_before_reload_followup() {
 
     cleanup_reload_context_file(session_id);
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -484,8 +484,8 @@ fn test_handle_post_connect_requests_client_reload_after_server_reload_even_with
 
     let _guard = crate::storage::lock_test_env();
     let temp_home = tempfile::TempDir::new().expect("create temp home");
-    let prev_home = std::env::var_os("JCODE_HOME");
-    crate::env::set_var("JCODE_HOME", temp_home.path());
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp_home.path());
 
     let mut app = create_test_app();
     app.client_binary_mtime = Some(SystemTime::now() + Duration::from_secs(3600));
@@ -521,9 +521,9 @@ fn test_handle_post_connect_requests_client_reload_after_server_reload_even_with
     assert!(app.should_quit);
 
     if let Some(prev_home) = prev_home {
-        crate::env::set_var("JCODE_HOME", prev_home);
+        crate::env::set_var("MINNAL_HOME", prev_home);
     } else {
-        crate::env::remove_var("JCODE_HOME");
+        crate::env::remove_var("MINNAL_HOME");
     }
 }
 
@@ -815,7 +815,7 @@ fn test_remote_done_recovers_stranded_soft_interrupt_as_queued_followup() {
 
 #[test]
 fn test_remote_done_auto_pokes_again_when_todos_remain() {
-    with_temp_jcode_home(|| {
+    with_temp_minnal_home(|| {
         let mut app = create_test_app();
         let rt = tokio::runtime::Runtime::new().unwrap();
         let _guard = rt.enter();

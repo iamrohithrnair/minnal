@@ -21,8 +21,8 @@ PROBE = "jqx92"
 DEFAULT_TIMEOUT_S = 20.0
 DEFAULT_SETTLE_S = 1.0
 DEFAULT_TOOLS = [
-    "jcode_memory_off",
-    "jcode_memory_on",
+    "minnal_memory_off",
+    "minnal_memory_on",
     "pi",
     "codex",
     "opencode",
@@ -38,7 +38,7 @@ class ToolSpec:
     argv: list[str]
     version_argv: list[str]
     env: dict[str, str] | None = None
-    jcode: bool = False
+    minnal: bool = False
 
 
 @dataclass
@@ -82,26 +82,26 @@ def detect_pi_bin() -> str:
 
 
 def build_specs() -> dict[str, ToolSpec]:
-    jcode = shutil.which("jcode") or str(Path.home() / ".local/bin/jcode")
+    minnal = shutil.which("minnal") or str(Path.home() / ".local/bin/minnal")
     codex = shutil.which("codex") or "/usr/bin/codex"
     opencode = shutil.which("opencode") or "/usr/bin/opencode"
     copilot = shutil.which("copilot") or str(Path.home() / ".local/bin/copilot")
     cursor_agent = shutil.which("cursor-agent") or str(Path.home() / ".local/bin/cursor-agent")
     claude = shutil.which("claude") or str(Path.home() / ".local/bin/claude")
     specs = {
-        "jcode_memory_off": ToolSpec(
-            name="jcode_memory_off",
-            argv=[jcode, "--no-update", "--no-selfdev"],
-            version_argv=[jcode, "version"],
-            env={"JCODE_NO_TELEMETRY": "1", "JCODE_MEMORY_ENABLED": "0"},
-            jcode=True,
+        "minnal_memory_off": ToolSpec(
+            name="minnal_memory_off",
+            argv=[minnal, "--no-update", "--no-selfdev"],
+            version_argv=[minnal, "version"],
+            env={"MINNAL_NO_TELEMETRY": "1", "MINNAL_MEMORY_ENABLED": "0"},
+            minnal=True,
         ),
-        "jcode_memory_on": ToolSpec(
-            name="jcode_memory_on",
-            argv=[jcode, "--no-update", "--no-selfdev"],
-            version_argv=[jcode, "version"],
-            env={"JCODE_NO_TELEMETRY": "1", "JCODE_MEMORY_ENABLED": "1"},
-            jcode=True,
+        "minnal_memory_on": ToolSpec(
+            name="minnal_memory_on",
+            argv=[minnal, "--no-update", "--no-selfdev"],
+            version_argv=[minnal, "version"],
+            env={"MINNAL_NO_TELEMETRY": "1", "MINNAL_MEMORY_ENABLED": "1"},
+            minnal=True,
         ),
         "pi": ToolSpec(
             name="pi",
@@ -345,23 +345,23 @@ def run_tool(spec: ToolSpec, sessions: int, cwd: Path, timeout_s: float, settle_
     cleanup_pgids: list[int] = []
     temp_root: str | None = None
     try:
-        if spec.jcode:
-            temp_root = tempfile.mkdtemp(prefix="jcode-memory-bench-")
+        if spec.minnal:
+            temp_root = tempfile.mkdtemp(prefix="minnal-memory-bench-")
             env = os.environ.copy()
             if spec.env:
                 env.update(spec.env)
-            env["JCODE_HOME"] = os.path.join(temp_root, "home")
-            env["JCODE_RUNTIME_DIR"] = os.path.join(temp_root, "run")
-            env["JCODE_TEMP_SERVER"] = "1"
-            env["JCODE_SERVER_OWNER_PID"] = str(os.getpid())
-            os.makedirs(env["JCODE_HOME"], exist_ok=True)
-            os.makedirs(env["JCODE_RUNTIME_DIR"], exist_ok=True)
-            if spec.name == "jcode_memory_on":
-                real_models = Path.home() / ".jcode" / "models"
-                bench_models = Path(env["JCODE_HOME"]) / "models"
+            env["MINNAL_HOME"] = os.path.join(temp_root, "home")
+            env["MINNAL_RUNTIME_DIR"] = os.path.join(temp_root, "run")
+            env["MINNAL_TEMP_SERVER"] = "1"
+            env["MINNAL_SERVER_OWNER_PID"] = str(os.getpid())
+            os.makedirs(env["MINNAL_HOME"], exist_ok=True)
+            os.makedirs(env["MINNAL_RUNTIME_DIR"], exist_ok=True)
+            if spec.name == "minnal_memory_on":
+                real_models = Path.home() / ".minnal" / "models"
+                bench_models = Path(env["MINNAL_HOME"]) / "models"
                 if real_models.exists() and not bench_models.exists():
                     bench_models.symlink_to(real_models)
-            socket_path = os.path.join(env["JCODE_RUNTIME_DIR"], "bench.sock")
+            socket_path = os.path.join(env["MINNAL_RUNTIME_DIR"], "bench.sock")
             server_proc = subprocess.Popen(
                 [spec.argv[0], "--no-update", "--no-selfdev", "serve", "--socket", socket_path],
                 cwd=str(cwd),
@@ -373,10 +373,10 @@ def run_tool(spec: ToolSpec, sessions: int, cwd: Path, timeout_s: float, settle_
             )
             cleanup_pgids.append(os.getpgid(server_proc.pid))
             if not wait_for_socket(socket_path, timeout_s):
-                raise RuntimeError("jcode server did not become ready")
-            if spec.name == "jcode_memory_on":
+                raise RuntimeError("minnal server did not become ready")
+            if spec.name == "minnal_memory_on":
                 time.sleep(max(settle_s, 5.0))
-            per_session_settle = max(settle_s, 2.0) if spec.name == "jcode_memory_on" else settle_s
+            per_session_settle = max(settle_s, 2.0) if spec.name == "minnal_memory_on" else settle_s
             for _ in range(sessions):
                 launches.append(
                     launch_interactive(

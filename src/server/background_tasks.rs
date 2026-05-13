@@ -6,7 +6,7 @@ use crate::message::{
     format_background_task_notification_markdown, format_background_task_progress_markdown,
 };
 use crate::protocol::{NotificationType, ServerEvent};
-use jcode_agent_runtime::SoftInterruptSource;
+use minnal_agent_runtime::SoftInterruptSource;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -170,8 +170,8 @@ pub(super) async fn dispatch_ui_activity(
         swarm_members,
         session_id,
         ServerEvent::Notification {
-            from_session: "jcode".to_string(),
-            from_name: Some("Jcode".to_string()),
+            from_session: "minnal".to_string(),
+            from_name: Some("Minnal".to_string()),
             notification_type: NotificationType::Message {
                 scope: Some(activity.kind.scope().to_string()),
                 channel: None,

@@ -1,9 +1,9 @@
-# Jcode Desktop Architecture Direction
+# Minnal Desktop Architecture Direction
 
 Status: Proposed
 Updated: 2026-04-25
 
-This document captures the initial direction for a desktop application for Jcode under these constraints:
+This document captures the initial direction for a desktop application for Minnal under these constraints:
 
 - no Electron/Tauri/web-app shell
 - no general UI framework
@@ -13,7 +13,7 @@ This document captures the initial direction for a desktop application for Jcode
 - primary developer machine may be Linux
 - most early users are expected to be on macOS
 
-The goal is to make the desktop client a first-class Jcode surface without forking the Jcode runtime or turning the app into a heavyweight IDE clone.
+The goal is to make the desktop client a first-class Minnal surface without forking the Minnal runtime or turning the app into a heavyweight IDE clone.
 
 See also:
 
@@ -26,7 +26,7 @@ See also:
 
 ## Executive summary
 
-Build Jcode Desktop as a small Rust desktop client with a custom GPU-rendered UI. The app should connect to a local Jcode server/daemon that owns sessions, tools, agent execution, persistence, and permissions.
+Build Minnal Desktop as a small Rust desktop client with a custom GPU-rendered UI. The app should connect to a local Minnal server/daemon that owns sessions, tools, agent execution, persistence, and permissions.
 
 The frontend should be optimized as a render/input surface:
 
@@ -42,8 +42,8 @@ Recommended initial stack:
 | Area | Decision |
 |---|---|
 | Frontend language | Rust |
-| Backend/runtime | Existing Rust Jcode server/session runtime |
-| Process model | Desktop frontend + local Jcode daemon/server |
+| Backend/runtime | Existing Rust Minnal server/session runtime |
+| Process model | Desktop frontend + local Minnal daemon/server |
 | Window/input layer | Thin platform layer, likely `winit` initially |
 | Rendering | `wgpu` with a custom 2D renderer |
 | UI architecture | Retained UI tree with dirty tracking |
@@ -55,7 +55,7 @@ Recommended initial stack:
 
 ## Product stance
 
-Jcode Desktop should not start as a full IDE and should not look like a conventional chatbot.
+Minnal Desktop should not start as a full IDE and should not look like a conventional chatbot.
 
 The differentiated product is a **keyboard-driven, Niri-like agent workspace superapp** for local development. The first-class object is not a chat window, but a workspace containing many navigable surfaces:
 
@@ -129,7 +129,7 @@ The existing Linux/Niri workflow should remain excellent, but desktop product qu
 Use a split process architecture:
 
 ```text
-Jcode Desktop Frontend
+Minnal Desktop Frontend
   - window/input
   - custom rendering
   - local view model
@@ -137,7 +137,7 @@ Jcode Desktop Frontend
   - surface-local state
   - protocol client
 
-Jcode Server/Daemon
+Minnal Server/Daemon
   - sessions
   - agent runtime
   - tool runtime
@@ -187,7 +187,7 @@ Early protocol properties:
 
 Possible transports:
 
-1. Existing Jcode server channel, if compatible with desktop needs.
+1. Existing Minnal server channel, if compatible with desktop needs.
 2. Unix domain socket on Linux/macOS and named pipe on Windows.
 3. Stdio JSON protocol for early prototypes and test harnesses.
 
@@ -348,7 +348,7 @@ Required early instrumentation:
 - daemon round-trip latency
 - frontend RSS if available
 
-A debug HUD should exist in the prototype before real Jcode integration is considered complete.
+A debug HUD should exist in the prototype before real Minnal integration is considered complete.
 
 Example HUD:
 
@@ -379,7 +379,7 @@ Success criteria:
 
 Success criteria:
 
-- connects to local Jcode server/daemon
+- connects to local Minnal server/daemon
 - lists sessions
 - attaches to a session/surface
 - subscribes to event stream
@@ -408,10 +408,10 @@ Suggested structure:
 
 ```text
 crates/
-  jcode-desktop-protocol/   # shared protocol/event types if not already covered by server types
-  jcode-desktop-ui/         # UI tree, layout, text/cache abstractions, renderer-agnostic pieces
-  jcode-desktop-renderer/   # wgpu renderer and GPU resources
-  jcode-desktop/            # app shell, platform window, protocol client, product UI
+  minnal-desktop-protocol/   # shared protocol/event types if not already covered by server types
+  minnal-desktop-ui/         # UI tree, layout, text/cache abstractions, renderer-agnostic pieces
+  minnal-desktop-renderer/   # wgpu renderer and GPU resources
+  minnal-desktop/            # app shell, platform window, protocol client, product UI
 ```
 
 If compile time becomes a problem, keep protocol/UI crates lightweight and gate GPU/window dependencies behind the final app crate.
@@ -425,7 +425,7 @@ Likely acceptable dependencies:
 - `wgpu` for rendering abstraction
 - a very thin window/input layer such as `winit` for bootstrapping
 - `cosmic-text`/`swash` or equivalent for text shaping/rasterization
-- small serialization/protocol crates already consistent with Jcode
+- small serialization/protocol crates already consistent with Minnal
 
 Avoid:
 
@@ -462,7 +462,7 @@ These should be resolved before implementation moves past the fake-data prototyp
 1. Use `winit` initially or write direct platform shells from the start?
 2. Use `wgpu` or direct Metal-first rendering?
 3. Use `cosmic-text`/`swash` or platform text APIs?
-4. Reuse the existing Jcode server protocol or introduce a desktop-specific event protocol crate?
+4. Reuse the existing Minnal server protocol or introduce a desktop-specific event protocol crate?
 5. Should the first desktop binary support multi-surface mode or only one active surface?
 6. What is the minimum macOS version to support?
 7. What is the first distribution path: local `.app`, Homebrew cask, or signed/notarized DMG?
@@ -482,4 +482,4 @@ The prototype should not wait for a perfect daemon API. It should validate the e
 - on-demand repaint
 - debug HUD
 
-Only after that should the real Jcode event stream be connected.
+Only after that should the real Minnal event stream be connected.

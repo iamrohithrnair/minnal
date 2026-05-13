@@ -1,1 +1,1 @@
-pub(crate) use jcode_tui_render::*;
+pub(crate) use minnal_tui_render::*;

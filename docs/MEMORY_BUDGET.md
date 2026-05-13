@@ -3,7 +3,7 @@
 Status: active guardrail
 Updated: 2026-04-18
 
-This document defines the current memory regression budget for jcode.
+This document defines the current memory regression budget for minnal.
 
 The goal is not to freeze memory usage forever. The goal is to make memory changes:
 - measurable

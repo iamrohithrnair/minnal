@@ -363,20 +363,20 @@ mod tests {
         let presentation = present_swarm_notification(
             "moss",
             &NotificationType::FileConflict {
-                path: "/home/jeremy/jcode/src/tool/communicate.rs".to_string(),
+                path: "/home/jeremy/minnal/src/tool/communicate.rs".to_string(),
                 operation: "edited".to_string(),
                 intent: Some("wire swarm intent display".to_string()),
                 summary: Some("edited lines 323-348 (1 occurrence)".to_string()),
                 detail: Some("323- old line\n323+ new line".to_string()),
             },
-            "⚠ File activity: /home/jeremy/jcode/src/tool/communicate.rs — moss just edited this file you previously worked with: edited lines 323-348 (1 occurrence)",
+            "⚠ File activity: /home/jeremy/minnal/src/tool/communicate.rs — moss just edited this file you previously worked with: edited lines 323-348 (1 occurrence)",
         );
 
         assert_eq!(presentation.title, "File activity · moss");
         assert!(
             presentation
                 .message
-                .contains("`…/jcode/src/tool/communicate.rs`")
+                .contains("`…/minnal/src/tool/communicate.rs`")
         );
         assert!(
             presentation
@@ -395,7 +395,7 @@ mod tests {
         );
         assert_eq!(
             presentation.status_notice,
-            "File activity · …/jcode/src/tool/communicate.rs"
+            "File activity · …/minnal/src/tool/communicate.rs"
         );
     }
 }

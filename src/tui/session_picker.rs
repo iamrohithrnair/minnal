@@ -8,7 +8,7 @@ use crate::session::{CrashedSessionsInfo, Session};
 use crate::tui::{DisplayMessage, markdown};
 use anyhow::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers, MouseEventKind};
-use jcode_session_types::SessionStatus;
+use minnal_session_types::SessionStatus;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -20,7 +20,7 @@ use std::collections::HashSet;
 use std::io::IsTerminal;
 use std::time::Duration;
 
-pub use jcode_tui_session_picker::{
+pub use minnal_tui_session_picker::{
     PickerItem, PreviewMessage, ResumeTarget, ServerGroup, SessionFilterMode, SessionInfo,
     SessionSource,
 };
@@ -436,7 +436,7 @@ impl SessionPicker {
                 (
                     s.resume_target.clone(),
                     match &s.resume_target {
-                        ResumeTarget::JcodeSession { session_id } => Some(session_id.clone()),
+                        ResumeTarget::MinnalSession { session_id } => Some(session_id.clone()),
                         ResumeTarget::ClaudeCodeSession { session_id, .. } => {
                             Some(session_id.clone())
                         }
@@ -457,7 +457,7 @@ impl SessionPicker {
         };
 
         let preview = match resume_target {
-            ResumeTarget::JcodeSession { .. } => {
+            ResumeTarget::MinnalSession { .. } => {
                 let Ok(session) = Session::load(&session_id) else {
                     return;
                 };

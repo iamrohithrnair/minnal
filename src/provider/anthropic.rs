@@ -10,7 +10,7 @@ use crate::message::{ContentBlock, Message, Role, StreamEvent, ToolDefinition};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
 use futures::StreamExt;
-use jcode_provider_core::{
+use minnal_provider_core::{
     ANTHROPIC_OAUTH_BETA_HEADERS, anthropic_effectively_1m, anthropic_is_1m_model as is_1m_model,
     anthropic_map_tool_name_for_oauth as map_tool_name_for_oauth,
     anthropic_map_tool_name_from_oauth as map_tool_name_from_oauth, anthropic_oauth_beta_headers,
@@ -54,7 +54,8 @@ pub(crate) const OAUTH_BILLING_HEADER: &str =
 
 pub(crate) const OAUTH_BETA_HEADERS: &str = ANTHROPIC_OAUTH_BETA_HEADERS;
 #[cfg(test)]
-pub(crate) const OAUTH_BETA_HEADERS_1M: &str = jcode_provider_core::ANTHROPIC_OAUTH_BETA_HEADERS_1M;
+pub(crate) const OAUTH_BETA_HEADERS_1M: &str =
+    minnal_provider_core::ANTHROPIC_OAUTH_BETA_HEADERS_1M;
 
 pub fn effectively_1m(model: &str) -> bool {
     anthropic_effectively_1m(model)
@@ -382,7 +383,7 @@ const RETRY_BASE_DELAY_MS: u64 = 1000;
 
 /// Default max output tokens for Anthropic models.
 /// Set to 32k to avoid truncating long tool calls (e.g. writing large files).
-/// Override with JCODE_ANTHROPIC_MAX_TOKENS env var.
+/// Override with MINNAL_ANTHROPIC_MAX_TOKENS env var.
 const DEFAULT_MAX_TOKENS: u32 = 32_768;
 
 /// Available models
@@ -423,7 +424,7 @@ impl AnthropicProvider {
     }
 
     pub fn new() -> Self {
-        let model = std::env::var("JCODE_ANTHROPIC_MODEL").unwrap_or_else(|_| {
+        let model = std::env::var("MINNAL_ANTHROPIC_MODEL").unwrap_or_else(|_| {
             if Self::is_usage_exhausted() {
                 "claude-sonnet-4-6".to_string()
             } else {
@@ -438,7 +439,7 @@ impl AnthropicProvider {
             })
         });
 
-        let max_tokens = std::env::var("JCODE_ANTHROPIC_MAX_TOKENS")
+        let max_tokens = std::env::var("MINNAL_ANTHROPIC_MAX_TOKENS")
             .ok()
             .and_then(|v| v.trim().parse::<u32>().ok())
             .unwrap_or(DEFAULT_MAX_TOKENS);
@@ -482,7 +483,7 @@ impl AnthropicProvider {
             && !oauth::claude_scopes_have_inference(&fresh_creds.scopes)
         {
             anyhow::bail!(
-                "Claude OAuth credentials are missing the required user:inference scope (scopes: {}). Run `jcode login --provider claude` to mint a fresh Claude.ai OAuth token, or import/use a fresh Claude Code login.",
+                "Claude OAuth credentials are missing the required user:inference scope (scopes: {}). Run `minnal login --provider claude` to mint a fresh Claude.ai OAuth token, or import/use a fresh Claude Code login.",
                 fresh_creds.scopes.join(" ")
             );
         }
@@ -1265,7 +1266,7 @@ async fn run_stream_with_retries(
                         Err(refresh_err) => {
                             let _ = tx
                                 .send(Err(anyhow::anyhow!(
-                                    "{}\n\nAutomatic Claude OAuth refresh failed: {}\nRun `jcode login --provider claude` (preferred) or `claude`, then retry.",
+                                    "{}\n\nAutomatic Claude OAuth refresh failed: {}\nRun `minnal login --provider claude` (preferred) or `claude`, then retry.",
                                     e,
                                     refresh_err
                                 )))
@@ -1286,7 +1287,7 @@ async fn run_stream_with_retries(
                 if is_oauth && is_oauth_auth_error(&error_str) {
                     let _ = tx
                         .send(Err(anyhow::anyhow!(
-                            "{}\n\nClaude OAuth authentication failed. Run `jcode login --provider claude` (preferred) or `claude`, then retry.",
+                            "{}\n\nClaude OAuth authentication failed. Run `minnal login --provider claude` (preferred) or `claude`, then retry.",
                             e
                         )))
                         .await;
@@ -1365,7 +1366,7 @@ async fn stream_response(
     oauth_session_id: &str,
 ) -> Result<()> {
     use crate::message::ConnectionPhase;
-    if std::env::var("JCODE_ANTHROPIC_DEBUG")
+    if std::env::var("MINNAL_ANTHROPIC_DEBUG")
         .map(|v| v == "1")
         .unwrap_or(false)
         && let Ok(json) = serde_json::to_string_pretty(&request)

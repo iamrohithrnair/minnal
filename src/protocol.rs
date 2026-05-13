@@ -1,1 +1,1 @@
-pub use jcode_protocol::*;
+pub use minnal_protocol::*;
