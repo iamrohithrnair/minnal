@@ -36,7 +36,7 @@ echo "  macOS Intel SHA256: $MACOS_INTEL_SHA"
 echo ""
 echo "Updating Homebrew tap..."
 BREW_DIR="$tmpdir/homebrew-minnal"
-git clone --depth 1 git@github.com:1jehuang/homebrew-minnal.git "$BREW_DIR" 2>/dev/null
+git clone --depth 1 git@github.com:codeslord/homebrew-minnal.git "$BREW_DIR" 2>/dev/null
 
 cat > "$BREW_DIR/Formula/minnal.rb" <<EOF
 class Minnal < Formula
@@ -75,7 +75,7 @@ class Minnal < Formula
         libexec.install Dir["libssl.so*"], Dir["libcrypto.so*"]
         (bin/"minnal").write <<~SH
           #!/bin/sh
-          exec "#{libexec}/minnal-linux-x86_64" "$@"
+          exec "#{libexec}/minnal-linux-x86_64" "\$@"
         SH
       end
     end

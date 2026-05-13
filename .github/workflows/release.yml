@@ -303,7 +303,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
 
-          git clone git@github.com:1jehuang/homebrew-minnal.git /tmp/homebrew-minnal
+          git clone git@github.com:codeslord/homebrew-minnal.git /tmp/homebrew-minnal
 
           cat > /tmp/homebrew-minnal/Formula/minnal.rb << FORMULA
           class Minnal < Formula
@@ -342,7 +342,7 @@ jobs:
                   libexec.install Dir["libssl.so*"], Dir["libcrypto.so*"]
                   (bin/"minnal").write <<~SH
                     #!/bin/sh
-                    exec "#{libexec}/minnal-linux-x86_64" "$@"
+                    exec "#{libexec}/minnal-linux-x86_64" "\$@"
                   SH
                 end
               end

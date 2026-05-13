@@ -1,22 +1,52 @@
 class Minnal < Formula
   desc "Possibly the greatest coding agent ever built — blazing-fast TUI, multi-model"
   homepage "https://github.com/codeslord/minnal"
-  version "0.12.2"
+  version "0.13.0"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/codeslord/minnal/releases/download/v0.12.2/minnal-aarch64-apple-darwin.tar.gz"
-      sha256 "REPLACE_WITH_AARCH64_DARWIN_SHA256"
+      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-macos-aarch64.tar.gz"
+      sha256 "REPLACE_WITH_MACOS_AARCH64_SHA256"
+
+      def install
+        bin.install "minnal-macos-aarch64" => "minnal"
+      end
     end
+
     on_intel do
-      url "https://github.com/codeslord/minnal/releases/download/v0.12.2/minnal-x86_64-apple-darwin.tar.gz"
-      sha256 "REPLACE_WITH_X86_64_DARWIN_SHA256"
+      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-macos-x86_64.tar.gz"
+      sha256 "REPLACE_WITH_MACOS_X86_64_SHA256"
+
+      def install
+        bin.install "minnal-macos-x86_64" => "minnal"
+      end
     end
   end
 
-  def install
-    bin.install "minnal"
+  on_linux do
+    on_intel do
+      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-linux-x86_64.tar.gz"
+      sha256 "REPLACE_WITH_LINUX_X86_64_SHA256"
+
+      def install
+        libexec.install "minnal-linux-x86_64", "minnal-linux-x86_64.bin"
+        libexec.install Dir["libssl.so*"], Dir["libcrypto.so*"]
+        (bin/"minnal").write <<~SH
+          #!/bin/sh
+          exec "#{libexec}/minnal-linux-x86_64" "$@"
+        SH
+      end
+    end
+
+    on_arm do
+      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-linux-aarch64.tar.gz"
+      sha256 "REPLACE_WITH_LINUX_AARCH64_SHA256"
+
+      def install
+        bin.install "minnal-linux-aarch64" => "minnal"
+      end
+    end
   end
 
   test do

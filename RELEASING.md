@@ -60,7 +60,7 @@ Tag push (v*)
     │
     ├─► release (after Linux + macOS complete)
     │     ├─► Create GitHub Release with binaries
-    │     ├─► Update Homebrew formula (1jehuang/homebrew-minnal)
+    │     ├─► Update Homebrew formula (codeslord/homebrew-minnal)
     │     └─► Update AUR package (minnal-bin)
     │
     └─► upload-windows-assets (after Windows + release complete)
@@ -78,7 +78,7 @@ Key design decisions:
 
 CI handles Homebrew and AUR updates automatically:
 
-- **Homebrew**: Updates `Formula/minnal.rb` in `1jehuang/homebrew-minnal` with new SHA256 hashes
+- **Homebrew**: Updates `Formula/minnal.rb` in `codeslord/homebrew-minnal` with new SHA256 hashes
 - **AUR**: Updates `PKGBUILD` and `.SRCINFO` in the `minnal-bin` AUR repo
 
 Both are triggered by the `release` job after Linux + macOS builds complete.
