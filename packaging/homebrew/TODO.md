@@ -1,6 +1,6 @@
-# Homebrew tap release checklist for v0.13.1
+# Homebrew tap release checklist for v0.14.0
 
-The automated release workflow should publish `v0.13.1` assets and update the
+The automated release workflow should publish `v0.14.0` assets and update the
 `iamrohithrnair/homebrew-minnal` tap when the `HOMEBREW_DEPLOY_KEY` repository secret
 is configured.
 
@@ -10,7 +10,7 @@ Manual fallback if the tap update is skipped or fails:
    ```bash
    gh repo create iamrohithrnair/homebrew-minnal --public --description "Homebrew tap for minnal"
    ```
-2. Wait for the `v0.13.1` release assets to finish uploading.
+2. Wait for the `v0.14.0` release assets to finish uploading.
 3. Compute SHA-256 hashes for:
    - `minnal-linux-x86_64.tar.gz`
    - `minnal-linux-aarch64.tar.gz`
