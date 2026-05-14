@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="codeslord/minnal"
+REPO="iamrohithrnair/minnal"
 IS_WINDOWS=false
 
 info() { printf '\033[1;34m%s\033[0m\n' "$*"; }

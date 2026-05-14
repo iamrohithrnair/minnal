@@ -20,7 +20,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 
-const TELEMETRY_ENDPOINT: &str = "https://minnal-telemetry.jeremyhuang55555.workers.dev/v1/event";
+const TELEMETRY_ENDPOINT: &str = "https://telemetry.minnal.dev/v1/event";
 const ASYNC_SEND_TIMEOUT: Duration = Duration::from_secs(5);
 const BLOCKING_INSTALL_TIMEOUT: Duration = Duration::from_millis(1200);
 const BLOCKING_LIFECYCLE_TIMEOUT: Duration = Duration::from_millis(800);
@@ -1720,7 +1720,7 @@ fn show_first_run_notice() {
     eprintln!("  session activity, tool counts, and crash/exit reasons). No code, filenames,");
     eprintln!("  prompts, or personal data is sent.");
     eprintln!("  To opt out: export MINNAL_NO_TELEMETRY=1");
-    eprintln!("  Details: https://github.com/1jehuang/minnal/blob/master/TELEMETRY.md");
+    eprintln!("  Details: https://github.com/iamrohithrnair/minnal/blob/main/TELEMETRY.md");
     eprintln!("\x1b[0m");
 }
 

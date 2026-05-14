@@ -787,7 +787,10 @@ mod tests {
 
     #[test]
     fn parses_command_permission_modes_and_aliases() {
-        assert_eq!(CommandPermissionMode::parse("ask"), Some(CommandPermissionMode::Ask));
+        assert_eq!(
+            CommandPermissionMode::parse("ask"),
+            Some(CommandPermissionMode::Ask)
+        );
         assert_eq!(
             CommandPermissionMode::parse("prompt"),
             Some(CommandPermissionMode::Ask)

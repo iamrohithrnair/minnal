@@ -2,19 +2,19 @@
 
 # minnal
 
-[![Latest Release](https://img.shields.io/github/v/release/1jehuang/minnal?style=flat-square)](https://github.com/1jehuang/minnal/releases)
-[![License](https://img.shields.io/github/license/1jehuang/minnal?style=flat-square)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/1jehuang/minnal/releases)
-[![Commit Activity](https://img.shields.io/github/commit-activity/m/1jehuang/minnal?style=flat-square)](https://github.com/1jehuang/minnal/commits/master)
-[![GitHub Stars](https://img.shields.io/github/stars/1jehuang/minnal?style=flat-square)](https://github.com/1jehuang/minnal/stargazers)
+[![Latest Release](https://img.shields.io/github/v/release/iamrohithrnair/minnal?style=flat-square)](https://github.com/iamrohithrnair/minnal/releases)
+[![License](https://img.shields.io/github/license/iamrohithrnair/minnal?style=flat-square)](LICENSE)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-blue?style=flat-square)](https://github.com/iamrohithrnair/minnal/releases)
+[![Commit Activity](https://img.shields.io/github/commit-activity/m/iamrohithrnair/minnal?style=flat-square)](https://github.com/iamrohithrnair/minnal/commits/main)
+[![GitHub Stars](https://img.shields.io/github/stars/iamrohithrnair/minnal?style=flat-square)](https://github.com/iamrohithrnair/minnal/stargazers)
 
 The next generation coding agent harness to raise the skill ceiling. <br>
 Built for multi-session workflows, infinite customizability, and performance.
 
 <br>
 
-<a href="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-memory-demo.mp4">
-  <img src="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-memory-demo.webp" alt="minnal memory demonstration" width="800">
+<a href="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-memory-demo.mp4">
+  <img src="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-memory-demo.webp" alt="minnal memory demonstration" width="800">
 </a>
 
 <br>
@@ -33,7 +33,7 @@ Built for multi-session workflows, infinite customizability, and performance.
 
 ```bash
 # macOS & Linux
-curl -fsSL https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.sh | bash
+curl -fsSL https://minnal.dev/install | bash
 ```
 
 Need Windows, Homebrew, source builds, provider setup, or tell your agent to set it up for you?
@@ -234,8 +234,8 @@ versions tested for this corrected memory rerun:
 
 <div align="center">
 
-  <a href="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-performance-demo.mp4">
-    <img src="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-performance-demo.webp" alt="minnal performance demonstration" width="900">
+  <a href="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-performance-demo.mp4">
+    <img src="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-performance-demo.webp" alt="minnal performance demonstration" width="900">
   </a>
 
   <p><em>minnal performance demonstration</em></p>
@@ -257,8 +257,8 @@ Memories are automatically consolidated every so often via the ambient mode. Thi
 
 <div align="center">
 
-  <a href="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-memory-demo.mp4">
-    <img src="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-memory-demo.webp" alt="minnal memory demonstration" width="900">
+  <a href="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-memory-demo.mp4">
+    <img src="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-memory-demo.webp" alt="minnal memory demonstration" width="900">
   </a>
 
   <p><em>minnal memory demonstration</em></p>
@@ -292,8 +292,8 @@ Spawn two or more agents in the same repo, and they will automatically be manage
 
 <div align="center">
 
-  <a href="https://github.com/1jehuang/minnal/releases/download/readme-assets/swarm-demo.mp4">
-    <img src="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-swarm-demonstration.webp" alt="minnal swarm demonstration" width="900">
+  <a href="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/swarm-demo.mp4">
+    <img src="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-swarm-demonstration.webp" alt="minnal swarm demonstration" width="900">
   </a>
 
   <p><em>minnal swarm demonstration</em></p>
@@ -556,8 +556,8 @@ and hotkey-friendly dictation without requiring a bundled speech-to-text stack.
 
 <div align="center">
 
-  <a href="https://github.com/1jehuang/minnal/releases/download/readme-assets/workflow.mp4">
-    <img src="https://github.com/1jehuang/minnal/releases/download/readme-assets/minnal-workflow-demonstration.webp" alt="minnal workflow demonstration" width="900">
+  <a href="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/workflow.mp4">
+    <img src="https://github.com/iamrohithrnair/minnal/releases/download/readme-assets/minnal-workflow-demonstration.webp" alt="minnal workflow demonstration" width="900">
   </a>
 
   <p><em>minnal workflow demonstration</em></p>
@@ -634,17 +634,17 @@ Set up minnal on this machine for me.
 1. Detect the operating system, available package managers, and shell environment, then install minnal using the best matching command below instead of referring me somewhere else:
 
    - macOS with Homebrew available:
-     brew tap 1jehuang/minnal
+     brew tap iamrohithrnair/minnal
      brew install minnal
 
    - macOS or Linux via install script:
-     curl -fsSL https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.sh | bash
+     curl -fsSL https://minnal.dev/install | bash
 
    - Windows PowerShell:
-     irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1 | iex
+     irm https://minnal.dev/install.ps1 | iex
 
    - From source if the above paths are not appropriate:
-     git clone https://github.com/codeslord/minnal.git
+     git clone https://github.com/iamrohithrnair/minnal.git
      cd minnal
      cargo build --release
      scripts/install_release.sh
@@ -689,25 +689,25 @@ This is intended to be a copy-paste bootstrap prompt for minnal itself or any ot
 
 ```bash
 # macOS & Linux
-curl -fsSL https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.sh | bash
+curl -fsSL https://minnal.dev/install | bash
 ```
 
 ```powershell
 # Windows (PowerShell)
-irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1 | iex
+irm https://minnal.dev/install.ps1 | iex
 ```
 
 ### macOS via Homebrew
 
 ```bash
-brew tap 1jehuang/minnal
+brew tap iamrohithrnair/minnal
 brew install minnal
 ```
 
 ### From Source (all platforms)
 
 ```bash
-git clone https://github.com/codeslord/minnal.git
+git clone https://github.com/iamrohithrnair/minnal.git
 cd minnal
 cargo build --release
 ```

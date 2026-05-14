@@ -265,8 +265,8 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
 
-          if ! git clone git@github.com:codeslord/homebrew-minnal.git /tmp/homebrew-minnal; then
-            echo "::warning::codeslord/homebrew-minnal is not available; skipping Homebrew tap update"
+          if ! git clone git@github.com:iamrohithrnair/homebrew-minnal.git /tmp/homebrew-minnal; then
+            echo "::warning::iamrohithrnair/homebrew-minnal is not available; skipping Homebrew tap update"
             exit 0
           fi
 
@@ -275,13 +275,13 @@ jobs:
           cat > /tmp/homebrew-minnal/Formula/minnal.rb << FORMULA
           class Minnal < Formula
             desc "AI coding agent powered by Claude and ChatGPT"
-            homepage "https://github.com/codeslord/minnal"
+            homepage "https://github.com/iamrohithrnair/minnal"
             version "${VERSION_NUM}"
             license "MIT"
 
             on_macos do
               on_arm do
-                url "https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-aarch64.tar.gz"
+                url "https://github.com/iamrohithrnair/minnal/releases/download/${VERSION}/minnal-macos-aarch64.tar.gz"
                 sha256 "${MACOS_ARM_SHA}"
 
                 def install
@@ -292,7 +292,7 @@ jobs:
 
             on_linux do
               on_intel do
-                url "https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
+                url "https://github.com/iamrohithrnair/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
                 sha256 "${LINUX_SHA}"
 
                 def install
@@ -306,7 +306,7 @@ jobs:
               end
 
               on_arm do
-                url "https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-aarch64.tar.gz"
+                url "https://github.com/iamrohithrnair/minnal/releases/download/${VERSION}/minnal-linux-aarch64.tar.gz"
                 sha256 "${LINUX_ARM_SHA}"
 
                 def install
@@ -324,8 +324,8 @@ jobs:
           sed -i 's/^          //' /tmp/homebrew-minnal/Formula/minnal.rb
 
           cd /tmp/homebrew-minnal
-          git config user.name "minnal-release-bot"
-          git config user.email "release@minnal.dev"
+          git config user.name "iamrohithrnair"
+          git config user.email "iamrohithrnair@gmail.com"
           git add Formula/minnal.rb
           git commit -m "Update to ${VERSION}" || echo "No changes"
           git push origin HEAD:main
@@ -358,7 +358,7 @@ jobs:
           VERSION_NUM="${VERSION#v}"
 
           LINUX_SHA=$(sha256sum artifacts/minnal-linux-x86_64/minnal-linux-x86_64.tar.gz | cut -d' ' -f1)
-          LINUX_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
+          LINUX_URL="https://github.com/iamrohithrnair/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
 
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
@@ -375,13 +375,13 @@ jobs:
           git remote set-url origin ssh://aur@aur.archlinux.org/minnal-bin.git
 
           cat > PKGBUILD << 'PKGBUILD_END'
-          # Maintainer: Jeremy Huang <jeremyhuang55555@gmail.com>
+          # Maintainer: iamrohithrnair <iamrohithrnair@gmail.com>
           pkgname=minnal-bin
           pkgver=VERSION_PLACEHOLDER
           pkgrel=1
           pkgdesc="AI coding agent powered by Claude and ChatGPT"
           arch=('x86_64')
-          url="https://github.com/codeslord/minnal"
+          url="https://github.com/iamrohithrnair/minnal"
           license=('MIT')
           provides=('minnal')
           conflicts=('minnal')
@@ -408,7 +408,7 @@ jobs:
           printf '\tpkgdesc = AI coding agent powered by Claude and ChatGPT\n' >> .SRCINFO
           printf '\tpkgver = %s\n' "${VERSION_NUM}" >> .SRCINFO
           printf '\tpkgrel = 1\n' >> .SRCINFO
-          printf '\turl = https://github.com/codeslord/minnal\n' >> .SRCINFO
+          printf '\turl = https://github.com/iamrohithrnair/minnal\n' >> .SRCINFO
           printf '\tarch = x86_64\n' >> .SRCINFO
           printf '\tlicense = MIT\n' >> .SRCINFO
           printf '\tprovides = minnal\n' >> .SRCINFO
@@ -417,8 +417,8 @@ jobs:
           printf '\tsha256sums = %s\n' "${LINUX_SHA}" >> .SRCINFO
           printf '\npkgname = minnal-bin\n' >> .SRCINFO
 
-          git config user.name "Jeremy Huang"
-          git config user.email "jeremyhuang55555@gmail.com"
+          git config user.name "iamrohithrnair"
+          git config user.email "iamrohithrnair@gmail.com"
           git add PKGBUILD .SRCINFO
           git commit -m "Update to ${VERSION}" || echo "No changes"
           retry 3 5 git push origin master

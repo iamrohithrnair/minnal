@@ -1,12 +1,12 @@
 class Minnal < Formula
   desc "Possibly the greatest coding agent ever built — blazing-fast TUI, multi-model"
-  homepage "https://github.com/codeslord/minnal"
-  version "0.13.0"
+  homepage "https://github.com/iamrohithrnair/minnal"
+  version "0.13.1"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-macos-aarch64.tar.gz"
+      url "https://github.com/iamrohithrnair/minnal/releases/download/v0.13.1/minnal-macos-aarch64.tar.gz"
       sha256 "REPLACE_WITH_MACOS_AARCH64_SHA256"
 
       def install
@@ -17,7 +17,7 @@ class Minnal < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-linux-x86_64.tar.gz"
+      url "https://github.com/iamrohithrnair/minnal/releases/download/v0.13.1/minnal-linux-x86_64.tar.gz"
       sha256 "REPLACE_WITH_LINUX_X86_64_SHA256"
 
       def install
@@ -31,7 +31,7 @@ class Minnal < Formula
     end
 
     on_arm do
-      url "https://github.com/codeslord/minnal/releases/download/v0.13.0/minnal-linux-aarch64.tar.gz"
+      url "https://github.com/iamrohithrnair/minnal/releases/download/v0.13.1/minnal-linux-aarch64.tar.gz"
       sha256 "REPLACE_WITH_LINUX_AARCH64_SHA256"
 
       def install

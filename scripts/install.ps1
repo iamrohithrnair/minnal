@@ -5,10 +5,10 @@
     Downloads the latest minnal release and installs it to %LOCALAPPDATA%\minnal\bin.
 
     One-liner install:
-      irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1 | iex
+      irm https://minnal.dev/install.ps1 | iex
 
     Or download and run (allows parameters):
-      & ([scriptblock]::Create((irm https://raw.githubusercontent.com/codeslord/minnal/main/scripts/install.ps1)))
+      & ([scriptblock]::Create((irm https://minnal.dev/install.ps1)))
 .PARAMETER InstallDir
     Override the installation directory (default: $env:LOCALAPPDATA\minnal\bin)
 .PARAMETER Version
@@ -38,7 +38,7 @@ if ($PSVersionTable.PSVersion.Major -lt 5) {
     exit 1
 }
 
-$Repo = "codeslord/minnal"
+$Repo = "iamrohithrnair/minnal"
 
 if (-not $InstallDir) {
     $InstallDir = Join-Path $env:LOCALAPPDATA "minnal\bin"

@@ -468,7 +468,7 @@ pub const OPENAI_COMPAT_PROFILE: OpenAiCompatibleProfile = OpenAiCompatibleProfi
     api_base: "https://api.openai.com/v1",
     api_key_env: "OPENAI_COMPAT_API_KEY",
     env_file: "openai-compatible.env",
-    setup_url: "https://github.com/1jehuang/minnal#openai-compatible-providers",
+    setup_url: "https://github.com/iamrohithrnair/minnal#openai-compatible-providers",
     default_model: None,
     requires_api_key: true,
 };

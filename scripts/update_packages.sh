@@ -8,9 +8,9 @@ VERSION_NUM="${VERSION#v}"
 
 echo "Updating packages for $VERSION..."
 
-LINUX_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
-LINUX_ARM_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-linux-aarch64.tar.gz"
-MACOS_ARM_URL="https://github.com/codeslord/minnal/releases/download/${VERSION}/minnal-macos-aarch64.tar.gz"
+LINUX_URL="https://github.com/iamrohithrnair/minnal/releases/download/${VERSION}/minnal-linux-x86_64.tar.gz"
+LINUX_ARM_URL="https://github.com/iamrohithrnair/minnal/releases/download/${VERSION}/minnal-linux-aarch64.tar.gz"
+MACOS_ARM_URL="https://github.com/iamrohithrnair/minnal/releases/download/${VERSION}/minnal-macos-aarch64.tar.gz"
 
 tmpdir=$(mktemp -d)
 trap 'rm -rf "$tmpdir"' EXIT
@@ -32,12 +32,12 @@ echo "  macOS ARM64 SHA256: $MACOS_ARM_SHA"
 echo ""
 echo "Updating Homebrew tap..."
 BREW_DIR="$tmpdir/homebrew-minnal"
-git clone --depth 1 git@github.com:codeslord/homebrew-minnal.git "$BREW_DIR" 2>/dev/null
+git clone --depth 1 git@github.com:iamrohithrnair/homebrew-minnal.git "$BREW_DIR" 2>/dev/null
 
 cat > "$BREW_DIR/Formula/minnal.rb" <<EOF
 class Minnal < Formula
   desc "AI coding agent powered by Claude and ChatGPT"
-  homepage "https://github.com/codeslord/minnal"
+  homepage "https://github.com/iamrohithrnair/minnal"
   version "$VERSION_NUM"
   license "MIT"
 
@@ -94,13 +94,13 @@ AUR_DIR="$tmpdir/minnal-bin-aur"
 git clone ssh://aur@aur.archlinux.org/minnal-bin.git "$AUR_DIR" 2>/dev/null
 
 cat > "$AUR_DIR/PKGBUILD" <<EOF
-# Maintainer: Jeremy Huang <jeremyhuang55555@gmail.com>
+# Maintainer: iamrohithrnair <iamrohithrnair@gmail.com>
 pkgname=minnal-bin
 pkgver=$VERSION_NUM
 pkgrel=1
 pkgdesc="AI coding agent powered by Claude and ChatGPT"
 arch=('x86_64')
-url="https://github.com/codeslord/minnal"
+url="https://github.com/iamrohithrnair/minnal"
 license=('MIT')
 provides=('minnal')
 conflicts=('minnal')

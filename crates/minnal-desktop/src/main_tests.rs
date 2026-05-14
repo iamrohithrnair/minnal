@@ -3459,14 +3459,14 @@ fn fresh_single_session_keeps_welcome_model_and_hero_available() {
 #[test]
 fn welcome_name_is_optional_and_sanitized() {
     assert_eq!(
-        sanitize_welcome_name("  Jeremy Huang  "),
-        Some("Jeremy".to_string())
+        sanitize_welcome_name("  Alex Rivera  "),
+        Some("Alex".to_string())
     );
     assert_eq!(sanitize_welcome_name("unknown"), None);
     assert_eq!(sanitize_welcome_name("   "), None);
 
-    let named = welcome_styled_lines(&Some("Jeremy".to_string()), 0, 0);
-    assert_eq!(named[0].text, "Welcome, Jeremy");
+    let named = welcome_styled_lines(&Some("Alex".to_string()), 0, 0);
+    assert_eq!(named[0].text, "Welcome, Alex");
     let generic = welcome_styled_lines(&None, 0, 0);
     assert_eq!(generic[0].text, "Hello there");
 }
