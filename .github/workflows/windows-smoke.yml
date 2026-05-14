@@ -13,6 +13,9 @@ on:
           - arm64
           - both
 
+permissions:
+  contents: read
+
 concurrency:
   group: windows-smoke-${{ github.ref }}-${{ github.event.inputs.target || 'x64' }}
   cancel-in-progress: true
@@ -31,6 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - uses: ilammy/msvc-dev-cmd@v1.13.0
@@ -163,6 +167,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - uses: ilammy/msvc-dev-cmd@v1.13.0

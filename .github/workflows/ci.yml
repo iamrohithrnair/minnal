@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -23,6 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
 
       - uses: dtolnay/rust-toolchain@stable
@@ -70,6 +74,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
 
       - uses: dtolnay/rust-toolchain@stable
@@ -105,6 +110,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
 
       - uses: dtolnay/rust-toolchain@stable
@@ -186,6 +192,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
 
       - uses: ilammy/msvc-dev-cmd@v1.13.0
@@ -319,6 +326,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -333,6 +342,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Check PowerShell script syntax (Windows PowerShell 5.1)
         shell: powershell
@@ -351,6 +362,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
 
       - uses: dtolnay/rust-toolchain@stable

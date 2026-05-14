@@ -44,6 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
           fetch-depth: 0
 
@@ -126,6 +127,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Configure MSVC build environment (ARM64)
@@ -207,6 +209,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
+          persist-credentials: false
           fetch-depth: 1
 
       - uses: actions/download-artifact@v8.0.1
@@ -261,9 +264,13 @@ jobs:
           MACOS_ARM_SHA=$(sha256sum artifacts/minnal-macos-aarch64/minnal-macos-aarch64.tar.gz | cut -d' ' -f1)
 
           mkdir -p ~/.ssh
-          echo "$HOMEBREW_DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 700 ~/.ssh
+          printf '%s\n' "$HOMEBREW_DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
+          touch ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o ConnectTimeout=10 -o ConnectionAttempts=3"
 
           if ! git clone git@github.com:iamrohithrnair/homebrew-minnal.git /tmp/homebrew-minnal; then
             echo "::warning::iamrohithrnair/homebrew-minnal is not available; skipping Homebrew tap update"
