@@ -136,7 +136,7 @@ impl App {
             }
             "version" => "`/version`\nShow minnal version/build details.",
             "changelog" => "`/changelog`\nShow recent changes embedded in this build.",
-            "quit" => "`/quit`\nExit minnal.",
+            "quit" | "exit" => "`/quit` `/exit`\nExit minnal.",
             "config" => {
                 "`/config`\nShow active configuration.\n\n`/config init`\nCreate default config file.\n\n`/config edit`\nOpen config in `$EDITOR`."
             }
