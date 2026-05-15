@@ -47,6 +47,10 @@ fn test_generated_default_config_uses_low_openai_reasoning_effort() {
         content.contains("openai_service_tier = \"priority\""),
         "generated default config should enable OpenAI fast mode"
     );
+    assert!(
+        content.contains("idle_animation = false"),
+        "generated default config should keep idle animation disabled"
+    );
 
     if let Some(prev) = prev_home {
         crate::env::set_var("MINNAL_HOME", prev);

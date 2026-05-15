@@ -1,41 +1,11 @@
-use super::box_utils::render_rounded_box;
-use super::changelog::get_unseen_changelog_entries;
 use super::{
-    TuiState, binary_age, dim_color, header_name_color, header_session_color,
-    is_running_stable_release, semver, shorten_model_name,
+    TuiState, dim_color, header_name_color, header_session_color, is_running_stable_release,
+    semver, shorten_model_name,
 };
 use crate::auth::{AuthState, AuthStatus};
 use crate::tui::color_support::rgb;
 use crate::tui::connection_type_icon;
 use ratatui::prelude::*;
-#[cfg(test)]
-use std::sync::OnceLock;
-
-#[cfg(test)]
-fn unseen_changelog_entries_override() -> &'static std::sync::Mutex<Option<Vec<String>>> {
-    static OVERRIDE: OnceLock<std::sync::Mutex<Option<Vec<String>>>> = OnceLock::new();
-    OVERRIDE.get_or_init(|| std::sync::Mutex::new(None))
-}
-
-fn unseen_changelog_entries() -> Vec<String> {
-    #[cfg(test)]
-    {
-        if let Ok(guard) = unseen_changelog_entries_override().lock()
-            && let Some(entries) = guard.clone()
-        {
-            return entries;
-        }
-    }
-    get_unseen_changelog_entries().clone()
-}
-
-#[cfg(test)]
-pub(crate) fn set_unseen_changelog_entries_override_for_tests(entries: Option<Vec<String>>) {
-    let mut guard = unseen_changelog_entries_override()
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner());
-    *guard = entries;
-}
 
 pub(crate) fn capitalize(s: &str) -> String {
     let mut chars = s.chars();
@@ -359,7 +329,6 @@ pub(super) fn build_persistent_header(app: &dyn TuiState, width: u16) -> Vec<Lin
     let icon = connection_type_icon(app.connection_type().as_deref())
         .unwrap_or_else(|| crate::id::session_icon(&session_name));
     let nice_model = format_model_name(&short_model);
-    let build_info = binary_age().unwrap_or_else(|| "unknown".to_string());
     let align = Alignment::Center;
     let mut lines: Vec<Line> = Vec::new();
     let w = width as usize;
@@ -442,14 +411,9 @@ pub(super) fn build_persistent_header(app: &dyn TuiState, width: u16) -> Vec<Lin
     let version_text = if is_running_stable_release() {
         let tag = env!("MINNAL_GIT_TAG");
         if tag.is_empty() || tag.contains('-') {
-            let full = format!("{} · release · built {}", semver(), build_info);
-            if full.chars().count() <= w {
-                full
-            } else {
-                format!("{} · release", semver())
-            }
+            format!("{} · release", semver())
         } else {
-            let full = format!("{} · release {} · built {}", semver(), tag, build_info);
+            let full = format!("{} · release {}", semver(), tag);
             if full.chars().count() <= w {
                 full
             } else {
@@ -457,12 +421,7 @@ pub(super) fn build_persistent_header(app: &dyn TuiState, width: u16) -> Vec<Lin
             }
         }
     } else {
-        let full = format!("{} · built {}", semver(), build_info);
-        if full.chars().count() <= w {
-            full
-        } else {
-            semver().to_string()
-        }
+        semver().to_string()
     };
     lines.push(
         Line::from(Span::styled(version_text, Style::default().fg(dim_color()))).alignment(align),
@@ -570,47 +529,6 @@ pub(crate) fn build_header_lines(app: &dyn TuiState, width: u16) -> Vec<Line<'st
             ))
             .alignment(align),
         );
-    }
-
-    let new_entries = unseen_changelog_entries();
-    if !new_entries.is_empty() && w > 20 {
-        const MAX_LINES: usize = 8;
-        let available_width = w.saturating_sub(2);
-        let display_count = new_entries.len().min(MAX_LINES);
-        let has_more = new_entries.len() > MAX_LINES;
-
-        let mut content: Vec<Line> = Vec::new();
-        for entry in new_entries.iter().take(display_count) {
-            content.push(
-                Line::from(Span::styled(
-                    format!("• {}", entry),
-                    Style::default().fg(dim_color()),
-                ))
-                .alignment(align),
-            );
-        }
-        if has_more {
-            content.push(
-                Line::from(Span::styled(
-                    format!(
-                        "  …{} more · /changelog to see all",
-                        new_entries.len() - MAX_LINES
-                    ),
-                    Style::default().fg(dim_color()),
-                ))
-                .alignment(align),
-            );
-        }
-
-        let boxed = render_rounded_box(
-            "Updates",
-            content,
-            available_width,
-            Style::default().fg(dim_color()),
-        );
-        for line in boxed {
-            lines.push(line.alignment(align));
-        }
     }
 
     let mcps = app.mcp_servers();

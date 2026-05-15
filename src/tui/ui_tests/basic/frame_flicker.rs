@@ -239,15 +239,8 @@ fn test_changelog_overlay_repeated_renders_are_stable() {
 }
 
 #[test]
-fn test_updates_header_repeated_renders_stay_stable_near_scrollbar_threshold() {
+fn test_header_repeated_renders_stay_stable_near_scrollbar_threshold() {
     let _lock = viewport_snapshot_test_lock();
-    super::header::set_unseen_changelog_entries_override_for_tests(Some(vec![
-        "Update one".to_string(),
-        "Update two".to_string(),
-        "Update three".to_string(),
-        "Update four".to_string(),
-        "Update five".to_string(),
-    ]));
 
     let state = TestState {
         display_messages: vec![DisplayMessage::assistant("ok")],
@@ -276,11 +269,9 @@ fn test_updates_header_repeated_renders_stay_stable_near_scrollbar_threshold() {
         }
     }
 
-    super::header::set_unseen_changelog_entries_override_for_tests(None);
-
     assert!(
         unstable.is_empty(),
-        "expected updates header to render stably near scrollbar threshold, found unstable sizes: {unstable:#?}"
+        "expected header to render stably near scrollbar threshold, found unstable sizes: {unstable:#?}"
     );
 }
 

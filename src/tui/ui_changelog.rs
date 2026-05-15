@@ -152,6 +152,7 @@ pub(super) fn get_grouped_changelog() -> Vec<ChangelogGroup> {
 /// Reads the last-seen commit hash from ~/.minnal/last_seen_changelog,
 /// filters the embedded changelog to only new entries, then saves the latest hash.
 /// Returns just the commit subjects (not the hashes).
+#[allow(dead_code)]
 pub(super) fn get_unseen_changelog_entries() -> &'static Vec<String> {
     static ENTRIES: OnceLock<Vec<String>> = OnceLock::new();
     ENTRIES.get_or_init(|| {
