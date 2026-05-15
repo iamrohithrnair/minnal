@@ -285,7 +285,7 @@ pub struct BackgroundInfo {
 pub enum UsageProvider {
     #[default]
     None,
-    /// Anthropic/Claude OAuth (shows subscription usage)
+    /// Legacy Anthropic/Claude subscription usage. API-key auth uses CostBased.
     Anthropic,
     /// OpenAI/Codex OAuth (shows subscription usage)
     OpenAI,
@@ -312,7 +312,7 @@ impl UsageProvider {
 pub enum AuthMethod {
     #[default]
     Unknown,
-    /// Anthropic OAuth (Claude Code CLI style)
+    /// Legacy Anthropic OAuth (disabled)
     AnthropicOAuth,
     /// Anthropic API key
     AnthropicApiKey,

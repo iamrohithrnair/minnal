@@ -112,56 +112,6 @@ pub(super) fn anthropic_usage_error(err_msg: String) -> UsageData {
     }
 }
 
-pub(super) fn provider_report_from_usage_data(
-    display_name: String,
-    data: &UsageData,
-) -> ProviderUsage {
-    if let Some(error) = &data.last_error {
-        return ProviderUsage {
-            provider_name: display_name,
-            error: Some(error.clone()),
-            ..Default::default()
-        };
-    }
-
-    let mut limits = Vec::new();
-    limits.push(UsageLimit {
-        name: "5-hour window".to_string(),
-        usage_percent: data.five_hour * 100.0,
-        resets_at: data.five_hour_resets_at.clone(),
-    });
-    limits.push(UsageLimit {
-        name: "7-day window".to_string(),
-        usage_percent: data.seven_day * 100.0,
-        resets_at: data.seven_day_resets_at.clone(),
-    });
-    if let Some(opus) = data.seven_day_opus {
-        limits.push(UsageLimit {
-            name: "7-day Opus window".to_string(),
-            usage_percent: opus * 100.0,
-            resets_at: data.seven_day_resets_at.clone(),
-        });
-    }
-
-    let mut extra_info = Vec::new();
-    extra_info.push((
-        "Extra usage (long context)".to_string(),
-        if data.extra_usage_enabled {
-            "enabled".to_string()
-        } else {
-            "disabled".to_string()
-        },
-    ));
-
-    ProviderUsage {
-        provider_name: display_name,
-        limits,
-        extra_info,
-        hard_limit_reached: false,
-        error: None,
-    }
-}
-
 pub(super) fn usage_data_from_provider_report(report: &ProviderUsage) -> UsageData {
     if let Some(error) = &report.error {
         return UsageData {
@@ -286,25 +236,6 @@ pub(super) fn openai_snapshot_from_usage(
                     .as_ref()
                     .and_then(|window| window.resets_at.clone())
             }),
-        error: usage.last_error.clone(),
-    }
-}
-
-pub(super) fn anthropic_snapshot_from_usage(
-    label: String,
-    email: Option<String>,
-    usage: &UsageData,
-) -> AccountUsageSnapshot {
-    AccountUsageSnapshot {
-        label,
-        email,
-        exhausted: usage.five_hour >= 0.99 && usage.seven_day >= 0.99,
-        five_hour_ratio: Some(usage.five_hour),
-        seven_day_ratio: Some(usage.seven_day),
-        resets_at: usage
-            .five_hour_resets_at
-            .clone()
-            .or_else(|| usage.seven_day_resets_at.clone()),
         error: usage.last_error.clone(),
     }
 }

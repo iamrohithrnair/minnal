@@ -1,6 +1,6 @@
 //! Subscription usage tracking.
 //!
-//! Fetches usage information from Anthropic's OAuth usage endpoint and OpenAI's ChatGPT wham/usage endpoint.
+//! Fetches usage information from OAuth/subscription providers and API-key usage endpoints.
 
 use crate::auth;
 mod accessors;
@@ -252,7 +252,6 @@ fn upsert_provider_usage(results: &mut Vec<ProviderUsage>, report: ProviderUsage
 fn enqueue_provider_usage_tasks(tasks: &mut tokio::task::JoinSet<Option<ProviderUsage>>) -> usize {
     let mut total = 0usize;
 
-    total += enqueue_anthropic_usage_tasks(tasks);
     total += enqueue_openai_usage_tasks(tasks);
 
     if openrouter_api_key().is_some() {
@@ -266,75 +265,6 @@ fn enqueue_provider_usage_tasks(tasks: &mut tokio::task::JoinSet<Option<Provider
     }
 
     total
-}
-
-fn enqueue_anthropic_usage_tasks(tasks: &mut tokio::task::JoinSet<Option<ProviderUsage>>) -> usize {
-    let accounts = match auth::claude::list_accounts() {
-        Ok(a) if !a.is_empty() => a,
-        _ => match auth::claude::load_credentials() {
-            Ok(creds) if !creds.access_token.is_empty() => {
-                tasks.spawn(async move {
-                    Some(
-                        fetch_anthropic_usage_for_token(
-                            "Anthropic (Claude)".to_string(),
-                            creds.access_token,
-                            creds.refresh_token,
-                            "default".to_string(),
-                            creds.expires_at,
-                        )
-                        .await,
-                    )
-                });
-                return 1;
-            }
-            _ => return 0,
-        },
-    };
-
-    let active_label = auth::claude::active_account_label();
-    let account_count = accounts.len();
-    for account in accounts {
-        let label = if account_count > 1 {
-            let active_marker = if active_label.as_deref() == Some(&account.label) {
-                " ✦"
-            } else {
-                ""
-            };
-            let email_suffix = account
-                .email
-                .as_deref()
-                .map(mask_email)
-                .map(|m| format!(" ({})", m))
-                .unwrap_or_default();
-            format!(
-                "Anthropic - {}{}{}",
-                account.label, email_suffix, active_marker
-            )
-        } else {
-            let email_suffix = account
-                .email
-                .as_deref()
-                .map(mask_email)
-                .map(|m| format!(" ({})", m))
-                .unwrap_or_default();
-            format!("Anthropic (Claude){}", email_suffix)
-        };
-
-        tasks.spawn(async move {
-            Some(
-                fetch_anthropic_usage_for_token(
-                    label,
-                    account.access,
-                    account.refresh,
-                    account.label,
-                    account.expires,
-                )
-                .await,
-            )
-        });
-    }
-
-    account_count
 }
 
 fn enqueue_openai_usage_tasks(tasks: &mut tokio::task::JoinSet<Option<ProviderUsage>>) -> usize {
@@ -401,13 +331,6 @@ async fn sync_active_anthropic_usage_from_reports(results: &[ProviderUsage]) {
     match report {
         Some(report) => {
             let usage_data = usage_data_from_provider_report(report);
-            if let Ok(creds) = auth::claude::load_credentials() {
-                let cache_key = anthropic_usage_cache_key(
-                    &creds.access_token,
-                    auth::claude::active_account_label().as_deref(),
-                );
-                store_anthropic_usage(cache_key, usage_data.clone());
-            }
             *cached = usage_data;
             if report.error.is_none() {
                 crate::provider::clear_provider_unavailable_for_account("claude");
@@ -416,7 +339,9 @@ async fn sync_active_anthropic_usage_from_reports(results: &[ProviderUsage]) {
         None => {
             *cached = UsageData {
                 fetched_at: Some(Instant::now()),
-                last_error: Some("No Anthropic OAuth credentials found".to_string()),
+                last_error: Some(
+                    "Anthropic subscription usage is not available for API-key auth".to_string(),
+                ),
                 ..Default::default()
             };
         }

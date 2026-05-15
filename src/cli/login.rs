@@ -534,32 +534,37 @@ fn login_openai_api_key_flow() -> Result<()> {
     Ok(())
 }
 
-async fn login_claude_flow(requested_label: Option<&str>, no_browser: bool) -> Result<()> {
-    let label = auth::claude::login_target_label(requested_label)?;
-    eprintln!("Logging in to Claude (account: {})...", label);
-    let tokens = auth::oauth::login_claude(no_browser).await?;
-    auth::oauth::save_claude_tokens_for_account(&tokens, &label)?;
-    let profile_email =
-        match auth::oauth::update_claude_account_profile(&label, &tokens.access_token).await {
-            Ok(email) => email,
-            Err(e) => {
-                eprintln!(
-                    "Warning: logged in but failed to fetch profile metadata: {}",
-                    e
-                );
-                None
-            }
-        };
-    eprintln!("Successfully logged in to Claude!");
+async fn login_claude_flow(_requested_label: Option<&str>, _no_browser: bool) -> Result<()> {
+    eprintln!("Setting up Anthropic/Claude API key...");
+    eprintln!("Get your API key from: https://console.anthropic.com/settings/keys\n");
     eprintln!(
-        "Account '{}' stored at {}",
-        label,
-        auth::claude::minnal_path()?.display()
+        "Claude OAuth / Claude subscription tokens are not used by Minnal; this keeps requests on Anthropic's official API-key path."
     );
-    if let Some(email) = profile_email {
-        eprintln!("Profile email: {}", email);
+    eprint!("Paste your Anthropic API key: ");
+    io::stdout().flush()?;
+
+    let key = read_secret_line()?;
+    if key.is_empty() {
+        anyhow::bail!("No API key provided.");
     }
-    crate::telemetry::record_auth_success("claude", "oauth");
+    if !key.starts_with("sk-ant-") {
+        eprintln!("Warning: Anthropic API keys usually start with 'sk-ant-'. Saving anyway.");
+    }
+
+    save_named_api_key(
+        auth::claude::ANTHROPIC_ENV_FILE,
+        auth::claude::ANTHROPIC_API_KEY_ENV,
+        &key,
+    )?;
+    eprintln!("\nSuccessfully saved Anthropic API key!");
+    eprintln!(
+        "Stored at {}",
+        crate::storage::app_config_dir()?
+            .join(auth::claude::ANTHROPIC_ENV_FILE)
+            .display()
+    );
+    eprintln!("Provider: claude (official Anthropic Messages API)");
+    crate::telemetry::record_auth_success("claude", "api_key");
     Ok(())
 }
 

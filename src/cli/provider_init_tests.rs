@@ -295,15 +295,15 @@ fn login_provider_menu_shows_autodetected_auth_and_skip() {
     let status = auth::AuthStatus {
         anthropic: auth::ProviderAuth {
             state: auth::AuthState::Available,
-            has_oauth: true,
-            has_api_key: false,
+            has_oauth: false,
+            has_api_key: true,
         },
         ..Default::default()
     };
 
     let menu = render_login_provider_selection_menu("Choose a provider:", &providers, &status);
     assert!(menu.contains("Autodetected auth:"));
-    assert!(menu.contains("Anthropic/Claude: configured: OAuth"));
+    assert!(menu.contains("Anthropic/Claude: configured: API key (`ANTHROPIC_API_KEY`)"));
     assert!(menu.contains("[configured"));
     assert!(menu.contains("[not configured"));
     assert!(menu.contains("Skip: press Enter"));

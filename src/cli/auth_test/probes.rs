@@ -15,6 +15,9 @@ fn generic_credential_paths_for_provider(
         crate::provider_catalog::LoginProviderTarget::OpenAiApiKey => {
             vec![config_dir.join("openai.env")]
         }
+        crate::provider_catalog::LoginProviderTarget::Claude => {
+            vec![config_dir.join(crate::auth::claude::ANTHROPIC_ENV_FILE)]
+        }
         crate::provider_catalog::LoginProviderTarget::Azure => {
             vec![config_dir.join(crate::auth::azure::ENV_FILE)]
         }
@@ -67,29 +70,21 @@ fn probe_generic_provider_auth(
 }
 
 async fn probe_claude_auth(report: &mut AuthTestProviderReport) {
-    if let Some(creds) = push_result_step(
-        report,
+    let has_api_key = crate::auth::claude::load_api_key().is_some();
+    report.push_step(
         "credential_probe",
-        crate::auth::claude::load_credentials(),
-        |creds| {
-            format!(
-                "Loaded Claude credentials (expires_at={}).",
-                creds.expires_at
-            )
+        has_api_key,
+        if has_api_key {
+            "Loaded Anthropic API key credentials.".to_string()
+        } else {
+            "No Anthropic API key found. Claude OAuth tokens are not used by Minnal.".to_string()
         },
-    ) {
-        push_result_step(
-            report,
-            "refresh_probe",
-            crate::auth::oauth::refresh_claude_tokens(&creds.refresh_token).await,
-            |tokens| {
-                format!(
-                    "Claude token refresh succeeded (new_expires_at={}).",
-                    tokens.expires_at
-                )
-            },
-        );
-    }
+    );
+    report.push_step(
+        "refresh_probe",
+        true,
+        "Skipped: Anthropic API keys do not use token refresh.".to_string(),
+    );
 }
 
 async fn probe_openai_auth(report: &mut AuthTestProviderReport) {

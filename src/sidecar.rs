@@ -5,7 +5,7 @@
 //!
 //! Automatically selects the best available backend:
 //! - OpenAI (gpt-5.3-codex-spark) if Codex credentials are available
-//! - Claude (claude-haiku-4-5-20241022) if Claude credentials are available
+//! - Claude (claude-haiku-4-5-20241022) if an Anthropic API key is available
 
 use crate::auth;
 use anyhow::{Context, Result};
@@ -26,18 +26,8 @@ const CHATGPT_API_BASE: &str = "https://chatgpt.com/backend-api/codex";
 const OPENAI_RESPONSES_PATH: &str = "responses";
 const OPENAI_ORIGINATOR: &str = "codex_cli_rs";
 
-/// Claude Messages API endpoint (with beta=true for OAuth)
-const CLAUDE_API_URL: &str = "https://api.anthropic.com/v1/messages?beta=true";
-
-/// User-Agent for OAuth requests (must match Claude CLI format)
-const CLAUDE_CLI_USER_AGENT: &str = "claude-cli/1.0.0";
-
-/// Beta headers required for OAuth
-const OAUTH_BETA_HEADERS: &str = "oauth-2025-04-20,claude-code-20250219";
-
-/// Claude Code identity block required for OAuth direct API access
-const CLAUDE_CODE_IDENTITY: &str = "You are Claude Code, Anthropic's official CLI for Claude.";
-const CLAUDE_CODE_MINNAL_NOTICE: &str = "You are minnal, powered by Claude Code. You are a third-party CLI, not the official Claude Code CLI.";
+/// Claude Messages API endpoint.
+const CLAUDE_API_URL: &str = "https://api.anthropic.com/v1/messages";
 
 /// Maximum tokens for sidecar responses (keep small for speed/cost)
 const DEFAULT_MAX_TOKENS: u32 = 1024;
@@ -85,7 +75,7 @@ impl Sidecar {
             }
         } else if auth::codex::load_credentials().is_ok() {
             (SidecarBackend::OpenAI, SIDECAR_OPENAI_MODEL.to_string())
-        } else if auth::claude::load_credentials().is_ok() {
+        } else if auth::claude::has_api_key() {
             (SidecarBackend::Claude, SIDECAR_CLAUDE_MODEL.to_string())
         } else {
             // Default to Claude - will fail on use with a clear error
@@ -266,10 +256,10 @@ impl Sidecar {
         }
     }
 
-    /// Complete via Claude Messages API
+    /// Complete via Claude Messages API.
     async fn complete_claude(&self, system: &str, user_message: &str) -> Result<String> {
-        let creds = auth::claude::load_credentials()
-            .context("Failed to load Claude credentials for sidecar")?;
+        let api_key =
+            auth::claude::load_api_key().context("Failed to load Anthropic API key for sidecar")?;
 
         let request = ClaudeMessagesRequest {
             model: &self.model,
@@ -281,20 +271,17 @@ impl Sidecar {
             }],
         };
 
-        let response = crate::provider::anthropic::apply_oauth_attribution_headers(
-            self.client
-                .post(CLAUDE_API_URL)
-                .header("Authorization", format!("Bearer {}", creds.access_token))
-                .header("User-Agent", CLAUDE_CLI_USER_AGENT)
-                .header("anthropic-version", "2023-06-01")
-                .header("anthropic-beta", OAUTH_BETA_HEADERS)
-                .header("content-type", "application/json")
-                .json(&request),
-            &crate::provider::anthropic::new_oauth_request_id(),
-        )
-        .send()
-        .await
-        .context("Failed to send request to Claude API")?;
+        let response = self
+            .client
+            .post(CLAUDE_API_URL)
+            .header("x-api-key", api_key)
+            .header("anthropic-version", "2023-06-01")
+            .header("anthropic-beta", "prompt-caching-2024-07-31")
+            .header("content-type", "application/json")
+            .json(&request)
+            .send()
+            .await
+            .context("Failed to send request to Claude API")?;
 
         if !response.status().is_success() {
             let status = response.status();
@@ -707,22 +694,14 @@ struct ClaudeApiSystemBlock<'a> {
 }
 
 fn build_claude_system_param(system: &str) -> Option<ClaudeApiSystem<'_>> {
-    let mut blocks = Vec::new();
-    blocks.push(ClaudeApiSystemBlock {
-        block_type: "text",
-        text: CLAUDE_CODE_IDENTITY,
-    });
-    blocks.push(ClaudeApiSystemBlock {
-        block_type: "text",
-        text: CLAUDE_CODE_MINNAL_NOTICE,
-    });
-    if !system.is_empty() {
-        blocks.push(ClaudeApiSystemBlock {
-            block_type: "text",
-            text: system,
-        });
+    if system.is_empty() {
+        return None;
     }
-    Some(ClaudeApiSystem::Blocks(blocks))
+
+    Some(ClaudeApiSystem::Blocks(vec![ClaudeApiSystemBlock {
+        block_type: "text",
+        text: system,
+    }]))
 }
 
 #[derive(Deserialize)]

@@ -111,21 +111,7 @@ fn save_openai_tokens_uses_minnal_home_sandbox() -> Result<()> {
 }
 
 #[test]
-fn save_claude_tokens_preserves_existing_account_metadata() -> Result<()> {
-    let _lock = crate::storage::lock_test_env();
-    let temp = tempfile::TempDir::new().map_err(|e| anyhow!(e))?;
-    let _home = EnvVarGuard::set("MINNAL_HOME", temp.path());
-
-    crate::auth::claude::upsert_account(crate::auth::claude::AnthropicAccount {
-        label: "claude-1".to_string(),
-        access: "old_access".to_string(),
-        refresh: "old_refresh".to_string(),
-        expires: 1,
-        email: Some("user@example.com".to_string()),
-        subscription_type: Some("pro".to_string()),
-        scopes: vec!["user:inference".to_string()],
-    })?;
-
+fn save_claude_tokens_is_disabled() -> Result<()> {
     let refreshed = OAuthTokens {
         access_token: "new_access".to_string(),
         refresh_token: "new_refresh".to_string(),
@@ -133,17 +119,29 @@ fn save_claude_tokens_preserves_existing_account_metadata() -> Result<()> {
         id_token: None,
         scopes: Vec::new(),
     };
-    save_claude_tokens_for_account(&refreshed, "claude-1")?;
 
-    let account = crate::auth::claude::list_accounts()?
-        .into_iter()
-        .find(|account| account.label == "claude-1")
-        .expect("claude account should exist");
-    assert_eq!(account.access, "new_access");
-    assert_eq!(account.refresh, "new_refresh");
-    assert_eq!(account.email.as_deref(), Some("user@example.com"));
-    assert_eq!(account.subscription_type.as_deref(), Some("pro"));
-    assert_eq!(account.scopes, vec!["user:inference".to_string()]);
+    let err = save_claude_tokens_for_account(&refreshed, "claude-1")
+        .expect_err("Claude OAuth tokens should not be saved");
+    assert!(err.to_string().contains("Claude OAuth"));
+    Ok(())
+}
+
+#[tokio::test]
+async fn claude_oauth_entrypoints_are_disabled() -> Result<()> {
+    let login_err = login_claude(true)
+        .await
+        .expect_err("Claude OAuth login should be disabled");
+    assert!(login_err.to_string().contains("Claude OAuth"));
+
+    let exchange_err = exchange_claude_code("verifier", "code", claude::REDIRECT_URI)
+        .await
+        .expect_err("Claude OAuth exchange should be disabled");
+    assert!(exchange_err.to_string().contains("Claude OAuth"));
+
+    let refresh_err = refresh_claude_tokens("refresh")
+        .await
+        .expect_err("Claude OAuth refresh should be disabled");
+    assert!(refresh_err.to_string().contains("Claude OAuth"));
     Ok(())
 }
 

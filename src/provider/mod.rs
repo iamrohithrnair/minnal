@@ -48,14 +48,14 @@ pub use minnal_provider_core::{
 };
 pub(crate) use minnal_provider_core::{ProviderFailoverPrompt, parse_failover_prompt_message};
 pub use route_builders::{
-    build_anthropic_oauth_route, build_copilot_route, build_openai_api_key_route,
-    build_openai_oauth_route, build_openrouter_auto_route, build_openrouter_endpoint_route,
+    build_copilot_route, build_openai_api_key_route, build_openai_oauth_route,
+    build_openrouter_auto_route, build_openrouter_endpoint_route,
     build_openrouter_fallback_provider_route, is_listable_model_name,
     listable_model_names_from_routes, openrouter_catalog_model_id,
 };
 pub(crate) use routing::{
-    anthropic_api_key_route_availability, anthropic_oauth_route_availability,
-    is_transient_transport_error, should_eager_detect_copilot_tier,
+    anthropic_api_key_route_availability, is_transient_transport_error,
+    should_eager_detect_copilot_tier,
 };
 
 pub fn set_model_with_auth_refresh(provider: &dyn Provider, model: &str) -> Result<()> {
@@ -520,18 +520,7 @@ impl MultiProvider {
         // using cheap local probes to hot-initialize newly configured providers.
         crate::auth::AuthStatus::invalidate_cache();
 
-        if self.use_claude_cli {
-            if self.claude_provider().is_none() && crate::auth::claude::load_credentials().is_ok() {
-                crate::logging::info("Hot-initialized Claude CLI provider after auth change");
-                *self
-                    .claude
-                    .write()
-                    .unwrap_or_else(|poisoned| poisoned.into_inner()) =
-                    Some(Arc::new(claude::ClaudeProvider::new()));
-            }
-        } else if self.anthropic_provider().is_none()
-            && crate::auth::claude::load_credentials().is_ok()
-        {
+        if self.anthropic_provider().is_none() && crate::auth::claude::has_api_key() {
             crate::logging::info("Hot-initialized Anthropic provider after auth change");
             *self
                 .anthropic
@@ -1021,8 +1010,7 @@ impl Provider for MultiProvider {
         let mut openrouter_endpoint_cache_hits = 0usize;
         let mut openrouter_endpoint_routes = 0usize;
         let mut openrouter_scheduled_endpoint_refreshes = 0usize;
-        let has_oauth = self.has_claude_runtime();
-        let has_api_key = std::env::var("ANTHROPIC_API_KEY").is_ok();
+        let has_api_key = auth::claude::has_api_key();
         let anthropic_models = if let Some(anthropic) = self.anthropic_provider() {
             anthropic.available_models_for_switching()
         } else if let Some(claude) = self.claude_provider() {
@@ -1036,42 +1024,21 @@ impl Provider for MultiProvider {
             known_openai_model_ids()
         };
 
-        // Anthropic models (oauth and/or api-key)
+        // Anthropic models use the official API-key transport only.
         for model in anthropic_models {
-            let (available, detail) = if has_oauth && !has_api_key {
-                anthropic_oauth_route_availability(&model)
+            let (available, detail) = if has_api_key {
+                anthropic_api_key_route_availability(&model)
             } else {
-                (true, String::new())
+                (false, "ANTHROPIC_API_KEY not set".to_string())
             };
-
-            if has_oauth {
-                routes.push(build_anthropic_oauth_route(
-                    &model,
-                    available,
-                    detail.clone(),
-                ));
-            }
-            if has_api_key {
-                let (ak_available, ak_detail) = anthropic_api_key_route_availability(&model);
-                routes.push(ModelRoute {
-                    model: model.to_string(),
-                    provider: "Anthropic".to_string(),
-                    api_method: "api-key".to_string(),
-                    available: ak_available,
-                    detail: ak_detail,
-                    cheapness: cheapness_for_route(&model, "Anthropic", "api-key"),
-                });
-            }
-            if !has_oauth && !has_api_key {
-                routes.push(ModelRoute {
-                    model: model.to_string(),
-                    provider: "Anthropic".to_string(),
-                    api_method: "claude-oauth".to_string(),
-                    available: false,
-                    detail: "no credentials".to_string(),
-                    cheapness: cheapness_for_route(&model, "Anthropic", "claude-oauth"),
-                });
-            }
+            routes.push(ModelRoute {
+                model: model.to_string(),
+                provider: "Anthropic".to_string(),
+                api_method: "api-key".to_string(),
+                available,
+                detail,
+                cheapness: cheapness_for_route(&model, "Anthropic", "api-key"),
+            });
         }
 
         // OpenAI models

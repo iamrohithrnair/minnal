@@ -459,7 +459,7 @@ pub(super) async fn run_usage_command(emit_json: bool) -> Result<()> {
         println!("No connected providers");
         println!();
         println!("Next steps:");
-        println!("- Use `minnal login --provider claude` to connect Claude OAuth.");
+        println!("- Use `minnal login --provider claude` to save an Anthropic API key.");
         println!("- Use `minnal login --provider openai` to connect ChatGPT / Codex OAuth.");
         return Ok(());
     }

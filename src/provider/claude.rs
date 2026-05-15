@@ -1,5 +1,4 @@
 use super::{EventStream, Provider};
-use crate::auth::{claude as claude_auth, oauth};
 use crate::message::{ContentBlock, Message, Role, StreamEvent, ToolDefinition};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
@@ -793,46 +792,9 @@ impl Provider for ClaudeProvider {
     }
 
     async fn prefetch_models(&self) -> Result<()> {
-        let creds = claude_auth::load_credentials().context("Failed to load Claude credentials")?;
-        let now = chrono::Utc::now().timestamp_millis();
-
-        let access_token = if creds.expires_at < now + 300_000 && !creds.refresh_token.is_empty() {
-            let active_label = claude_auth::active_account_label()
-                .unwrap_or_else(claude_auth::primary_account_label);
-            match oauth::refresh_claude_tokens_for_account(&creds.refresh_token, &active_label)
-                .await
-            {
-                Ok(refreshed) => refreshed.access_token,
-                Err(err) => {
-                    crate::logging::warn(&format!(
-                        "Claude OAuth token refresh failed during model prefetch; using fallback list: {}",
-                        err
-                    ));
-                    return Ok(());
-                }
-            }
-        } else {
-            creds.access_token
-        };
-
-        match crate::provider::fetch_anthropic_model_catalog_oauth(&access_token).await {
-            Ok(catalog) => {
-                crate::provider::persist_anthropic_model_catalog(&catalog);
-                if !catalog.context_limits.is_empty() {
-                    crate::provider::populate_context_limits(catalog.context_limits);
-                }
-                if !catalog.available_models.is_empty() {
-                    crate::provider::populate_anthropic_models(catalog.available_models);
-                }
-            }
-            Err(err) => {
-                crate::logging::warn(&format!(
-                    "Claude OAuth model catalog refresh failed; keeping fallback list: {}",
-                    err
-                ));
-            }
-        }
-
+        crate::logging::warn(
+            "Skipping Claude subprocess model prefetch because Claude OAuth is disabled. Use the Anthropic API-key provider instead.",
+        );
         Ok(())
     }
 

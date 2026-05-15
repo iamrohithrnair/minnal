@@ -183,7 +183,7 @@ fn source_provider_labels_reports_supported_oauth_and_api_key_imports() {
 
     let labels = source_provider_labels(ExternalAuthSource::OpenCode);
     assert!(labels.contains(&"OpenAI/Codex"));
-    assert!(labels.contains(&"Claude"));
+    assert!(!labels.contains(&"Claude"));
     assert!(labels.contains(&"OpenRouter/API-key providers"));
 
     if let Some(prev) = prev {

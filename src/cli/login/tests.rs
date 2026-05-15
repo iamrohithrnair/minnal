@@ -104,7 +104,7 @@ fn auto_scriptable_flow_reason_prefers_non_interactive_for_oauth_provider() {
 #[test]
 fn auto_scriptable_flow_reason_uses_no_browser_reason_when_requested() {
     let provider =
-        crate::provider_catalog::resolve_login_provider("claude").expect("resolve claude provider");
+        crate::provider_catalog::resolve_login_provider("openai").expect("resolve openai provider");
     let reason = auto_scriptable_flow_reason(
         provider,
         &LoginOptions {

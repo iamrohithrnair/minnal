@@ -159,7 +159,7 @@ impl MixedModelRoutesProvider {
             crate::provider::ModelRoute {
                 model: "claude-opus-4-6".to_string(),
                 provider: "Anthropic".to_string(),
-                api_method: "claude-oauth".to_string(),
+                api_method: "api-key".to_string(),
                 available: true,
                 detail: String::new(),
                 cheapness: None,
@@ -1040,7 +1040,7 @@ fn test_model_picker_state_space_preserves_provider_labels_after_route_hydration
     );
     assert_eq!(
         routes_by_model.get("claude-opus-4-6"),
-        Some(&("Anthropic".to_string(), "claude-oauth".to_string()))
+        Some(&("Anthropic".to_string(), "api-key".to_string()))
     );
     assert_eq!(
         routes_by_model.get("Qwen/Qwen3-Coder-480B-A35B-Instruct"),

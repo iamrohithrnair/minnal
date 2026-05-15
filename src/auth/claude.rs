@@ -5,6 +5,14 @@ use std::sync::RwLock;
 
 pub const CLAUDE_CODE_AUTH_SOURCE_ID: &str = "claude_code_credentials";
 pub const OPENCODE_AUTH_SOURCE_ID: &str = "opencode_anthropic_auth";
+pub const ANTHROPIC_API_KEY_ENV: &str = "ANTHROPIC_API_KEY";
+pub const ANTHROPIC_ENV_FILE: &str = "anthropic.env";
+
+const CLAUDE_OAUTH_UNSUPPORTED_MESSAGE: &str = "Claude OAuth / Claude subscription tokens are disabled in Minnal. Configure an official Anthropic API key with `minnal login --provider claude` or set ANTHROPIC_API_KEY.";
+
+pub fn claude_oauth_unsupported_message() -> &'static str {
+    CLAUDE_OAUTH_UNSUPPORTED_MESSAGE
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExternalClaudeAuthSource {
@@ -137,12 +145,14 @@ fn relabel_accounts(auth: &mut MinnalAuthFile) -> bool {
 }
 
 // -- Claude Code credentials file format --
+#[cfg(test)]
 #[derive(Deserialize)]
 struct CredentialsFile {
     #[serde(rename = "claudeAiOauth")]
     claude_ai_oauth: Option<ClaudeOAuth>,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct ClaudeOAuth {
     #[serde(rename = "accessToken")]
@@ -158,11 +168,13 @@ struct ClaudeOAuth {
 }
 
 // -- OpenCode auth.json format --
+#[cfg(test)]
 #[derive(Deserialize)]
 struct OpenCodeAuth {
     anthropic: Option<OpenCodeAnthropicAuth>,
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct OpenCodeAnthropicAuth {
     access: String,
@@ -343,62 +355,38 @@ pub fn update_account_profile(label: &str, email: Option<String>) -> Result<()> 
 
 // ---- Credential loading (used by provider) ----
 
-/// Check if OAuth credentials are available (quick check, doesn't validate)
+/// Check if Anthropic credentials are available (quick check, doesn't validate).
 pub fn has_credentials() -> bool {
-    load_credentials().is_ok()
+    has_api_key()
+}
+
+pub fn load_api_key() -> Option<String> {
+    crate::provider_catalog::load_api_key_from_env_or_config(
+        ANTHROPIC_API_KEY_ENV,
+        ANTHROPIC_ENV_FILE,
+    )
+    .or_else(|| crate::auth::external::load_api_key_for_env(ANTHROPIC_API_KEY_ENV))
+}
+
+pub fn has_api_key() -> bool {
+    load_api_key().is_some()
 }
 
 pub fn preferred_external_auth_source() -> Option<ExternalClaudeAuthSource> {
-    [
-        ExternalClaudeAuthSource::ClaudeCode,
-        ExternalClaudeAuthSource::OpenCode,
-    ]
-    .into_iter()
-    .find(|source| source.path().map(|path| path.exists()).unwrap_or(false))
+    None
 }
 
 pub fn has_unconsented_external_auth() -> Option<ExternalClaudeAuthSource> {
-    let source = preferred_external_auth_source()?;
-    let allowed = source
-        .path()
-        .ok()
-        .map(|path| match source {
-            ExternalClaudeAuthSource::OpenCode => {
-                crate::config::Config::external_auth_source_allowed_for_path(
-                    source.source_id(),
-                    &path,
-                ) || crate::config::Config::external_auth_source_allowed_for_path(
-                    crate::auth::external::OPENCODE_AUTH_JSON_SOURCE_ID,
-                    &path,
-                )
-            }
-            ExternalClaudeAuthSource::ClaudeCode => {
-                crate::config::Config::external_auth_source_allowed_for_path(
-                    source.source_id(),
-                    &path,
-                )
-            }
-        })
-        .unwrap_or(false);
-    if allowed { None } else { Some(source) }
+    None
 }
 
-pub fn trust_external_auth_source(source: ExternalClaudeAuthSource) -> Result<()> {
-    let path = source.path()?;
-    crate::config::Config::allow_external_auth_source_for_path(source.source_id(), &path)?;
-    if matches!(source, ExternalClaudeAuthSource::OpenCode) {
-        crate::config::Config::allow_external_auth_source_for_path(
-            crate::auth::external::OPENCODE_AUTH_JSON_SOURCE_ID,
-            &path,
-        )?;
-    }
-    super::AuthStatus::invalidate_cache();
-    Ok(())
+pub fn trust_external_auth_source(_source: ExternalClaudeAuthSource) -> Result<()> {
+    anyhow::bail!(CLAUDE_OAUTH_UNSUPPORTED_MESSAGE)
 }
 
 /// Get the subscription type (e.g., "pro", "max") if available.
 pub fn get_subscription_type() -> Option<String> {
-    load_credentials().ok().and_then(|c| c.subscription_type)
+    None
 }
 
 /// Check if the subscription is Claude Max (allows Opus models).
@@ -406,116 +394,21 @@ pub fn get_subscription_type() -> Option<String> {
 pub fn is_max_subscription() -> bool {
     match get_subscription_type() {
         Some(t) => t != "pro",
-        None => true,
+        None => false,
     }
 }
 
-/// Load credentials for the active Anthropic account.
-/// Falls through Claude Code -> minnal accounts -> OpenCode, preferring non-expired tokens.
+/// Load legacy Claude OAuth credentials.
 pub fn load_credentials() -> Result<ClaudeCredentials> {
-    let now_ms = chrono::Utc::now().timestamp_millis();
-
-    let mut expired_candidates: Vec<(&str, ClaudeCredentials)> = Vec::new();
-
-    if claude_code_path()
-        .ok()
-        .map(|path| {
-            crate::config::Config::external_auth_source_allowed_for_path(
-                CLAUDE_CODE_AUTH_SOURCE_ID,
-                &path,
-            )
-        })
-        .unwrap_or(false)
-        && let Ok(creds) = load_claude_code_credentials()
-    {
-        if creds.expires_at > now_ms {
-            return Ok(creds);
-        }
-        expired_candidates.push(("claude", creds));
-    }
-
-    if let Ok(creds) = load_minnal_credentials() {
-        if creds.expires_at > now_ms {
-            return Ok(creds);
-        }
-        expired_candidates.push(("minnal", creds));
-    }
-
-    if opencode_path()
-        .ok()
-        .map(|path| {
-            crate::config::Config::external_auth_source_allowed_for_path(
-                OPENCODE_AUTH_SOURCE_ID,
-                &path,
-            ) || crate::config::Config::external_auth_source_allowed_for_path(
-                crate::auth::external::OPENCODE_AUTH_JSON_SOURCE_ID,
-                &path,
-            )
-        })
-        .unwrap_or(false)
-        && let Ok(creds) = load_opencode_credentials()
-    {
-        if creds.expires_at > now_ms {
-            return Ok(creds);
-        }
-        expired_candidates.push(("opencode", creds));
-    }
-
-    if let Some((_source, creds)) = expired_candidates.into_iter().next() {
-        return Ok(creds);
-    }
-
-    anyhow::bail!("No Claude OAuth credentials found (checked Claude Code, minnal, OpenCode)")
+    anyhow::bail!(CLAUDE_OAUTH_UNSUPPORTED_MESSAGE)
 }
 
 /// Load credentials for a specific minnal account by label.
-pub fn load_credentials_for_account(label: &str) -> Result<ClaudeCredentials> {
-    let auth = load_auth_file()?;
-    let account = auth
-        .anthropic_accounts
-        .iter()
-        .find(|a| a.label == label)
-        .with_context(|| format!("No account with label '{}'", label))?;
-
-    Ok(ClaudeCredentials {
-        access_token: account.access.clone(),
-        refresh_token: account.refresh.clone(),
-        expires_at: account.expires,
-        scopes: account.scopes.clone(),
-        subscription_type: account.subscription_type.clone(),
-    })
+pub fn load_credentials_for_account(_label: &str) -> Result<ClaudeCredentials> {
+    anyhow::bail!(CLAUDE_OAUTH_UNSUPPORTED_MESSAGE)
 }
 
-/// Load credentials from the active minnal account (multi-account aware).
-fn load_minnal_credentials() -> Result<ClaudeCredentials> {
-    let auth = load_auth_file()?;
-    if auth.anthropic_accounts.is_empty() {
-        anyhow::bail!("No anthropic accounts configured in minnal auth.json");
-    }
-
-    let active_label = get_active_account_override()
-        .or(auth.active_anthropic_account)
-        .unwrap_or_else(primary_account_label);
-
-    let account = auth
-        .anthropic_accounts
-        .iter()
-        .find(|a| a.label == active_label)
-        .or_else(|| auth.anthropic_accounts.first())
-        .context("No anthropic accounts in minnal auth.json")?;
-
-    Ok(ClaudeCredentials {
-        access_token: account.access.clone(),
-        refresh_token: account.refresh.clone(),
-        expires_at: account.expires,
-        scopes: account.scopes.clone(),
-        subscription_type: account
-            .subscription_type
-            .clone()
-            .or_else(|| Some("max".to_string())),
-    })
-}
-
+#[cfg(test)]
 fn load_claude_code_credentials() -> Result<ClaudeCredentials> {
     let path = crate::storage::validate_external_auth_file(&claude_code_path()?)?;
     let content = std::fs::read_to_string(&path)
@@ -538,38 +431,7 @@ fn load_claude_code_credentials() -> Result<ClaudeCredentials> {
 }
 
 pub fn load_opencode_credentials() -> Result<ClaudeCredentials> {
-    let path = crate::storage::validate_external_auth_file(&opencode_path()?)?;
-    let content = std::fs::read_to_string(&path)
-        .with_context(|| format!("Could not read OpenCode credentials from {:?}", path))?;
-
-    let anthropic = serde_json::from_str::<OpenCodeAuth>(&content)
-        .ok()
-        .and_then(|auth| auth.anthropic)
-        .map(|anthropic| ClaudeCredentials {
-            access_token: anthropic.access,
-            refresh_token: anthropic.refresh,
-            expires_at: anthropic.expires,
-            scopes: Vec::new(),
-            subscription_type: Some("max".to_string()),
-        })
-        .or_else(|| {
-            crate::auth::external::load_anthropic_oauth_tokens().map(|tokens| ClaudeCredentials {
-                access_token: tokens.access_token,
-                refresh_token: tokens.refresh_token,
-                expires_at: tokens.expires_at,
-                scopes: Vec::new(),
-                subscription_type: Some("max".to_string()),
-            })
-        })
-        .context("No anthropic OAuth credentials in OpenCode auth file")?;
-
-    let now_ms = chrono::Utc::now().timestamp_millis();
-    if anthropic.expires_at <= now_ms {
-        crate::logging::info("OpenCode Anthropic token expired; will attempt refresh.");
-    }
-    crate::logging::info("Using OpenCode Anthropic credentials");
-
-    Ok(anthropic)
+    anyhow::bail!(CLAUDE_OAUTH_UNSUPPORTED_MESSAGE)
 }
 
 #[cfg(test)]

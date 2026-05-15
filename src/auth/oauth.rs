@@ -3,7 +3,7 @@ use anyhow::Result;
 use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::io::{BufRead, BufReader, IsTerminal, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::net::TcpListener;
 use std::time::Duration;
 
@@ -26,6 +26,7 @@ pub mod claude {
         "user:profile user:inference user:sessions:claude_code user:mcp_servers user:file_upload";
 }
 
+#[cfg(test)]
 const CLAUDE_TOKEN_TIMEOUT_SECS: u64 = 15;
 
 /// OpenAI Codex OAuth configuration
@@ -58,6 +59,7 @@ pub struct OAuthTokens {
     pub scopes: Vec<String>,
 }
 
+#[cfg(test)]
 fn parse_oauth_scopes(scope: Option<&str>) -> Vec<String> {
     scope
         .unwrap_or_default()
@@ -67,6 +69,7 @@ fn parse_oauth_scopes(scope: Option<&str>) -> Vec<String> {
         .collect()
 }
 
+#[cfg(test)]
 pub(crate) fn claude_scopes_have_inference(scopes: &[String]) -> bool {
     scopes.iter().any(|scope| {
         matches!(
@@ -81,6 +84,7 @@ pub(crate) fn claude_scopes_have_inference(scopes: &[String]) -> bool {
     })
 }
 
+#[cfg(test)]
 fn ensure_claude_inference_scope(scopes: &[String], action: &str) -> Result<()> {
     if scopes.is_empty() || claude_scopes_have_inference(scopes) {
         return Ok(());
@@ -430,123 +434,9 @@ pub async fn wait_for_callback_async_on_listener(
     }
 }
 
-/// Perform OAuth login for Claude
-pub async fn login_claude(no_browser: bool) -> Result<OAuthTokens> {
-    let (verifier, challenge) = generate_pkce();
-    if let Ok(code) = std::env::var("MINNAL_CLAUDE_AUTH_CODE") {
-        let trimmed = code.trim();
-        if trimmed.is_empty() {
-            anyhow::bail!("MINNAL_CLAUDE_AUTH_CODE is set but empty");
-        }
-        eprintln!("Exchanging code for tokens...");
-        return exchange_claude_code(&verifier, trimmed, claude::REDIRECT_URI).await;
-    }
-
-    if !std::io::stdin().is_terminal() {
-        anyhow::bail!(
-            "Claude login needs an authorization code from stdin. Re-run in an interactive terminal, or set MINNAL_CLAUDE_AUTH_CODE."
-        );
-    }
-
-    // Try local callback first for a fully automatic flow.
-    if let Ok(listener) = bind_callback_listener(0) {
-        let port = listener.local_addr()?.port();
-
-        let redirect_uri = format!("http://localhost:{}/callback", port);
-        let auth_url = claude_auth_url(&redirect_uri, &challenge, &verifier);
-        let manual_auth_url = claude_auth_url(claude::REDIRECT_URI, &challenge, &verifier);
-
-        eprintln!("\nOpen this URL in your browser:\n");
-        eprintln!("{}\n", auth_url);
-        if let Some(qr) = crate::login_qr::indented_section(
-            &manual_auth_url,
-            "No browser on this machine? Scan this QR on another device, finish login there, then paste the full callback URL back here:",
-            "    ",
-        ) {
-            eprintln!("{qr}\n");
-        }
-        eprintln!("Opening browser for Claude login...\n");
-        let browser_opened = if crate::auth::browser_suppressed(no_browser) {
-            false
-        } else {
-            open::that(&auth_url).is_ok()
-        };
-        if browser_opened {
-            eprintln!(
-                "Waiting up to 120s for automatic callback on {}",
-                redirect_uri
-            );
-        } else {
-            eprintln!(
-                "Couldn't open a browser on this machine. Use the QR code or manual URL above, then paste the callback URL here.\n"
-            );
-        }
-
-        if browser_opened {
-            match tokio::time::timeout(
-                std::time::Duration::from_secs(120),
-                wait_for_callback_async_on_listener(listener, &verifier),
-            )
-            .await
-            {
-                Ok(Ok(code)) => {
-                    eprintln!("Received callback. Exchanging code for tokens...");
-                    return exchange_claude_code(&verifier, &code, &redirect_uri).await;
-                }
-                Ok(Err(err)) => {
-                    eprintln!(
-                        "Automatic callback failed ({err}). Falling back to manual code paste."
-                    );
-                }
-                Err(_) => {
-                    eprintln!("Timed out waiting for callback. Falling back to manual code paste.");
-                }
-            }
-        }
-
-        eprintln!("Paste the authorization code (or callback URL) here:\n");
-        eprint!("> ");
-        std::io::stdout().flush()?;
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input)?;
-        let trimmed = input.trim();
-        if trimmed.is_empty() {
-            anyhow::bail!("No authorization code entered.");
-        }
-        eprintln!("Exchanging code for tokens...");
-        let selected_redirect_uri = claude_redirect_uri_for_input(trimmed, &redirect_uri);
-        return exchange_claude_code(&verifier, trimmed, &selected_redirect_uri).await;
-    }
-
-    // Last-resort manual flow if localhost callback binding is unavailable.
-    let auth_url = claude_auth_url(claude::REDIRECT_URI, &challenge, &verifier);
-
-    eprintln!("\nOpen this URL in your browser:\n");
-    eprintln!("{}\n", auth_url);
-    if let Some(qr) = crate::login_qr::indented_section(
-        &auth_url,
-        "Scan this QR on another device if this machine has no browser:",
-        "    ",
-    ) {
-        eprintln!("{qr}\n");
-    }
-    eprintln!("Opening browser for Claude login...\n");
-    if !crate::auth::browser_suppressed(no_browser) {
-        let _ = open::that(&auth_url);
-    }
-    eprintln!("After logging in, copy and paste the callback URL or code here:\n");
-    eprint!("> ");
-    std::io::stdout().flush()?;
-
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input)?;
-    let trimmed = input.trim();
-    if trimmed.is_empty() {
-        anyhow::bail!("No authorization code entered.");
-    }
-
-    eprintln!("Exchanging code for tokens...");
-    exchange_claude_code(&verifier, trimmed, claude::REDIRECT_URI).await
+/// Perform OAuth login for Claude.
+pub async fn login_claude(_no_browser: bool) -> Result<OAuthTokens> {
+    anyhow::bail!(claude_auth::claude_oauth_unsupported_message())
 }
 
 pub fn claude_auth_url(redirect_uri: &str, challenge: &str, state: &str) -> String {
@@ -635,6 +525,15 @@ pub fn parse_callback_input_with_state(input: &str) -> Result<(String, String)> 
     Ok((code, state))
 }
 
+#[cfg(test)]
+fn claude_refresh_error_is_invalid_scope(err: &anyhow::Error) -> bool {
+    let text = format!("{err:#}").to_ascii_lowercase();
+    text.contains("invalid_scope")
+        || text.contains("requested scope is invalid")
+        || text.contains("scope is invalid")
+}
+
+#[cfg(test)]
 fn looks_like_cloudflare_challenge(text: &str) -> bool {
     let lower = text.to_ascii_lowercase();
     lower.contains("cf-challenge")
@@ -643,6 +542,7 @@ fn looks_like_cloudflare_challenge(text: &str) -> bool {
         || lower.contains("/cdn-cgi/challenge-platform")
 }
 
+#[cfg(test)]
 async fn exchange_claude_code_at_url(
     token_url: &str,
     verifier: &str,
@@ -729,11 +629,11 @@ async fn exchange_claude_code_at_url(
 ///
 /// `input` can be a plain code, a URL/query containing `code=`, or `code#state`.
 pub async fn exchange_claude_code(
-    verifier: &str,
-    input: &str,
-    redirect_uri: &str,
+    _verifier: &str,
+    _input: &str,
+    _redirect_uri: &str,
 ) -> Result<OAuthTokens> {
-    exchange_claude_code_at_url(claude::TOKEN_URL, verifier, input, redirect_uri).await
+    anyhow::bail!(claude_auth::claude_oauth_unsupported_message())
 }
 
 pub fn openai_auth_url(redirect_uri: &str, challenge: &str, state: &str) -> String {
@@ -907,48 +807,29 @@ pub async fn login_openai(no_browser: bool) -> Result<OAuthTokens> {
 }
 
 /// Save Claude tokens to minnal's credentials file (active account or first numbered account).
-pub fn save_claude_tokens(tokens: &OAuthTokens) -> Result<()> {
-    let label = claude_auth::login_target_label(None)?;
-    save_claude_tokens_for_account(tokens, &label)
+pub fn save_claude_tokens(_tokens: &OAuthTokens) -> Result<()> {
+    anyhow::bail!(claude_auth::claude_oauth_unsupported_message())
 }
 
 /// Save Claude tokens for a specific stored account label.
-pub fn save_claude_tokens_for_account(tokens: &OAuthTokens, label: &str) -> Result<()> {
-    let existing = claude_auth::list_accounts()?
-        .into_iter()
-        .find(|account| account.label == label);
-    let scopes = if tokens.scopes.is_empty() {
-        existing
-            .as_ref()
-            .map(|account| account.scopes.clone())
-            .unwrap_or_default()
-    } else {
-        tokens.scopes.clone()
-    };
-    let account = claude_auth::AnthropicAccount {
-        label: label.to_string(),
-        access: tokens.access_token.clone(),
-        refresh: tokens.refresh_token.clone(),
-        expires: tokens.expires_at,
-        email: existing.as_ref().and_then(|account| account.email.clone()),
-        subscription_type: existing.and_then(|account| account.subscription_type),
-        scopes,
-    };
-    claude_auth::upsert_account(account)?;
-    Ok(())
+pub fn save_claude_tokens_for_account(_tokens: &OAuthTokens, _label: &str) -> Result<()> {
+    anyhow::bail!(claude_auth::claude_oauth_unsupported_message())
 }
 
+#[cfg(test)]
 #[derive(Deserialize)]
 struct ClaudeProfileResponse {
     #[serde(default)]
     account: ClaudeProfileAccount,
 }
 
+#[cfg(test)]
 #[derive(Deserialize, Default)]
 struct ClaudeProfileAccount {
     email: Option<String>,
 }
 
+#[cfg(test)]
 async fn fetch_claude_profile_email_at_url(
     access_token: &str,
     profile_url: &str,
@@ -975,176 +856,37 @@ async fn fetch_claude_profile_email_at_url(
 
 /// Fetch profile metadata for a Claude account and persist any discovered fields.
 pub async fn update_claude_account_profile(
-    label: &str,
-    access_token: &str,
+    _label: &str,
+    _access_token: &str,
 ) -> Result<Option<String>> {
-    let email = fetch_claude_profile_email_at_url(access_token, claude::PROFILE_URL).await?;
-    claude_auth::update_account_profile(label, email.clone())?;
-    Ok(email)
+    anyhow::bail!(claude_auth::claude_oauth_unsupported_message())
 }
 
 /// Load Claude tokens from minnal's credentials file (active account).
 pub fn load_claude_tokens() -> Result<OAuthTokens> {
-    if let Ok(creds) = claude_auth::load_credentials() {
-        return Ok(OAuthTokens {
-            access_token: creds.access_token,
-            refresh_token: creds.refresh_token,
-            expires_at: creds.expires_at,
-            id_token: None,
-            scopes: creds.scopes,
-        });
-    }
-
-    anyhow::bail!("No Claude Max OAuth credentials found. Run 'minnal login --provider claude'.");
+    anyhow::bail!(claude_auth::claude_oauth_unsupported_message())
 }
 
 /// Load Claude tokens for a specific stored account label.
-pub fn load_claude_tokens_for_account(label: &str) -> Result<OAuthTokens> {
-    let creds = claude_auth::load_credentials_for_account(label)?;
-    Ok(OAuthTokens {
-        access_token: creds.access_token,
-        refresh_token: creds.refresh_token,
-        expires_at: creds.expires_at,
-        id_token: None,
-        scopes: creds.scopes,
-    })
-}
-
-#[derive(Serialize)]
-struct ClaudeRefreshTokenRequest<'a> {
-    grant_type: &'static str,
-    refresh_token: &'a str,
-    client_id: &'static str,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    scope: Option<&'static str>,
-}
-
-#[derive(Deserialize)]
-struct ClaudeRefreshTokenResponse {
-    access_token: String,
-    refresh_token: Option<String>,
-    expires_in: i64,
-    scope: Option<String>,
-}
-
-fn claude_refresh_error_is_invalid_scope(err: &anyhow::Error) -> bool {
-    let text = format!("{err:#}").to_ascii_lowercase();
-    text.contains("invalid_scope")
-        || text.contains("requested scope is invalid")
-        || text.contains("scope is invalid")
-}
-
-async fn send_claude_refresh_request(
-    refresh_token: &str,
-    scope: Option<&'static str>,
-) -> Result<ClaudeRefreshTokenResponse> {
-    let payload = ClaudeRefreshTokenRequest {
-        grant_type: "refresh_token",
-        refresh_token,
-        client_id: claude::CLIENT_ID,
-        scope,
-    };
-
-    let client = crate::provider::shared_http_client();
-    let resp = client
-        .post(claude::TOKEN_URL)
-        .header("Content-Type", "application/json")
-        .timeout(Duration::from_secs(CLAUDE_TOKEN_TIMEOUT_SECS))
-        .json(&payload)
-        .send()
-        .await?;
-
-    if !resp.status().is_success() {
-        let text = resp.text().await?;
-        let scope_label = scope.unwrap_or("<omitted>");
-        anyhow::bail!(
-            "Token refresh failed with scope '{}': {}",
-            scope_label,
-            text
-        );
-    }
-
-    Ok(resp.json().await?)
-}
-
-async fn refresh_claude_tokens_inner(
-    refresh_token: &str,
-    label: Option<&str>,
-) -> Result<OAuthTokens> {
-    let scoped_result =
-        send_claude_refresh_request(refresh_token, Some(claude::REFRESH_SCOPES)).await;
-    let tokens = match scoped_result {
-        Ok(tokens) => tokens,
-        Err(err) if claude_refresh_error_is_invalid_scope(&err) => {
-            crate::logging::warn(
-                "Claude token refresh rejected Claude Code scopes; retrying without an explicit scope for legacy token compatibility",
-            );
-            match send_claude_refresh_request(refresh_token, None).await {
-                Ok(tokens) => tokens,
-                Err(fallback_err) => {
-                    anyhow::bail!(
-                        "Claude token refresh fallback without scope failed: {fallback_err:#}; scoped refresh error: {err:#}"
-                    );
-                }
-            }
-        }
-        Err(err) => return Err(err),
-    };
-
-    let expires_at = chrono::Utc::now().timestamp_millis() + (tokens.expires_in * 1000);
-    let scopes = parse_oauth_scopes(tokens.scope.as_deref());
-    ensure_claude_inference_scope(&scopes, "token refresh")?;
-    let oauth_tokens = OAuthTokens {
-        access_token: tokens.access_token,
-        refresh_token: tokens
-            .refresh_token
-            .unwrap_or_else(|| refresh_token.to_string()),
-        expires_at,
-        id_token: None,
-        scopes,
-    };
-
-    let save_label = label.map(ToString::to_string).unwrap_or_else(|| {
-        claude_auth::active_account_label().unwrap_or_else(claude_auth::primary_account_label)
-    });
-    save_claude_tokens_for_account(&oauth_tokens, &save_label)?;
-
-    Ok(oauth_tokens)
+pub fn load_claude_tokens_for_account(_label: &str) -> Result<OAuthTokens> {
+    anyhow::bail!(claude_auth::claude_oauth_unsupported_message())
 }
 
 /// Refresh Claude OAuth tokens
-pub async fn refresh_claude_tokens(refresh_token: &str) -> Result<OAuthTokens> {
-    let result = refresh_claude_tokens_inner(refresh_token, None).await;
-
-    match &result {
-        Ok(_) => {
-            let _ = crate::auth::refresh_state::record_success("claude");
-        }
-        Err(err) => {
-            let _ = crate::auth::refresh_state::record_failure("claude", err.to_string());
-        }
-    }
-
-    result
+pub async fn refresh_claude_tokens(_refresh_token: &str) -> Result<OAuthTokens> {
+    let err = claude_auth::claude_oauth_unsupported_message();
+    let _ = crate::auth::refresh_state::record_failure("claude", err.to_string());
+    anyhow::bail!(err)
 }
 
 /// Refresh Claude OAuth tokens for a specific account.
 pub async fn refresh_claude_tokens_for_account(
-    refresh_token: &str,
-    label: &str,
+    _refresh_token: &str,
+    _label: &str,
 ) -> Result<OAuthTokens> {
-    let result = refresh_claude_tokens_inner(refresh_token, Some(label)).await;
-
-    match &result {
-        Ok(_) => {
-            let _ = crate::auth::refresh_state::record_success("claude");
-        }
-        Err(err) => {
-            let _ = crate::auth::refresh_state::record_failure("claude", err.to_string());
-        }
-    }
-
-    result
+    let err = claude_auth::claude_oauth_unsupported_message();
+    let _ = crate::auth::refresh_state::record_failure("claude", err.to_string());
+    anyhow::bail!(err)
 }
 
 /// Save OpenAI tokens to auth file

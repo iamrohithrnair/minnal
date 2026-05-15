@@ -120,11 +120,7 @@ pub(super) fn build_auth_status_line(auth: &AuthStatus, max_width: usize) -> Lin
         }
     }
 
-    let anthropic_label = if auth.anthropic.has_oauth && auth.anthropic.has_api_key {
-        provider_label("anthropic", auth.anthropic.state, Some("oauth+key"))
-    } else if auth.anthropic.has_oauth {
-        provider_label("anthropic", auth.anthropic.state, Some("oauth"))
-    } else if auth.anthropic.has_api_key {
+    let anthropic_label = if auth.anthropic.has_api_key {
         provider_label("anthropic", auth.anthropic.state, Some("key"))
     } else {
         provider_label("anthropic", auth.anthropic.state, None)
@@ -223,9 +219,7 @@ pub(super) fn build_auth_status_line(auth: &AuthStatus, max_width: usize) -> Lin
 fn header_provider_auth_tag(name: &str, auth: &AuthStatus) -> &'static str {
     match name {
         "anthropic" => {
-            if auth.anthropic.has_oauth {
-                "oauth"
-            } else if std::env::var("ANTHROPIC_API_KEY").is_ok() || auth.anthropic.has_api_key {
+            if auth.anthropic.has_api_key {
                 "api-key"
             } else {
                 ""
@@ -820,9 +814,9 @@ mod tests {
         let auth = AuthStatus {
             minnal: AuthState::Available,
             anthropic: ProviderAuth {
-                state: AuthState::Expired,
-                has_oauth: true,
-                has_api_key: false,
+                state: AuthState::Available,
+                has_oauth: false,
+                has_api_key: true,
             },
             azure: AuthState::Available,
             google: AuthState::Available,
@@ -916,9 +910,9 @@ mod tests {
     fn auth_status_line_hides_not_configured_providers() {
         let auth = AuthStatus {
             anthropic: ProviderAuth {
-                state: AuthState::Expired,
-                has_oauth: true,
-                has_api_key: false,
+                state: AuthState::Available,
+                has_oauth: false,
+                has_api_key: true,
             },
             openai: AuthState::Available,
             openai_has_oauth: false,
@@ -933,10 +927,7 @@ mod tests {
             .map(|span| span.content.as_ref())
             .collect::<String>();
 
-        assert!(
-            rendered.contains("anthropic(oauth)"),
-            "rendered: {rendered}"
-        );
+        assert!(rendered.contains("anthropic(key)"), "rendered: {rendered}");
         assert!(rendered.contains("openai(key)"), "rendered: {rendered}");
         assert!(!rendered.contains("openrouter"), "rendered: {rendered}");
         assert!(!rendered.contains("copilot"), "rendered: {rendered}");

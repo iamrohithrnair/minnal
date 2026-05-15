@@ -555,7 +555,7 @@ impl AutoProviderAvailability {
 async fn detect_auto_provider_flags() -> AutoProviderAvailability {
     let auth_status = auth::AuthStatus::check_fast();
     AutoProviderAvailability {
-        has_claude: auth_status.anthropic.has_oauth || auth_status.anthropic.has_api_key,
+        has_claude: auth_status.anthropic.has_api_key,
         has_openai: auth_status.openai_has_oauth || auth_status.openai_has_api_key,
         has_copilot: auth_status.copilot_has_api_token,
         has_antigravity: auth::antigravity::load_tokens().is_ok(),
@@ -570,6 +570,9 @@ fn provider_label_for_api_key_env(env_key: &str) -> String {
     if env_key == "OPENROUTER_API_KEY" {
         return "OpenRouter".to_string();
     }
+    if env_key == auth::claude::ANTHROPIC_API_KEY_ENV {
+        return "Anthropic/Claude".to_string();
+    }
 
     crate::provider_catalog::openai_compatible_profiles()
         .iter()
@@ -583,6 +586,9 @@ fn provider_label_for_api_key_env(env_key: &str) -> String {
 fn provider_login_hint_for_api_key_env(env_key: &str) -> String {
     if env_key == "OPENROUTER_API_KEY" {
         return "minnal login --provider openrouter".to_string();
+    }
+    if env_key == auth::claude::ANTHROPIC_API_KEY_ENV {
+        return "minnal login --provider claude".to_string();
     }
 
     crate::provider_catalog::openai_compatible_profiles()
@@ -778,78 +784,39 @@ fn maybe_enable_legacy_codex_auth_for_auto(has_other_provider: bool) -> Result<b
 }
 
 fn ensure_claude_auth_allowed_for_explicit_choice() -> Result<()> {
-    if auth::claude::load_credentials().is_ok() {
+    if auth::claude::has_api_key() {
         return Ok(());
     }
 
-    if maybe_prompt_for_generic_oauth_source(
-        "Claude",
-        auth::external::preferred_unconsented_anthropic_oauth_source(),
-        "minnal login --provider claude",
-        false,
-        || auth::claude::load_credentials().is_ok(),
-    )? {
-        return Ok(());
-    }
-
-    let Some(source) = auth::claude::has_unconsented_external_auth() else {
-        return Ok(());
-    };
-    let path = source.path()?;
-    if !can_prompt_for_external_auth() {
-        anyhow::bail!(external_auth_blocked_message(
-            "Claude",
-            source.display_name(),
-            &path,
-            "minnal login --provider claude"
-        ));
-    }
-    if prompt_to_trust_external_auth("Claude", source.display_name(), &path)? {
-        auth::claude::trust_external_auth_source(source)?;
-        return Ok(());
-    }
-    anyhow::bail!(
-        "Skipped trusting external Claude credentials. Run `minnal login --provider claude` to authenticate minnal directly."
-    )
+    ensure_external_api_key_auth_allowed_for_explicit_choice(auth::claude::ANTHROPIC_API_KEY_ENV)
 }
 
 fn maybe_enable_claude_auth_for_auto(has_other_provider: bool) -> Result<bool> {
-    if auth::claude::load_credentials().is_ok() {
+    if auth::claude::has_api_key() {
         return Ok(true);
     }
-
-    if let Some(source) = auth::external::preferred_unconsented_anthropic_oauth_source() {
-        if has_other_provider {
-            return Ok(false);
-        }
-        return maybe_prompt_for_generic_oauth_source(
-            "Claude",
-            Some(source),
-            "minnal login --provider claude",
-            true,
-            || auth::claude::load_credentials().is_ok(),
-        );
-    }
-
-    let Some(source) = auth::claude::has_unconsented_external_auth() else {
-        return Ok(false);
-    };
     if has_other_provider {
         return Ok(false);
     }
+
+    let Some(source) = auth::external::preferred_unconsented_api_key_source_for_env(
+        auth::claude::ANTHROPIC_API_KEY_ENV,
+    ) else {
+        return Ok(false);
+    };
     let path = source.path()?;
     if !can_prompt_for_external_auth() {
         crate::logging::warn(&external_auth_blocked_message(
-            "Claude",
+            "Anthropic/Claude",
             source.display_name(),
             &path,
             "minnal login --provider claude",
         ));
         return Ok(false);
     }
-    if prompt_to_trust_external_auth("Claude", source.display_name(), &path)? {
-        auth::claude::trust_external_auth_source(source)?;
-        return Ok(auth::claude::load_credentials().is_ok());
+    if prompt_to_trust_external_auth("Anthropic/Claude", source.display_name(), &path)? {
+        auth::external::trust_external_auth_source(source)?;
+        return Ok(auth::claude::has_api_key());
     }
     Ok(false)
 }
@@ -1250,12 +1217,9 @@ async fn init_provider_with_options(
             disable_subscription_runtime_mode();
             ensure_claude_auth_allowed_for_explicit_choice()?;
             crate::logging::warn(
-                "Using --provider claude-subprocess is deprecated and will be removed. Prefer `--provider claude`.",
+                "--provider claude-subprocess is no longer supported. Using official Anthropic API-key transport instead.",
             );
-            crate::env::set_var("MINNAL_USE_CLAUDE_CLI", "1");
-            init_notice(
-                "Using deprecated Claude subprocess transport (legacy compatibility mode; provider locked)",
-            );
+            init_notice("Using Claude via official Anthropic API key (provider locked)");
             lock_model_provider("claude");
             Arc::new(provider::MultiProvider::with_preference_fast(false))
         }

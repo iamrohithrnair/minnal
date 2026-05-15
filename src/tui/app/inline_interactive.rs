@@ -191,9 +191,13 @@ impl App {
                     match crate::provider::provider_for_model(&model) {
                         Some("claude") => (
                             "Anthropic".to_string(),
-                            "claude-oauth".to_string(),
-                            auth.anthropic.has_oauth || auth.anthropic.has_api_key,
-                            String::new(),
+                            "api-key".to_string(),
+                            auth.anthropic.has_api_key,
+                            if auth.anthropic.has_api_key {
+                                String::new()
+                            } else {
+                                "ANTHROPIC_API_KEY not set".to_string()
+                            },
                         ),
                         Some("openai") => unreachable!("OpenAI models are handled above"),
                         Some("gemini") => (
@@ -566,8 +570,7 @@ impl App {
         fn route_sort_key(r: &PickerOption) -> (u8, u8, u64, String) {
             let avail = if r.available { 0 } else { 1 };
             let method = match r.api_method.as_str() {
-                "claude-oauth" | "openai-oauth" | "openai-api-key" => 0,
-                "api-key" => 1,
+                "api-key" | "openai-oauth" | "openai-api-key" => 0,
                 method if method.starts_with("openai-compatible") => 1,
                 "cursor" => 2,
                 "copilot" => 3,
@@ -606,8 +609,6 @@ impl App {
         const RECOMMENDED_MODELS: &[&str] =
             &["gpt-5.5", "claude-opus-4-7", "deepseek/deepseek-v4-pro"];
 
-        const CLAUDE_OAUTH_ONLY_MODELS: &[&str] = &["claude-opus-4-7"];
-
         const OPENAI_OAUTH_ONLY_MODELS: &[&str] =
             &["gpt-5.5", "gpt-5.4", "gpt-5.4[1m]", "gpt-5.4-pro"];
         const COPILOT_OAUTH_MODELS: &[&str] = &["claude-opus-4.7", "gpt-5.5", "gpt-5.4"];
@@ -626,7 +627,7 @@ impl App {
             }
             matches!(
                 route.api_method.as_str(),
-                "claude-oauth" | "openai-oauth" | "openai-api-key" | "copilot"
+                "api-key" | "openai-oauth" | "openai-api-key" | "copilot"
             ) || (route.api_method == "openrouter" && route.provider == "auto")
         }
 
@@ -717,8 +718,7 @@ impl App {
                             is_current: is_this_current,
                             recommended: RECOMMENDED_MODELS.contains(&name.as_str())
                                 && (*effort == "xhigh" || *effort == "high")
-                                && (!(CLAUDE_OAUTH_ONLY_MODELS.contains(&name.as_str())
-                                    || OPENAI_OAUTH_ONLY_MODELS.contains(&name.as_str())
+                                && (!(OPENAI_OAUTH_ONLY_MODELS.contains(&name.as_str())
                                     || COPILOT_OAUTH_MODELS.contains(&name.as_str())
                                     || OPENROUTER_AUTO_ONLY_MODELS.contains(&name.as_str()))
                                     || (route_can_be_recommended(name, route) && route.available)),
@@ -737,8 +737,7 @@ impl App {
                     && or_created.map(|t| t < old_threshold_secs).unwrap_or(false);
                 for route in entry_routes {
                     let is_recommended = RECOMMENDED_MODELS.contains(&name.as_str())
-                        && (!(CLAUDE_OAUTH_ONLY_MODELS.contains(&name.as_str())
-                            || OPENAI_OAUTH_ONLY_MODELS.contains(&name.as_str())
+                        && (!(OPENAI_OAUTH_ONLY_MODELS.contains(&name.as_str())
                             || COPILOT_OAUTH_MODELS.contains(&name.as_str())
                             || OPENROUTER_AUTO_ONLY_MODELS.contains(&name.as_str()))
                             || (route_can_be_recommended(name, &route) && route.available));
@@ -965,14 +964,24 @@ impl App {
 
             let mut added_any = false;
 
-            if crate::provider::provider_for_model(model) == Some("claude")
-                && auth.anthropic.has_oauth
-            {
-                let (available, detail) =
-                    crate::provider::anthropic_oauth_route_availability(model);
-                routes.push(crate::provider::build_anthropic_oauth_route(
-                    model, available, detail,
-                ));
+            if crate::provider::provider_for_model(model) == Some("claude") {
+                let (available, detail) = if auth.anthropic.has_api_key {
+                    crate::provider::anthropic_api_key_route_availability(model)
+                } else {
+                    (false, "ANTHROPIC_API_KEY not set".to_string())
+                };
+                routes.push(crate::provider::ModelRoute {
+                    model: model.clone(),
+                    provider: "Anthropic".to_string(),
+                    api_method: "api-key".to_string(),
+                    available,
+                    detail,
+                    cheapness: crate::provider::pricing::cheapness_for_route(
+                        model,
+                        "Anthropic",
+                        "api-key",
+                    ),
+                });
                 added_any = true;
             }
 

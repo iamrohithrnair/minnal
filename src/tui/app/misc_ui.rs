@@ -156,9 +156,9 @@ impl App {
             return;
         }
 
-        // For OAuth providers, cost is already tracked in subscription
+        // Unsupported legacy OAuth credentials are not priced as API usage.
         let is_oauth = (provider_name.contains("anthropic") || provider_name.contains("claude"))
-            && std::env::var("ANTHROPIC_API_KEY").is_err();
+            && !crate::auth::claude::has_api_key();
         if is_oauth {
             return;
         }

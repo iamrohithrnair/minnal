@@ -75,9 +75,6 @@ pub fn source_provider_labels(source: ExternalAuthSource) -> Vec<&'static str> {
     {
         labels.push("OpenAI/Codex");
     }
-    if source_contains_oauth_provider(source, &["anthropic", "claude"]).unwrap_or(false) {
-        labels.push("Claude");
-    }
     if source_contains_oauth_provider(source, &["google-gemini-cli", "gemini-cli", "gemini"])
         .unwrap_or(false)
     {
@@ -123,7 +120,7 @@ pub fn preferred_unconsented_openai_oauth_source() -> Option<ExternalAuthSource>
 }
 
 pub fn preferred_unconsented_anthropic_oauth_source() -> Option<ExternalAuthSource> {
-    preferred_unconsented_oauth_source_for_candidates(&["anthropic", "claude"])
+    None
 }
 
 pub fn preferred_unconsented_gemini_oauth_source() -> Option<ExternalAuthSource> {
@@ -172,7 +169,7 @@ pub fn load_antigravity_oauth_tokens() -> Option<ExternalOAuthTokens> {
 }
 
 pub fn load_anthropic_oauth_tokens() -> Option<ExternalOAuthTokens> {
-    load_oauth_tokens_for_candidates(&["anthropic", "claude"])
+    None
 }
 
 pub fn source_allowed(source: ExternalAuthSource) -> bool {
@@ -244,8 +241,6 @@ fn source_has_supported_auth(source: ExternalAuthSource) -> bool {
                 "openai-codex",
                 "openai_codex",
                 "openai",
-                "anthropic",
-                "claude",
                 "google-gemini-cli",
                 "gemini-cli",
                 "gemini",

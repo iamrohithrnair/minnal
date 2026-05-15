@@ -125,13 +125,18 @@ fn test_parse_tailscale_dns_name_invalid_json() {
 
 #[test]
 fn configured_auth_test_targets_only_include_configured_supported_providers() {
+    let _env_guard = crate::storage::lock_test_env();
+    let _saved = SavedEnv::capture(&["OPENROUTER_API_KEY"]);
+    crate::env::set_var("OPENROUTER_API_KEY", "test-openrouter-key");
+
     let status = AuthStatus {
         anthropic: ProviderAuth {
             state: AuthState::Available,
-            has_oauth: true,
-            has_api_key: false,
+            has_oauth: false,
+            has_api_key: true,
         },
         openai: AuthState::NotConfigured,
+        openrouter: AuthState::Available,
         gemini: AuthState::Available,
         google: AuthState::Expired,
         copilot: AuthState::Available,
@@ -391,9 +396,9 @@ fn collect_cli_model_names_falls_back_when_no_routes_are_available() {
     let routes = vec![ModelRoute {
         model: "claude-opus-4-6".to_string(),
         provider: "Anthropic".to_string(),
-        api_method: "claude-oauth".to_string(),
+        api_method: "api-key".to_string(),
         available: false,
-        detail: "no credentials".to_string(),
+        detail: "ANTHROPIC_API_KEY not set".to_string(),
         cheapness: None,
     }];
 

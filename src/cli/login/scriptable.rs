@@ -11,8 +11,7 @@ pub(super) fn auto_scriptable_flow_reason(
 
     let supports_scriptable = matches!(
         provider.target,
-        LoginProviderTarget::Claude
-            | LoginProviderTarget::OpenAi
+        LoginProviderTarget::OpenAi
             | LoginProviderTarget::Gemini
             | LoginProviderTarget::Antigravity
             | LoginProviderTarget::Google
@@ -55,28 +54,6 @@ pub(super) async fn start_scriptable_login(
     options: &LoginOptions,
 ) -> Result<LoginFlowOutcome> {
     let (pending, auth_url, input_kind, user_code, expires_at_ms) = match provider.target {
-        LoginProviderTarget::Claude => {
-            let label = auth::claude::login_target_label(account_label)?;
-            let (verifier, challenge) = auth::oauth::generate_pkce_public();
-            let redirect_uri = auth::oauth::claude::REDIRECT_URI.to_string();
-            let auth_url = auth::oauth::claude_auth_url(&redirect_uri, &challenge, &verifier);
-            (
-                PendingScriptableLogin::Claude {
-                    account_label: label,
-                    verifier,
-                    redirect_uri,
-                },
-                auth_url,
-                "auth_code_or_callback_url",
-                None,
-                PendingScriptableLogin::Claude {
-                    account_label: String::new(),
-                    verifier: String::new(),
-                    redirect_uri: String::new(),
-                }
-                .default_expires_at_ms(),
-            )
-        }
         LoginProviderTarget::OpenAi => {
             let label = auth::codex::login_target_label(account_label)?;
             let (verifier, challenge) = auth::oauth::generate_pkce_public();
@@ -198,7 +175,7 @@ pub(super) async fn start_scriptable_login(
         }
         _ => {
             anyhow::bail!(
-                "`--print-auth-url` is currently supported for: claude, openai, gemini, antigravity, google, copilot."
+                "`--print-auth-url` is currently supported for: openai, gemini, antigravity, google, copilot."
             )
         }
     };
@@ -235,10 +212,6 @@ pub(super) async fn complete_scriptable_login(
     }
 
     match provider.target {
-        LoginProviderTarget::Claude => {
-            complete_scriptable_claude_login(provider.id, options, require_scriptable_input(input)?)
-                .await
-        }
         LoginProviderTarget::OpenAi => {
             complete_scriptable_openai_login(provider.id, options, require_scriptable_input(input)?)
                 .await
@@ -271,62 +244,9 @@ pub(super) async fn complete_scriptable_login(
             complete_scriptable_copilot_login(provider.id, options).await
         }
         _ => anyhow::bail!(
-            "Scriptable completion is currently supported for: claude, openai, gemini, antigravity, google, copilot."
+            "Scriptable completion is currently supported for: openai, gemini, antigravity, google, copilot."
         ),
     }
-}
-
-pub(super) async fn complete_scriptable_claude_login(
-    provider_id: &str,
-    options: &LoginOptions,
-    input: ProvidedAuthInput,
-) -> Result<LoginFlowOutcome> {
-    let pending_path = pending_login_path("claude")?;
-    let PendingScriptableLogin::Claude {
-        account_label,
-        verifier,
-        redirect_uri,
-    } = load_pending_login(&pending_path, "claude")?
-    else {
-        anyhow::bail!("Pending Claude login state is invalid.");
-    };
-
-    let raw_input = match input {
-        ProvidedAuthInput::CallbackUrl(value) | ProvidedAuthInput::AuthCode(value) => value,
-    };
-    let selected_redirect_uri =
-        auth::oauth::claude_redirect_uri_for_input(&raw_input, &redirect_uri);
-    let tokens =
-        auth::oauth::exchange_claude_code(&verifier, &raw_input, &selected_redirect_uri).await?;
-    auth::oauth::save_claude_tokens_for_account(&tokens, &account_label)?;
-    let profile_email =
-        auth::oauth::update_claude_account_profile(&account_label, &tokens.access_token)
-            .await
-            .unwrap_or(None);
-    clear_pending_login(&pending_path);
-    crate::telemetry::record_auth_success(provider_id, "oauth");
-    emit_scriptable_auth_success(
-        options.json,
-        ScriptableAuthSuccess {
-            status: "authenticated",
-            provider: provider_id.to_string(),
-            account_label: Some(account_label.clone()),
-            credentials_path: Some(auth::claude::minnal_path()?.display().to_string()),
-            email: profile_email.clone(),
-        },
-    )?;
-    if !options.json {
-        eprintln!("Successfully logged in to Claude!");
-        eprintln!(
-            "Account '{}' stored at {}",
-            account_label,
-            auth::claude::minnal_path()?.display()
-        );
-        if let Some(email) = profile_email {
-            eprintln!("Profile email: {}", email);
-        }
-    }
-    Ok(LoginFlowOutcome::Completed)
 }
 
 pub(super) async fn complete_scriptable_openai_login(

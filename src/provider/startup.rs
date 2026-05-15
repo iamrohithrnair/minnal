@@ -94,7 +94,7 @@ impl MultiProvider {
             }
         }
 
-        let has_claude_creds = auth::claude::load_credentials().is_ok();
+        let has_claude_creds = auth::claude::has_credentials();
         let has_openai_creds = auth::codex::load_credentials().is_ok();
         let has_copilot_api = provider_state.auth_status().copilot_has_api_token;
         let has_antigravity_creds = auth::antigravity::load_tokens().is_ok();
@@ -106,25 +106,19 @@ impl MultiProvider {
         let has_bedrock_creds = bedrock::BedrockProvider::has_credentials();
         let has_openrouter_creds = openrouter::OpenRouterProvider::has_credentials();
 
-        let use_claude_cli = std::env::var("MINNAL_USE_CLAUDE_CLI")
+        let use_claude_cli_requested = std::env::var("MINNAL_USE_CLAUDE_CLI")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
-        if use_claude_cli {
+        if use_claude_cli_requested {
             crate::logging::warn(
-                "MINNAL_USE_CLAUDE_CLI is deprecated and will be removed. Direct Anthropic API transport is the default.",
+                "MINNAL_USE_CLAUDE_CLI is no longer supported. Using official Anthropic API-key transport instead.",
             );
         }
+        let use_claude_cli = false;
 
-        let claude = if has_claude_creds && use_claude_cli {
-            crate::logging::info(
-                "Using deprecated Claude CLI provider (forced by MINNAL_USE_CLAUDE_CLI=1)",
-            );
-            Some(Arc::new(claude::ClaudeProvider::new()))
-        } else {
-            None
-        };
+        let claude = None;
 
-        let anthropic = if has_claude_creds && !use_claude_cli {
+        let anthropic = if has_claude_creds {
             Some(Arc::new(anthropic::AnthropicProvider::new()))
         } else {
             None

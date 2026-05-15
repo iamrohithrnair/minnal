@@ -294,13 +294,30 @@ fn is_max_subscription_max_is_true() {
 }
 
 #[test]
-fn is_max_subscription_unknown_is_true() {
-    let sub_type: Option<String> = None;
-    let is_max = match sub_type {
-        Some(t) => t != "pro",
-        None => true,
-    };
-    assert!(is_max);
+fn is_max_subscription_unknown_is_false_without_oauth() {
+    assert!(!is_max_subscription());
+}
+
+#[test]
+fn load_credentials_rejects_legacy_claude_oauth() {
+    let err = load_credentials().expect_err("legacy Claude OAuth should be disabled");
+    assert!(err.to_string().contains("Claude OAuth"));
+}
+
+#[test]
+fn anthropic_api_key_counts_as_credentials() {
+    let _lock = crate::storage::lock_test_env();
+    let previous = std::env::var_os(ANTHROPIC_API_KEY_ENV);
+    crate::env::set_var(ANTHROPIC_API_KEY_ENV, "sk-ant-test");
+
+    assert!(has_api_key());
+    assert!(has_credentials());
+
+    if let Some(previous) = previous {
+        crate::env::set_var(ANTHROPIC_API_KEY_ENV, previous);
+    } else {
+        crate::env::remove_var(ANTHROPIC_API_KEY_ENV);
+    }
 }
 
 #[test]

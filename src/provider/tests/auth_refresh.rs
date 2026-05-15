@@ -184,22 +184,13 @@ fn test_on_auth_changed_hot_initializes_anthropic_and_marks_routes_available() {
             forced_provider: Some(ActiveProvider::Claude),
         };
 
-        crate::auth::claude::upsert_account(crate::auth::claude::AnthropicAccount {
-            label: "claude-1".to_string(),
-            access: "test-access-token".to_string(),
-            refresh: "test-refresh-token".to_string(),
-            expires: i64::MAX,
-            email: None,
-            scopes: Vec::new(),
-            subscription_type: None,
-        })
-        .expect("save test Claude auth");
+        crate::env::set_var(crate::auth::claude::ANTHROPIC_API_KEY_ENV, "sk-ant-test");
 
         provider.on_auth_changed();
 
         assert!(provider.anthropic_provider().is_some());
         assert!(provider.model_routes().iter().any(|route| {
-            route.provider == "Anthropic" && route.api_method == "claude-oauth" && route.available
+            route.provider == "Anthropic" && route.api_method == "api-key" && route.available
         }));
     });
 }
@@ -226,16 +217,7 @@ fn test_anthropic_model_routes_keep_plain_4_6_available_without_extra_usage() {
             forced_provider: Some(ActiveProvider::Claude),
         };
 
-        crate::auth::claude::upsert_account(crate::auth::claude::AnthropicAccount {
-            label: "claude-1".to_string(),
-            access: "test-access-token".to_string(),
-            refresh: "test-refresh-token".to_string(),
-            expires: i64::MAX,
-            email: None,
-            scopes: Vec::new(),
-            subscription_type: None,
-        })
-        .expect("save test Claude auth");
+        crate::env::set_var(crate::auth::claude::ANTHROPIC_API_KEY_ENV, "sk-ant-test");
 
         provider.on_auth_changed();
 
@@ -244,7 +226,7 @@ fn test_anthropic_model_routes_keep_plain_4_6_available_without_extra_usage() {
             .iter()
             .find(|route| {
                 route.provider == "Anthropic"
-                    && route.api_method == "claude-oauth"
+                    && route.api_method == "api-key"
                     && route.model == "claude-opus-4-6"
             })
             .expect("plain opus route");
@@ -255,7 +237,7 @@ fn test_anthropic_model_routes_keep_plain_4_6_available_without_extra_usage() {
             .iter()
             .find(|route| {
                 route.provider == "Anthropic"
-                    && route.api_method == "claude-oauth"
+                    && route.api_method == "api-key"
                     && route.model == "claude-opus-4-6[1m]"
             })
             .expect("1m opus route");

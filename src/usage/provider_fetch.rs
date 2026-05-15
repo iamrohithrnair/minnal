@@ -14,48 +14,6 @@ pub(super) fn usage_percent_from_remaining_limit(remaining: f64, limit: f64) -> 
     usage_percent_from_used_limit((limit - remaining).max(0.0), limit)
 }
 
-pub(super) async fn fetch_anthropic_usage_for_token(
-    display_name: String,
-    access_token: String,
-    refresh_token: String,
-    account_label: String,
-    expires_at: i64,
-) -> ProviderUsage {
-    let now_ms = chrono::Utc::now().timestamp_millis();
-    let access_token = if expires_at < now_ms + 300_000 && !refresh_token.is_empty() {
-        match crate::auth::oauth::refresh_claude_tokens_for_account(&refresh_token, &account_label)
-            .await
-        {
-            Ok(refreshed) => refreshed.access_token,
-            Err(_) => {
-                if expires_at < now_ms {
-                    return ProviderUsage {
-                        provider_name: display_name,
-                        error: Some(
-                            "OAuth token expired - use `/login claude` to re-authenticate"
-                                .to_string(),
-                        ),
-                        ..Default::default()
-                    };
-                }
-                access_token
-            }
-        }
-    } else {
-        access_token
-    };
-
-    let cache_key = anthropic_usage_cache_key(&access_token, Some(&account_label));
-    match fetch_anthropic_usage_data(access_token, cache_key).await {
-        Ok(data) => provider_report_from_usage_data(display_name, &data),
-        Err(e) => ProviderUsage {
-            provider_name: display_name,
-            error: Some(e.to_string()),
-            ..Default::default()
-        },
-    }
-}
-
 pub(super) async fn fetch_all_openai_usage_reports() -> Vec<ProviderUsage> {
     let accounts = auth::codex::list_accounts().unwrap_or_default();
     if !accounts.is_empty() {

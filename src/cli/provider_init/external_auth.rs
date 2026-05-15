@@ -50,7 +50,6 @@ pub(super) fn prompt_to_trust_external_auth(
 enum ExternalAuthReviewAction {
     SharedExternal(auth::external::ExternalAuthSource),
     CodexLegacy,
-    ClaudeCode,
     GeminiCli,
     Copilot(auth::copilot::ExternalCopilotAuthSource),
     Cursor(auth::cursor::ExternalCursorAuthSource),
@@ -107,17 +106,6 @@ pub(crate) fn pending_external_auth_review_candidates() -> Result<Vec<ExternalAu
             source_name: "Codex auth.json".to_string(),
             path: auth::codex::legacy_auth_file_path()?,
             action: ExternalAuthReviewAction::CodexLegacy,
-        });
-    }
-
-    if let Some(source) = auth::claude::has_unconsented_external_auth()
-        && matches!(source, auth::claude::ExternalClaudeAuthSource::ClaudeCode)
-    {
-        candidates.push(ExternalAuthReviewCandidate {
-            provider_summary: "Claude".to_string(),
-            source_name: source.display_name().to_string(),
-            path: source.path()?,
-            action: ExternalAuthReviewAction::ClaudeCode,
         });
     }
 
@@ -236,9 +224,6 @@ fn approve_external_auth_review_candidate(candidate: &ExternalAuthReviewCandidat
             auth::external::trust_external_auth_source(source)?
         }
         ExternalAuthReviewAction::CodexLegacy => auth::codex::trust_legacy_auth_for_future_use()?,
-        ExternalAuthReviewAction::ClaudeCode => auth::claude::trust_external_auth_source(
-            auth::claude::ExternalClaudeAuthSource::ClaudeCode,
-        )?,
         ExternalAuthReviewAction::GeminiCli => auth::gemini::trust_cli_auth_for_future_use()?,
         ExternalAuthReviewAction::Copilot(source) => {
             auth::copilot::trust_external_auth_source(source)?
@@ -264,12 +249,6 @@ fn revoke_external_auth_review_candidate(candidate: &ExternalAuthReviewCandidate
                 &candidate.path,
             )?
         }
-        ExternalAuthReviewAction::ClaudeCode => {
-            crate::config::Config::revoke_external_auth_source_for_path(
-                auth::claude::CLAUDE_CODE_AUTH_SOURCE_ID,
-                &candidate.path,
-            )?
-        }
         ExternalAuthReviewAction::GeminiCli => {
             crate::config::Config::revoke_external_auth_source_for_path(
                 auth::gemini::GEMINI_CLI_AUTH_SOURCE_ID,
@@ -290,15 +269,6 @@ fn revoke_external_auth_review_candidate(candidate: &ExternalAuthReviewCandidate
         }
     }
     Ok(())
-}
-
-async fn validate_claude_import() -> Result<String> {
-    let creds = auth::claude::load_credentials()?;
-    let refreshed = crate::auth::oauth::refresh_claude_tokens(&creds.refresh_token).await?;
-    Ok(format!(
-        "Claude refresh probe succeeded (expires_at={}).",
-        refreshed.expires_at
-    ))
 }
 
 async fn validate_openai_import() -> Result<String> {
@@ -369,7 +339,6 @@ async fn validate_shared_external_import(
     for label in auth::external::source_provider_labels(source) {
         let result = match label {
             "OpenAI/Codex" => validate_openai_import().await,
-            "Claude" => validate_claude_import().await,
             "Gemini" => validate_gemini_import().await,
             "Antigravity" => validate_antigravity_import().await,
             "GitHub Copilot" => validate_copilot_import().await,
@@ -392,7 +361,6 @@ async fn validate_external_auth_review_candidate(
             validate_shared_external_import(source).await
         }
         ExternalAuthReviewAction::CodexLegacy => validate_openai_import().await,
-        ExternalAuthReviewAction::ClaudeCode => validate_claude_import().await,
         ExternalAuthReviewAction::GeminiCli => validate_gemini_import().await,
         ExternalAuthReviewAction::Copilot(_) => validate_copilot_import().await,
         ExternalAuthReviewAction::Cursor(_) => validate_cursor_import().await,

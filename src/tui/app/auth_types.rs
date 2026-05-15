@@ -1,6 +1,7 @@
 #[derive(Debug, Clone)]
 pub(crate) enum PendingLogin {
-    /// Waiting for user to paste Claude OAuth code for a specific stored account
+    /// Legacy Claude OAuth login state. New Claude logins use API keys.
+    #[allow(dead_code)]
     ClaudeAccount {
         verifier: String,
         label: String,
@@ -63,7 +64,9 @@ pub(crate) enum PendingLogin {
 impl PendingLogin {
     pub(crate) fn telemetry_context(&self) -> Option<(String, String)> {
         match self {
-            Self::ClaudeAccount { .. } => Some(("claude".to_string(), "oauth".to_string())),
+            Self::ClaudeAccount { .. } => {
+                Some(("claude".to_string(), "oauth_disabled".to_string()))
+            }
             Self::OpenAiAccount { .. } => Some(("openai".to_string(), "oauth".to_string())),
             Self::Gemini { .. } => Some(("gemini".to_string(), "oauth".to_string())),
             Self::Antigravity { .. } => Some(("antigravity".to_string(), "oauth".to_string())),

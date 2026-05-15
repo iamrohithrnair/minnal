@@ -86,6 +86,12 @@ fn openai_api_key_configured() -> bool {
         .unwrap_or(false)
 }
 
+fn anthropic_api_key_configured() -> bool {
+    crate::auth::claude::load_api_key()
+        .map(|value| !value.trim().is_empty())
+        .unwrap_or(false)
+}
+
 fn auth_state_label(state: AuthState) -> &'static str {
     match state {
         AuthState::Available => "available",
@@ -240,7 +246,6 @@ impl AuthStatus {
 
     pub fn has_any_untrusted_external_auth() -> bool {
         crate::auth::codex::has_unconsented_legacy_credentials()
-            || crate::auth::claude::has_unconsented_external_auth().is_some()
             || crate::auth::external::has_any_unconsented_external_auth()
             || crate::auth::gemini::has_unconsented_cli_auth()
             || crate::auth::copilot::has_unconsented_external_auth().is_some()
@@ -409,29 +414,10 @@ impl AuthStatus {
             }
             _ => match provider.auth_state_key {
                 LoginProviderAuthStateKey::Anthropic => {
-                    let detail = if self.anthropic.has_oauth && self.anthropic.has_api_key {
-                        "OAuth + API key"
-                    } else if self.anthropic.has_oauth {
-                        "OAuth"
-                    } else if self.anthropic.has_api_key {
-                        "API key"
+                    if self.anthropic.has_api_key {
+                        "API key (`ANTHROPIC_API_KEY`)".to_string()
                     } else {
-                        "not configured"
-                    };
-
-                    let accounts = crate::auth::claude::list_accounts().unwrap_or_default();
-                    if accounts.len() > 1 {
-                        let active = crate::auth::claude::active_account_label()
-                            .unwrap_or_else(|| "?".to_string());
-                        format!(
-                            "{detail} ({} accounts, active: `{}`)",
-                            accounts.len(),
-                            active
-                        )
-                    } else if accounts.len() == 1 {
-                        format!("{detail} (account: `{}`)", accounts[0].label)
-                    } else {
-                        detail.to_string()
+                        "not configured".to_string()
                     }
                 }
                 LoginProviderAuthStateKey::OpenAi => {
@@ -733,18 +719,8 @@ fn probe_minnal_status(status: &mut AuthStatus) {
 fn probe_anthropic_status(status: &mut AuthStatus) {
     let mut anthropic = ProviderAuth::default();
 
-    if let Ok(creds) = claude::load_credentials() {
-        let now_ms = chrono::Utc::now().timestamp_millis();
-        anthropic.has_oauth = true;
-        if creds.expires_at > now_ms {
-            anthropic.state = AuthState::Available;
-        } else {
-            anthropic.state = AuthState::Expired;
-        }
-    }
-
-    // API key overrides expired OAuth.
-    if std::env::var("ANTHROPIC_API_KEY").is_ok() {
+    // Official Anthropic API keys are the supported Claude transport.
+    if anthropic_api_key_configured() {
         anthropic.has_api_key = true;
         anthropic.state = AuthState::Available;
     }
@@ -867,31 +843,28 @@ fn assessment_for_key(
     match key {
         LoginProviderAuthStateKey::Anthropic => {
             let (source, detail) = summarize_sources(vec![
-                anthropic_oauth_source(status),
-                env_source("ANTHROPIC_API_KEY"),
+                env_source(crate::auth::claude::ANTHROPIC_API_KEY_ENV),
+                config_source(
+                    crate::auth::claude::ANTHROPIC_API_KEY_ENV,
+                    crate::auth::claude::ANTHROPIC_ENV_FILE,
+                    "~/.config/minnal/anthropic.env",
+                ),
+                external_api_key_source(crate::auth::claude::ANTHROPIC_API_KEY_ENV),
             ]);
             (
                 source,
                 detail,
-                if status.anthropic.has_oauth {
-                    AuthExpiryConfidence::Exact
-                } else if status.anthropic.has_api_key {
+                if status.anthropic.has_api_key {
                     AuthExpiryConfidence::NotApplicable
                 } else {
                     AuthExpiryConfidence::Unknown
                 },
-                if status.anthropic.has_oauth {
-                    AuthRefreshSupport::Automatic
-                } else if status.anthropic.has_api_key {
+                if status.anthropic.has_api_key {
                     AuthRefreshSupport::NotApplicable
                 } else {
                     AuthRefreshSupport::Unknown
                 },
-                if status.anthropic.has_oauth {
-                    AuthValidationMethod::TimestampCheck
-                } else {
-                    AuthValidationMethod::PresenceCheck
-                },
+                AuthValidationMethod::PresenceCheck,
             )
         }
         LoginProviderAuthStateKey::OpenAi => {
@@ -1075,37 +1048,6 @@ fn azure_entra_source() -> Option<(AuthCredentialSource, String)> {
             "Azure DefaultAzureCredential".to_string(),
         )
     })
-}
-
-fn anthropic_oauth_source(status: &AuthStatus) -> Option<(AuthCredentialSource, String)> {
-    if !status.anthropic.has_oauth {
-        return None;
-    }
-    if !crate::auth::claude::list_accounts()
-        .unwrap_or_default()
-        .is_empty()
-    {
-        return Some((
-            AuthCredentialSource::MinnalManagedFile,
-            "~/.minnal/auth.json".to_string(),
-        ));
-    }
-    if let Some(source) = crate::auth::claude::preferred_external_auth_source()
-        && let Ok(path) = source.path()
-        && crate::config::Config::external_auth_source_allowed_for_path(source.source_id(), &path)
-    {
-        return Some((
-            AuthCredentialSource::TrustedExternalFile,
-            format!("trusted external file ({})", path.display()),
-        ));
-    }
-    if crate::auth::external::load_anthropic_oauth_tokens().is_some() {
-        return Some((
-            AuthCredentialSource::TrustedExternalFile,
-            "trusted external auth import".to_string(),
-        ));
-    }
-    None
 }
 
 fn openai_oauth_source(status: &AuthStatus) -> Option<(AuthCredentialSource, String)> {

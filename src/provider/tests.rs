@@ -27,6 +27,7 @@ fn with_clean_provider_test_env<T>(f: impl FnOnce() -> T) -> T {
         "MINNAL_OPENAI_COMPAT_LOCAL_ENABLED",
         "OPENAI_COMPAT_API_KEY",
         "OPENAI_API_KEY",
+        crate::auth::claude::ANTHROPIC_API_KEY_ENV,
         "MINNAL_NAMED_PROVIDER_PROFILE",
         "MINNAL_PROVIDER_PROFILE_ACTIVE",
         "MINNAL_PROVIDER_PROFILE_NAME",

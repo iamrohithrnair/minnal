@@ -702,17 +702,16 @@ struct BootstrapCredentialState {
 
 async fn detect_bootstrap_credentials() -> BootstrapCredentialState {
     let (has_claude, has_openai) = tokio::join!(
-        tokio::task::spawn_blocking(|| auth::claude::load_credentials().is_ok()),
+        tokio::task::spawn_blocking(auth::claude::has_api_key),
         tokio::task::spawn_blocking(|| auth::codex::load_credentials().is_ok()),
     );
     let has_claude = has_claude.unwrap_or(false);
     let has_openai = has_openai.unwrap_or(false);
     let has_openrouter = provider::openrouter::OpenRouterProvider::has_credentials();
     let has_copilot = auth::copilot::has_copilot_credentials();
-    let has_api_key = std::env::var("ANTHROPIC_API_KEY").is_ok();
 
     BootstrapCredentialState {
-        has_any: has_claude || has_openai || has_openrouter || has_copilot || has_api_key,
+        has_any: has_claude || has_openai || has_openrouter || has_copilot,
     }
 }
 

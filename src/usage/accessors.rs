@@ -13,24 +13,7 @@ pub(super) async fn get_usage() -> Arc<RwLock<UsageData>> {
 
 /// Fetch usage data from the API
 async fn fetch_usage() -> Result<UsageData> {
-    let creds = auth::claude::load_credentials().context("Failed to load Claude credentials")?;
-
-    let now = chrono::Utc::now().timestamp_millis();
-    let active_label =
-        auth::claude::active_account_label().unwrap_or_else(auth::claude::primary_account_label);
-    let access_token = if creds.expires_at < now + 300_000 && !creds.refresh_token.is_empty() {
-        match auth::oauth::refresh_claude_tokens_for_account(&creds.refresh_token, &active_label)
-            .await
-        {
-            Ok(refreshed) => refreshed.access_token,
-            Err(_) => creds.access_token,
-        }
-    } else {
-        creds.access_token
-    };
-
-    let cache_key = anthropic_usage_cache_key(&access_token, Some(&active_label));
-    fetch_anthropic_usage_data(access_token, cache_key).await
+    anyhow::bail!("Anthropic subscription usage is not available for API-key auth")
 }
 
 async fn refresh_usage(usage: Arc<RwLock<UsageData>>) {
@@ -240,46 +223,7 @@ pub fn account_usage_probe_sync(provider: MultiAccountProviderKind) -> Option<Ac
 }
 
 fn anthropic_account_usage_probe_sync() -> Option<AccountUsageProbe> {
-    let accounts = auth::claude::list_accounts().ok()?;
-    if accounts.is_empty() {
-        return None;
-    }
-
-    let current_label = auth::claude::active_account_label()
-        .or_else(|| accounts.first().map(|account| account.label.clone()))?;
-    let active_cached = get_sync();
-
-    let mut snapshots = Vec::with_capacity(accounts.len());
-    for account in &accounts {
-        let usage = if account.label == current_label && active_cached.fetched_at.is_some() {
-            Ok(active_cached.clone())
-        } else {
-            fetch_usage_for_account_sync(&account.access, &account.refresh, account.expires)
-        };
-
-        match usage {
-            Ok(usage) => snapshots.push(anthropic_snapshot_from_usage(
-                account.label.clone(),
-                account.email.clone(),
-                &usage,
-            )),
-            Err(err) => snapshots.push(AccountUsageSnapshot {
-                label: account.label.clone(),
-                email: account.email.clone(),
-                exhausted: false,
-                five_hour_ratio: None,
-                seven_day_ratio: None,
-                resets_at: None,
-                error: Some(err.to_string()),
-            }),
-        }
-    }
-
-    Some(AccountUsageProbe {
-        provider: MultiAccountProviderKind::Anthropic,
-        current_label,
-        accounts: snapshots,
-    })
+    None
 }
 
 fn openai_account_usage_probe_sync() -> Option<AccountUsageProbe> {

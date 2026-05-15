@@ -14,7 +14,7 @@ use serde::Serialize;
 pub struct AuthStatus {
     /// Minnal subscription router credentials
     pub minnal: AuthState,
-    /// Anthropic provider (Claude models) - via OAuth or API key
+    /// Anthropic provider (Claude models) - via official API key
     pub anthropic: ProviderAuth,
     /// OpenRouter provider - via API key
     pub openrouter: AuthState,
@@ -53,7 +53,7 @@ pub struct AuthStatus {
 pub struct ProviderAuth {
     /// Overall state (best of available methods)
     pub state: AuthState,
-    /// Has OAuth credentials
+    /// Has legacy OAuth credentials (disabled for Anthropic)
     pub has_oauth: bool,
     /// Has API key
     pub has_api_key: bool,

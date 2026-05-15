@@ -147,9 +147,7 @@ impl App {
 
         match route.provider {
             WidgetProviderKind::Anthropic => {
-                if auth_status.anthropic.has_oauth {
-                    crate::tui::info_widget::AuthMethod::AnthropicOAuth
-                } else if auth_status.anthropic.has_api_key {
+                if auth_status.anthropic.has_api_key {
                     crate::tui::info_widget::AuthMethod::AnthropicApiKey
                 } else {
                     crate::tui::info_widget::AuthMethod::Unknown
@@ -204,25 +202,22 @@ impl App {
                 output_tps,
                 available: self.total_input_tokens > 0 || self.total_output_tokens > 0,
             }),
-            WidgetProviderKind::Anthropic => {
-                let usage = crate::usage::get_sync();
-                Some(crate::tui::info_widget::UsageInfo {
-                    provider: crate::tui::info_widget::UsageProvider::Anthropic,
-                    five_hour: usage.five_hour,
-                    five_hour_resets_at: usage.five_hour_resets_at.clone(),
-                    seven_day: usage.seven_day,
-                    seven_day_resets_at: usage.seven_day_resets_at.clone(),
-                    spark: None,
-                    spark_resets_at: None,
-                    total_cost: 0.0,
-                    input_tokens: 0,
-                    output_tokens: 0,
-                    cache_read_tokens: None,
-                    cache_write_tokens: None,
-                    output_tps,
-                    available: usage.last_error.is_none(),
-                })
-            }
+            WidgetProviderKind::Anthropic => Some(crate::tui::info_widget::UsageInfo {
+                provider: crate::tui::info_widget::UsageProvider::CostBased,
+                five_hour: 0.0,
+                five_hour_resets_at: None,
+                seven_day: 0.0,
+                seven_day_resets_at: None,
+                spark: None,
+                spark_resets_at: None,
+                total_cost: self.total_cost,
+                input_tokens: self.total_input_tokens,
+                output_tokens: self.total_output_tokens,
+                cache_read_tokens: self.streaming_cache_read_tokens,
+                cache_write_tokens: self.streaming_cache_creation_tokens,
+                output_tps,
+                available: true,
+            }),
             WidgetProviderKind::OpenAI => {
                 let openai_usage = crate::usage::get_openai_usage_sync();
                 Some(crate::tui::info_widget::UsageInfo {

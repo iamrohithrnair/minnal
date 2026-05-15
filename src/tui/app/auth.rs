@@ -242,9 +242,7 @@ impl App {
     }
 
     fn start_claude_login(&mut self) {
-        let label = crate::auth::claude::login_target_label(None)
-            .unwrap_or_else(|_| crate::auth::claude::primary_account_label());
-        self.start_claude_login_for_account(&label);
+        self.start_claude_api_key_login(None);
     }
 
     fn start_minnal_login(&mut self) {
@@ -260,64 +258,26 @@ impl App {
     }
 
     pub(super) fn start_claude_login_for_account(&mut self, label: &str) {
-        use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD};
-        use sha2::{Digest, Sha256};
+        self.start_claude_api_key_login(Some(label));
+    }
 
-        let verifier: String = {
-            use rand::Rng;
-            const CHARSET: &[u8] =
-                b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            let mut rng = rand::rng();
-            (0..64)
-                .map(|_| {
-                    let idx = rng.random_range(0..CHARSET.len());
-                    CHARSET[idx] as char
-                })
-                .collect()
-        };
-
-        let mut hasher = Sha256::new();
-        hasher.update(verifier.as_bytes());
-        let hash = hasher.finalize();
-        let challenge = URL_SAFE_NO_PAD.encode(hash);
-
-        let auth_url = crate::auth::oauth::claude_auth_url(
-            crate::auth::oauth::claude::REDIRECT_URI,
-            &challenge,
-            &verifier,
+    fn start_claude_api_key_login(&mut self, account_label: Option<&str>) {
+        if let Some(label) = account_label {
+            self.push_display_message(DisplayMessage::system(format!(
+                "Claude OAuth account `{}` is not used by Minnal. Save an official Anthropic API key instead.",
+                label
+            )));
+        }
+        self.start_api_key_login(
+            "Anthropic/Claude",
+            "https://console.anthropic.com/settings/keys",
+            crate::auth::claude::ANTHROPIC_ENV_FILE,
+            crate::auth::claude::ANTHROPIC_API_KEY_ENV,
+            Some("claude-sonnet-4-6"),
+            Some("https://api.anthropic.com/v1"),
+            false,
+            None,
         );
-        let qr_section = crate::login_qr::markdown_section_for_tui(
-            &auth_url,
-            "Scan this on another device if this machine has no browser:",
-        )
-        .map(|section| format!("\n\n{section}"))
-        .unwrap_or_default();
-
-        let browser_opened = Self::open_auth_browser(&auth_url);
-        let preflight = Self::record_oauth_preflight("claude", browser_opened, None, None);
-
-        self.push_display_message(DisplayMessage::system(format!(
-            "**Claude OAuth Login** (account: `{}`)\n\n\
-             Opening browser for authentication...\n\n\
-             If the browser didn't open, visit:\n{}\n\n\
-             {}{}{}After logging in, copy the callback URL or authorization code and **paste it here**. Type `/cancel` to abort.{}",
-            label,
-            auth_url,
-            if preflight.is_empty() { "" } else { &preflight },
-            if preflight.is_empty() { "" } else { "\n\n" },
-            if preflight.is_empty() {
-                ""
-            } else {
-                "Manual-safe fallback is already available here.\n\n"
-            },
-            qr_section
-        )));
-        self.set_status_notice(format!("Login [{}]: paste code...", label));
-        self.begin_pending_login(PendingLogin::ClaudeAccount {
-            verifier,
-            label: label.to_string(),
-            redirect_uri: None,
-        });
     }
 
     pub(super) fn switch_account(&mut self, label: &str) {
@@ -923,6 +883,7 @@ impl App {
             .unwrap_or_else(|| match key_name {
                 crate::subscription_catalog::MINNAL_API_KEY_ENV => "minnal".to_string(),
                 "OPENROUTER_API_KEY" => "openrouter".to_string(),
+                crate::auth::claude::ANTHROPIC_API_KEY_ENV => "claude".to_string(),
                 _ => provider.to_ascii_lowercase().replace(' ', "-"),
             });
         let auth_method = if api_key_optional {
@@ -1284,43 +1245,12 @@ impl App {
         }
 
         match pending {
-            PendingLogin::ClaudeAccount {
-                verifier,
-                label,
-                redirect_uri,
-            } => {
-                self.set_status_notice(format!("Login [{}]: exchanging...", label));
-                let input_owned = input.clone();
-                let label_clone = label.clone();
-                tokio::spawn(async move {
-                    match Self::claude_token_exchange(
-                        verifier,
-                        input_owned,
-                        &label_clone,
-                        redirect_uri,
-                    )
-                    .await
-                    {
-                        Ok(msg) => {
-                            Bus::global().publish(BusEvent::LoginCompleted(LoginCompleted {
-                                provider: "claude".to_string(),
-                                success: true,
-                                message: msg,
-                            }));
-                        }
-                        Err(e) => {
-                            Bus::global().publish(BusEvent::LoginCompleted(LoginCompleted {
-                                provider: "claude".to_string(),
-                                success: false,
-                                message: format!("Claude login [{}] failed: {}", label_clone, e),
-                            }));
-                        }
-                    }
-                });
-                self.push_display_message(DisplayMessage::system(format!(
-                    "Exchanging authorization code for account `{}`...",
+            PendingLogin::ClaudeAccount { label, .. } => {
+                self.push_display_message(DisplayMessage::error(format!(
+                    "Claude OAuth login for account `{}` is disabled. Run `/login claude` to save an official Anthropic API key instead.",
                     label
                 )));
+                self.set_status_notice("Login: Claude OAuth disabled");
             }
             PendingLogin::OpenAiAccount {
                 verifier,
@@ -2189,47 +2119,6 @@ impl App {
                 self.set_status_notice(format!("Update failed: {}", e));
             }
         }
-    }
-
-    async fn claude_token_exchange(
-        verifier: String,
-        input: String,
-        label: &str,
-        redirect_uri: Option<String>,
-    ) -> Result<String, String> {
-        let fallback_redirect_uri =
-            redirect_uri.unwrap_or_else(|| crate::auth::oauth::claude::REDIRECT_URI.to_string());
-        let redirect_uri =
-            crate::auth::oauth::claude_redirect_uri_for_input(input.trim(), &fallback_redirect_uri);
-        let oauth_tokens =
-            crate::auth::oauth::exchange_claude_code(&verifier, input.trim(), &redirect_uri)
-                .await
-                .map_err(|e| e.to_string())?;
-
-        crate::auth::oauth::save_claude_tokens_for_account(&oauth_tokens, label)
-            .map_err(|e| format!("Failed to save tokens: {}", e))?;
-
-        let profile_suffix = match crate::auth::oauth::update_claude_account_profile(
-            label,
-            &oauth_tokens.access_token,
-        )
-        .await
-        {
-            Ok(Some(email)) => format!(" (email: {})", mask_email(&email)),
-            Ok(None) => String::new(),
-            Err(e) => {
-                crate::logging::warn(&format!(
-                    "Claude login [{}] profile fetch failed: {}",
-                    label, e
-                ));
-                String::new()
-            }
-        };
-
-        Ok(format!(
-            "Successfully logged in to Claude! (account: {}){}",
-            label, profile_suffix
-        ))
     }
 
     fn save_named_api_key(env_file: &str, key_name: &str, key: &str) -> anyhow::Result<()> {

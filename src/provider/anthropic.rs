@@ -5,7 +5,6 @@
 
 use super::{EventStream, NativeToolResultSender, Provider};
 use crate::auth;
-use crate::auth::oauth;
 use crate::message::{ContentBlock, Message, Role, StreamEvent, ToolDefinition};
 use anyhow::{Context, Result};
 use async_trait::async_trait;
@@ -398,7 +397,9 @@ pub const AVAILABLE_MODELS: &[&str] = &[
     "claude-sonnet-4-20250514",
 ];
 
-/// Cached OAuth credentials
+/// Legacy cached OAuth credentials. OAuth is disabled, but the shape remains for
+/// old retry plumbing until that code is removed.
+#[allow(dead_code)]
 #[derive(Clone)]
 struct CachedCredentials {
     access_token: String,
@@ -432,13 +433,6 @@ impl AnthropicProvider {
             }
         });
 
-        // Trigger background usage fetch so extra_usage is known before first API call
-        let _ = tokio::runtime::Handle::try_current().map(|_| {
-            tokio::spawn(async {
-                let _ = crate::usage::get().await;
-            })
-        });
-
         let max_tokens = std::env::var("MINNAL_ANTHROPIC_MAX_TOKENS")
             .ok()
             .and_then(|v| v.trim().parse::<u32>().ok())
@@ -454,83 +448,15 @@ impl AnthropicProvider {
         }
     }
 
-    /// Get the access token from credentials
-    /// Supports both OAuth tokens and direct API keys
-    /// Automatically refreshes OAuth tokens when expired
+    /// Get the official Anthropic API key.
     async fn get_access_token(&self) -> Result<(String, bool)> {
-        // First check for direct API key in environment
-        if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
-            return Ok((key, false)); // false = not OAuth
-        }
-
-        // Check cached credentials
-        {
-            let cached = self.credentials.read().await;
-            if let Some(ref creds) = *cached {
-                let now = chrono::Utc::now().timestamp_millis();
-                // Return cached token if not expired (with 5 min buffer)
-                if creds.expires_at > now + 300_000 {
-                    return Ok((creds.access_token.clone(), true));
-                }
-            }
-        }
-
-        // Load fresh credentials or refresh expired ones
-        let fresh_creds =
-            auth::claude::load_credentials().context("Failed to load Claude credentials")?;
-
-        if !fresh_creds.scopes.is_empty()
-            && !oauth::claude_scopes_have_inference(&fresh_creds.scopes)
-        {
-            anyhow::bail!(
-                "Claude OAuth credentials are missing the required user:inference scope (scopes: {}). Run `minnal login --provider claude` to mint a fresh Claude.ai OAuth token, or import/use a fresh Claude Code login.",
-                fresh_creds.scopes.join(" ")
-            );
-        }
-
-        let now = chrono::Utc::now().timestamp_millis();
-
-        // Check if token needs refresh (expired or expiring within 5 minutes)
-        if fresh_creds.expires_at < now + 300_000 && !fresh_creds.refresh_token.is_empty() {
-            crate::logging::info("OAuth token expired or expiring soon, attempting refresh...");
-
-            let active_label = auth::claude::active_account_label()
-                .unwrap_or_else(auth::claude::primary_account_label);
-            match oauth::refresh_claude_tokens_for_account(
-                &fresh_creds.refresh_token,
-                &active_label,
+        let key = auth::claude::load_api_key().with_context(|| {
+            format!(
+                "{} not set. Run `minnal login --provider claude` or configure an official Anthropic API key.",
+                auth::claude::ANTHROPIC_API_KEY_ENV
             )
-            .await
-            {
-                Ok(refreshed) => {
-                    crate::logging::info("OAuth token refreshed successfully");
-
-                    // Cache the refreshed credentials
-                    let mut cached = self.credentials.write().await;
-                    *cached = Some(CachedCredentials {
-                        access_token: refreshed.access_token.clone(),
-                        refresh_token: refreshed.refresh_token,
-                        expires_at: refreshed.expires_at,
-                    });
-
-                    return Ok((refreshed.access_token, true));
-                }
-                Err(e) => {
-                    crate::logging::error(&format!("OAuth token refresh failed: {}", e));
-                    // Fall through to try the possibly-expired token
-                }
-            }
-        }
-
-        // Cache and return the loaded credentials (even if expired, let the API reject it)
-        let mut cached = self.credentials.write().await;
-        *cached = Some(CachedCredentials {
-            access_token: fresh_creds.access_token.clone(),
-            refresh_token: fresh_creds.refresh_token,
-            expires_at: fresh_creds.expires_at,
-        });
-
-        Ok((fresh_creds.access_token, true))
+        })?;
+        Ok((key, false))
     }
 
     /// Convert our Message type to Anthropic API format
@@ -1312,47 +1238,9 @@ async fn run_stream_with_retries(
 }
 
 async fn force_refresh_oauth_token(
-    credentials: Arc<RwLock<Option<CachedCredentials>>>,
+    _credentials: Arc<RwLock<Option<CachedCredentials>>>,
 ) -> Result<String> {
-    let refresh_from_cache = {
-        let cached = credentials.read().await;
-        cached
-            .as_ref()
-            .map(|c| c.refresh_token.clone())
-            .filter(|t| !t.is_empty())
-    };
-
-    let refresh_token = if let Some(token) = refresh_from_cache {
-        token
-    } else {
-        let loaded = auth::claude::load_credentials()
-            .context("Failed to load Claude credentials for forced refresh")?;
-        if loaded.refresh_token.is_empty() {
-            anyhow::bail!("No refresh token available in Claude credentials");
-        }
-        loaded.refresh_token
-    };
-
-    let active_label =
-        auth::claude::active_account_label().unwrap_or_else(auth::claude::primary_account_label);
-    let refreshed =
-        match oauth::refresh_claude_tokens_for_account(&refresh_token, &active_label).await {
-            Ok(refreshed) => refreshed,
-            Err(err) => {
-                anyhow::bail!("OAuth refresh endpoint rejected the refresh token: {err:#}");
-            }
-        };
-
-    {
-        let mut cached = credentials.write().await;
-        *cached = Some(CachedCredentials {
-            access_token: refreshed.access_token.clone(),
-            refresh_token: refreshed.refresh_token,
-            expires_at: refreshed.expires_at,
-        });
-    }
-
-    Ok(refreshed.access_token)
+    anyhow::bail!(crate::auth::claude::claude_oauth_unsupported_message())
 }
 
 /// Stream the response from Anthropic API

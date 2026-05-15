@@ -32,21 +32,6 @@ pub fn listable_model_names_from_routes(routes: &[ModelRoute]) -> Vec<String> {
     models
 }
 
-pub fn build_anthropic_oauth_route(
-    model: &str,
-    available: bool,
-    detail: impl Into<String>,
-) -> ModelRoute {
-    ModelRoute {
-        model: model.to_string(),
-        provider: "Anthropic".to_string(),
-        api_method: "claude-oauth".to_string(),
-        available,
-        detail: detail.into(),
-        cheapness: cheapness_for_route(model, "Anthropic", "claude-oauth"),
-    }
-}
-
 pub fn build_openai_oauth_route(
     model: &str,
     available: bool,
