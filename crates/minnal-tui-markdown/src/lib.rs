@@ -10,10 +10,6 @@ use syntect::highlighting::{Style as SynStyle, ThemeSet};
 use syntect::parsing::SyntaxSet;
 use unicode_width::UnicodeWidthStr;
 
-#[cfg(feature = "mermaid-renderer")]
-use minnal_tui_mermaid as mermaid;
-
-#[cfg(not(feature = "mermaid-renderer"))]
 mod mermaid {
     use ratatui::prelude::*;
 
@@ -853,9 +849,7 @@ fn mermaid_should_register_active() -> bool {
 }
 
 fn mermaid_rendering_enabled() -> bool {
-    // Temporarily disable Mermaid for users while the renderer is unstable.
-    // Developers can opt in explicitly to keep iterating on the feature.
-    std::env::var("MINNAL_ENABLE_MERMAID").is_ok_and(|value| value == "1")
+    false
 }
 
 fn mermaid_sidebar_placeholder(text: &str) -> Line<'static> {

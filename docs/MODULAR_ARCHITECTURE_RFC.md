@@ -76,7 +76,7 @@ Current workspace members from `Cargo.toml` are grouped roughly as follows:
 - protocol and planning: `minnal-protocol`, `minnal-plan`
 - heavy or optional integrations: `minnal-embedding`, `minnal-pdf`, `minnal-notify-email`
 - auth and providers: `minnal-azure-auth`, `minnal-provider-core`, `minnal-provider-metadata`, `minnal-provider-openrouter`, `minnal-provider-gemini`
-- TUI extraction seams: `minnal-tui-core`, `minnal-tui-markdown`, `minnal-tui-mermaid`, `minnal-tui-render`, `minnal-tui-workspace`
+- TUI extraction seams: `minnal-tui-core`, `minnal-tui-markdown`, `minnal-tui-render`, `minnal-tui-workspace`
 - product surfaces outside the main TUI binary: `minnal-desktop`, `minnal-mobile-core`, `minnal-mobile-sim`
 
 ### What the root crate still owns
@@ -130,8 +130,7 @@ These splits already exist and should be treated as real architectural footholds
 | `minnal-provider-openrouter` | OpenRouter-specific catalog/cache/support helpers |
 | `minnal-provider-gemini` | Gemini schema/model/support helpers |
 | `minnal-tui-core` | low-level terminal UI primitives that do not need full app state |
-| `minnal-tui-markdown` | markdown wrapping/rendering, layered on mermaid/workspace support |
-| `minnal-tui-mermaid` | mermaid parsing, rendering, caching, viewport, and widget support |
+| `minnal-tui-markdown` | markdown wrapping/rendering layered on workspace support |
 | `minnal-tui-render` | reusable TUI layout/render helpers |
 | `minnal-tui-workspace` | workspace-map data/model/widget rendering |
 | `minnal-terminal-launch` | terminal process launch helpers |
@@ -380,7 +379,6 @@ Existing examples:
 - `minnal-pdf`
 - `minnal-azure-auth`
 - `minnal-notify-email`
-- `minnal-tui-mermaid`
 - provider support crates such as `minnal-provider-openrouter` and `minnal-provider-gemini`
 
 Target direction:

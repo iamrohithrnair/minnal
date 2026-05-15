@@ -510,9 +510,9 @@ struct MermaidRegion {
     x_offset: u16,
 }
 
-/// Scan a buffer for mermaid image placeholder markers.
-/// Detects both inline markers (\x00MERMAID_IMAGE:hash\x00) and
-/// video export markers (JMERMAID:hash:END).
+/// Scan a buffer for inline image placeholder markers.
+/// Detects both inline markers (\x00MINNAL_IMAGE:hash\x00) and
+/// video export markers (JMINNAL:hash:END).
 fn find_mermaid_regions(buf: &Buffer) -> Vec<MermaidRegion> {
     let width = buf.area.width;
     let height = buf.area.height;
@@ -531,14 +531,14 @@ fn find_mermaid_regions(buf: &Buffer) -> Vec<MermaidRegion> {
         }
 
         // Try both marker formats
-        let (hash, marker_byte_pos) = if let Some(start) = row_text.find("\x00MERMAID_IMAGE:") {
-            let after = start + "\x00MERMAID_IMAGE:".len();
+        let (hash, marker_byte_pos) = if let Some(start) = row_text.find("\x00MINNAL_IMAGE:") {
+            let after = start + "\x00MINNAL_IMAGE:".len();
             let h = row_text[after..]
                 .find('\x00')
                 .and_then(|end| u64::from_str_radix(&row_text[after..after + end], 16).ok());
             (h, Some(start))
-        } else if let Some(start) = row_text.find("JMERMAID:") {
-            let after = start + "JMERMAID:".len();
+        } else if let Some(start) = row_text.find("JMINNAL:") {
+            let after = start + "JMINNAL:".len();
             let h = row_text[after..]
                 .find(":END")
                 .and_then(|end| u64::from_str_radix(&row_text[after..after + end], 16).ok());
@@ -554,7 +554,7 @@ fn find_mermaid_regions(buf: &Buffer) -> Vec<MermaidRegion> {
                 .unwrap_or(0);
 
             // Determine the right boundary of the region.
-            // For JMERMAID markers, find the end of the marker text to infer the pane width.
+            // For JMINNAL markers, find the end of the marker text to infer the pane width.
             // The marker is written into the inner area of a bordered block, so the region
             // extends from marker_x to approximately the right border (which has non-space chars).
             // We find the last non-space character on the marker row as the boundary.
@@ -564,7 +564,7 @@ fn find_mermaid_regions(buf: &Buffer) -> Vec<MermaidRegion> {
                 while rx > marker_x + 1 {
                     rx -= 1;
                     let s = buf[(rx, y)].symbol();
-                    if s != " " && !s.is_empty() && !s.starts_with("JMERMAID") {
+                    if s != " " && !s.is_empty() && !s.starts_with("JMINNAL") {
                         // This is likely a border char - the inner region is to the left of it
                         break;
                     }

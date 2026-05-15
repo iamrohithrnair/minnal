@@ -42,7 +42,6 @@ members = [
     "crates/minnal-tui-messages",
     "crates/minnal-usage-types",
     "crates/minnal-tui-core",
-    "crates/minnal-tui-mermaid",
     "crates/minnal-task-types",
     "crates/minnal-tool-core",
     "crates/minnal-tool-types",
@@ -79,11 +78,6 @@ path = "src/bin/harness.rs"
 [[bin]]
 name = "session_memory_bench"
 path = "src/bin/session_memory_bench.rs"
-required-features = ["dev-bins"]
-
-[[bin]]
-name = "mermaid_side_panel_probe"
-path = "src/bin/mermaid_side_panel_probe.rs"
 required-features = ["dev-bins"]
 
 [[bin]]
@@ -158,7 +152,6 @@ minnal-provider-gemini = { path = "crates/minnal-provider-gemini" }
 minnal-tui-markdown = { path = "crates/minnal-tui-markdown" }
 minnal-tui-messages = { path = "crates/minnal-tui-messages" }
 minnal-tui-core = { path = "crates/minnal-tui-core" }
-minnal-tui-mermaid = { path = "crates/minnal-tui-mermaid" }
 minnal-tui-account-picker = { path = "crates/minnal-tui-account-picker" }
 minnal-tui-render = { path = "crates/minnal-tui-render" }
 minnal-tui-session-picker = { path = "crates/minnal-tui-session-picker" }
@@ -238,7 +231,6 @@ jemalloc-prof = [
     "tikv-jemalloc-ctl/profiling",
 ]
 embeddings = ["dep:minnal-embedding"]
-mmdr-size-api = ["minnal-tui-mermaid/mmdr-size-api"]
 pdf = ["dep:minnal-pdf"]
 
 [target.'cfg(windows)'.dependencies]

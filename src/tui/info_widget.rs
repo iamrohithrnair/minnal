@@ -462,7 +462,7 @@ pub struct MemoryInfo {
     pub graph_edges: Vec<GraphEdge>,
 }
 
-pub use minnal_tui_mermaid::DiagramInfo;
+pub use super::mermaid::DiagramInfo;
 
 /// Git repository status for the info widget
 #[derive(Debug, Clone)]

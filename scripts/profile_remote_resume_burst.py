@@ -328,7 +328,6 @@ def main() -> None:
     env["MINNAL_HOME"] = str(home)
     env["MINNAL_RUNTIME_DIR"] = str(run)
     env["MINNAL_SOCKET"] = str(run / "minnal.sock")
-    env["MINNAL_NO_TELEMETRY"] = "1"
     env["MINNAL_DEBUG_CONTROL"] = "1"
     env["MINNAL_TEMP_SERVER"] = "1"
     env["MINNAL_SERVER_OWNER_PID"] = str(os.getpid())

@@ -313,24 +313,6 @@ fn test_incremental_renderer_streams_fenced_block_before_close() {
     );
 }
 
-#[cfg(feature = "mermaid-renderer")]
-#[test]
-fn test_incremental_renderer_defers_mermaid_render_until_background_ready() {
-    minnal_tui_mermaid::clear_cache().ok();
-
-    let mut renderer = IncrementalMarkdownRenderer::new(Some(80));
-    let text = "Plan:\n\n```mermaid\nflowchart LR\n  A[Start] --> B[End]\n```\n";
-    let lines = renderer.update(text);
-    let rendered = lines_to_string(&lines);
-
-    assert!(
-        rendered.contains("rendering mermaid diagram")
-            || rendered.contains("mermaid diagram rendering"),
-        "expected deferred mermaid placeholder on first completed streaming render: {}",
-        rendered
-    );
-}
-
 #[test]
 fn test_checkpoint_does_not_enter_unclosed_fence() {
     let renderer = IncrementalMarkdownRenderer::new(Some(80));

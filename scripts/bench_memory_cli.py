@@ -93,14 +93,14 @@ def build_specs() -> dict[str, ToolSpec]:
             name="minnal_memory_off",
             argv=[minnal, "--no-update", "--no-selfdev"],
             version_argv=[minnal, "version"],
-            env={"MINNAL_NO_TELEMETRY": "1", "MINNAL_MEMORY_ENABLED": "0"},
+            env={"MINNAL_MEMORY_ENABLED": "0"},
             minnal=True,
         ),
         "minnal_memory_on": ToolSpec(
             name="minnal_memory_on",
             argv=[minnal, "--no-update", "--no-selfdev"],
             version_argv=[minnal, "version"],
-            env={"MINNAL_NO_TELEMETRY": "1", "MINNAL_MEMORY_ENABLED": "1"},
+            env={"MINNAL_MEMORY_ENABLED": "1"},
             minnal=True,
         ),
         "pi": ToolSpec(

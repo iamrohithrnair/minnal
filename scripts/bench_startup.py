@@ -108,7 +108,6 @@ def isolated_env(root: str) -> dict[str, str]:
     env["MINNAL_HOME"] = os.path.join(root, "home")
     env["MINNAL_RUNTIME_DIR"] = os.path.join(root, "run")
     env["MINNAL_SOCKET"] = os.path.join(env["MINNAL_RUNTIME_DIR"], "minnal.sock")
-    env["MINNAL_NO_TELEMETRY"] = "1"
     os.makedirs(env["MINNAL_HOME"], exist_ok=True)
     os.makedirs(env["MINNAL_RUNTIME_DIR"], exist_ok=True)
     return env

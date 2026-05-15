@@ -119,7 +119,7 @@ impl DiffDisplayMode {
     }
 }
 
-/// How to display mermaid diagrams.
+/// Legacy diagram display mode. Mermaid rendering is disabled.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum DiagramDisplayMode {
@@ -495,8 +495,7 @@ pub struct DisplayConfig {
     pub centered: bool,
     /// Show thinking/reasoning content by default (default: false)
     pub show_thinking: bool,
-    /// How to display mermaid diagrams (none/margin/pinned, default: none).
-    /// Mermaid rendering is temporarily disabled for users unless MINNAL_ENABLE_MERMAID=1.
+    /// Legacy diagram display mode. Mermaid rendering is disabled.
     pub diagram_mode: DiagramDisplayMode,
     /// Markdown block spacing style (compact/document, default: compact)
     pub markdown_spacing: MarkdownSpacingMode,

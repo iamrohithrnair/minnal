@@ -45,7 +45,6 @@ FORBIDDEN_INTERNAL_DEPS = {
     "minnal-terminal-launch",
     "minnal-tui-core",
     "minnal-tui-markdown",
-    "minnal-tui-mermaid",
     "minnal-tui-render",
     "minnal-tui-workspace",
 }

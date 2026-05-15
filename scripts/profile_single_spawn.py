@@ -126,7 +126,6 @@ def profile_single_spawn(binary: str, cwd: str, timeout_s: float) -> dict:
             "MINNAL_SOCKET": str(socket_path),
             "MINNAL_DEBUG_SOCKET": str(debug_socket_path),
             "MINNAL_SWARM_ENABLED": "0",
-            "MINNAL_NO_TELEMETRY": "1",
             "MINNAL_TRACE": "1",
             "MINNAL_TEMP_SERVER": "1",
             "MINNAL_SERVER_OWNER_PID": str(os.getpid()),
