@@ -53,7 +53,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.10
+        uses: mozilla-actions/sccache-action@v0.0.9
         continue-on-error: true
         id: sccache
 
@@ -72,6 +72,7 @@ jobs:
         if: matrix.compat_container != true
         shell: bash
         run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
           mkdir -p .cargo
           if [ "$RUNNER_OS" = "Linux" ]; then
             cat > .cargo/config.toml << 'EOF'
@@ -141,7 +142,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Setup sccache
-        uses: mozilla-actions/sccache-action@v0.0.10
+        uses: mozilla-actions/sccache-action@v0.0.9
         continue-on-error: true
         id: sccache
 
