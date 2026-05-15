@@ -1846,8 +1846,8 @@ fn draw_inner(frame: &mut Frame, app: &dyn TuiState) {
     let prepared_wide = mermaid::with_preferred_aspect_ratio(pinned_mermaid_aspect_ratio, || {
         prepare::prepare_messages(app, wide_prepare_width, chat_area.height)
     });
-    let show_donut = super::idle_donut_active(app);
-    let donut_height: u16 = if show_donut { 14 } else { 0 };
+    let show_idle_animation = super::idle_donut_active(app);
+    let idle_animation_height: u16 = if show_idle_animation { 18 } else { 0 };
     let notification_height: u16 = if app.has_notification() { 1 } else { 0 };
     let fixed_height = 1
         + queued_height
@@ -1855,7 +1855,7 @@ fn draw_inner(frame: &mut Frame, app: &dyn TuiState) {
         + inline_block_height
         + inline_ui_gap_height
         + input_height
-        + donut_height; // status + queued + notification + inline UI + gap + input + donut
+        + idle_animation_height;
     let available_height = chat_area.height;
 
     let initial_content_height = prepared_wide.total_wrapped_lines().max(1) as u16;
@@ -1899,7 +1899,7 @@ fn draw_inner(frame: &mut Frame, app: &dyn TuiState) {
     // Use packed layout when content fits, scrolling layout otherwise
     let use_packed = content_height + fixed_height <= available_height;
 
-    // Layout: messages (includes header), queued, status, notification, inline UI, gap, input, donut
+    // Layout: messages (includes header), queued, status, notification, inline UI, gap, input, idle animation
     // All vertical chunks are within the chat_area (left column).
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -1912,18 +1912,18 @@ fn draw_inner(frame: &mut Frame, app: &dyn TuiState) {
                 Constraint::Length(inline_block_height),   // Inline UI
                 Constraint::Length(inline_ui_gap_height),  // Inline UI/input spacing
                 Constraint::Length(input_height),          // Input
-                Constraint::Length(donut_height),          // Donut animation
+                Constraint::Length(idle_animation_height), // Idle animation
             ]
         } else {
             vec![
-                Constraint::Min(3),                       // Messages (scrollable)
-                Constraint::Length(queued_height),        // Queued messages (above status)
-                Constraint::Length(1),                    // Status line
-                Constraint::Length(notification_height),  // Notification line
-                Constraint::Length(inline_block_height),  // Inline UI
-                Constraint::Length(inline_ui_gap_height), // Inline UI/input spacing
-                Constraint::Length(input_height),         // Input
-                Constraint::Length(donut_height),         // Donut animation
+                Constraint::Min(3),                        // Messages (scrollable)
+                Constraint::Length(queued_height),         // Queued messages (above status)
+                Constraint::Length(1),                     // Status line
+                Constraint::Length(notification_height),   // Notification line
+                Constraint::Length(inline_block_height),   // Inline UI
+                Constraint::Length(inline_ui_gap_height),  // Inline UI/input spacing
+                Constraint::Length(input_height),          // Input
+                Constraint::Length(idle_animation_height), // Idle animation
             ]
         })
         .split(chat_area);
@@ -2126,7 +2126,7 @@ fn draw_inner(frame: &mut Frame, app: &dyn TuiState) {
         &mut debug_capture,
     );
 
-    if donut_height > 0 {
+    if idle_animation_height > 0 {
         animations::draw_idle_animation(frame, app, chunks[7]);
     }
 
@@ -2135,7 +2135,7 @@ fn draw_inner(frame: &mut Frame, app: &dyn TuiState) {
     let mut widget_render_ms: Option<f32> = None;
     let mut placements: Vec<info_widget::WidgetPlacement> = Vec::new();
     let widget_bounds = messages_area;
-    if !widget_data.is_empty() && !show_donut {
+    if !widget_data.is_empty() && !show_idle_animation {
         if let Some(ref mut capture) = debug_capture {
             capture.render_order.push("render_info_widgets".to_string());
         }

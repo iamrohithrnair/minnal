@@ -111,14 +111,14 @@ show_thinking = false
 # Markdown spacing style: "compact" (chat/TUI) or "document" (docs-like)
 # markdown_spacing = "compact"
 
-# Show idle animation before first prompt (default: false)
-idle_animation = false
+# Show idle animation before first prompt (default: true)
+idle_animation = true
 
 # Briefly animate a user prompt line when it enters the viewport (default: true)
 prompt_entry_animation = true
 
 # Disable specific animation variants by name.
-# Examples: ["donut"] or ["donut", "orbit_rings"]
+# Example: ["minnal_logo"]. Set idle_animation = false to disable all idle animation.
 # Legacy aliases such as "three_rings" and "gyroscope" are still accepted.
 # disabled_animations = []
 

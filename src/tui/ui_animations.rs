@@ -5,7 +5,45 @@ use std::collections::{HashSet, hash_map::DefaultHasher};
 use std::hash::{Hash, Hasher};
 use std::sync::OnceLock;
 
-const IDLE_VARIANTS: &[&str] = &["donut", "orbit_rings"];
+const IDLE_VARIANTS: &[&str] = &["minnal_logo"];
+const MINNAL_LOGO_ASCII: &[&str] = &[
+    "     @#############@@*==***+.",
+    "    .-#############################",
+    "    .*#############################-",
+    "   .%#############################",
+    "   .#############################@",
+    "  .*#############################.",
+    " .:%############################@",
+    ".:%#############################@",
+    ".*@@##@@################################@###@@@@#####",
+    "..@@@@@@@@@#@##@#@#######################@@@@@@@@@@@@%",
+    ".%@@@@@@@@@@@@@@@@@#@@####@@#@@@@@@@@@@@@@@@@@@@@@@@*",
+    ".:@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.",
+    "  .++++++++*+++*+**+++**@@@@@@@@@@@@@@@@@@@@@@@@@@%",
+    "                              :-=@@@@@@@@@@@@@@@@@@@@@@@@@+",
+    "                              -*@@@@@@@@@@@@@@@@@@@@@@@@@.",
+    "                             -+@@@@@@@@@@@@@@@@@@@@@@@@=",
+    "                            --@@@@@@@@@@@@@@@@@@@@@@@@-",
+    "                           --%@@@@@@@@@@@@@@@@@@@@@@%.",
+    "                          .-=@@@@@@@@@@@@@@@@@@@@@@%",
+    "                         --@@@@@@@@@@@@@@@@@@@@@%%#####@%%",
+    "                        --%@@@@@@@@@@@@@@@%@@@%@%%%%%@%%%%%%%.",
+    "                       .-=%%@@@@@@@@@%@@%%@%%%%%@%%%%%%@%%%=",
+    "                       .:%%%%%%@%%%%@%@@%%%%%%%%%%%%%%%%%=",
+    "                                      .=%%%%%%%%%%%%%%+",
+    "                                     ++@%%%%%%%%%%%%=",
+    "                                    -+=%%%%%%%%%%%%:",
+    "                                   ++%%%%%%%%%%%*",
+    "                                  -+%%%%%%%%%%%.",
+    "                                 --%%%%%%%%%",
+    "                                +*%%%%%%%= ",
+    "                               -+=%%%%%=.",
+    "                              .+=%%%%%+",
+    "                             ++=%%%=",
+    "                            :-%%==+",
+    "                           -+==+",
+    "                            .-",
+];
 
 fn rotate_xyz(x: f32, y: f32, z: f32, ax: f32, ay: f32, az: f32) -> (f32, f32, f32) {
     let (sx, cx) = ax.sin_cos();
@@ -118,11 +156,27 @@ thread_local! {
     static IDLE_BUF: RefCell<IdleBuffers> = RefCell::new(IdleBuffers::new());
 }
 
+#[derive(Clone, Copy)]
+struct LogoCell {
+    ch: char,
+    depth: f32,
+    density: f32,
+    x_norm: f32,
+    y_norm: f32,
+}
+
 pub(super) fn draw_idle_animation(frame: &mut Frame, app: &dyn TuiState, area: Rect) {
     if area.width < 4 || area.height < 2 {
         return;
     }
 
+    match idle_animation_variant() {
+        "minnal_logo" => draw_rotating_ascii_logo(frame, app, area),
+        variant => draw_sampled_idle_animation(frame, app, area, variant),
+    }
+}
+
+fn draw_sampled_idle_animation(frame: &mut Frame, app: &dyn TuiState, area: Rect, variant: &str) {
     let elapsed = app.animation_elapsed();
     let cw = area.width as usize;
     let ch = area.height as usize;
@@ -137,7 +191,6 @@ pub(super) fn draw_idle_animation(frame: &mut Frame, app: &dyn TuiState, area: R
         bufs.resize_and_clear(sw * sh);
         let bufs = &mut *bufs;
 
-        let variant = idle_animation_variant();
         match variant {
             "donut" => sample_donut(
                 elapsed,
@@ -229,6 +282,114 @@ pub(super) fn draw_idle_animation(frame: &mut Frame, app: &dyn TuiState, area: R
 
         frame.render_widget(Paragraph::new(lines), area);
     });
+}
+
+fn draw_rotating_ascii_logo(frame: &mut Frame, app: &dyn TuiState, area: Rect) {
+    let elapsed = app.animation_elapsed();
+    let cw = area.width as usize;
+    let ch = area.height as usize;
+    let source_width = MINNAL_LOGO_ASCII
+        .iter()
+        .map(|line| line.chars().count())
+        .max()
+        .unwrap_or_default() as f32;
+    let source_height = MINNAL_LOGO_ASCII.len() as f32;
+    if source_width <= 0.0 || source_height <= 0.0 {
+        return;
+    }
+
+    let x_factor = 1.12;
+    let scale = ((cw as f32 * 0.86) / (source_width * x_factor))
+        .min((ch as f32 * 0.92) / source_height)
+        .max(0.15);
+    let x_scale = scale * x_factor;
+    let angle = elapsed * 0.82;
+    let (sin_y, cos_y) = angle.sin_cos();
+    let camera = (source_width * x_scale * 0.92).max(18.0);
+    let center_x = (cw.saturating_sub(1)) as f32 * 0.5;
+    let center_y = (ch.saturating_sub(1)) as f32 * 0.5;
+    let mut cells = vec![None::<LogoCell>; cw * ch];
+
+    for (row, line) in MINNAL_LOGO_ASCII.iter().enumerate() {
+        let source_y = (row as f32 + 0.5 - source_height * 0.5) * scale;
+        let y_norm = row as f32 / (source_height - 1.0).max(1.0);
+
+        for (col, ch_value) in line.chars().enumerate() {
+            if ch_value == ' ' {
+                continue;
+            }
+
+            let source_x = (col as f32 + 0.5 - source_width * 0.5) * x_scale;
+            let x_norm = col as f32 / (source_width - 1.0).max(1.0);
+            let rotated_x = source_x * cos_y;
+            let z = -source_x * sin_y;
+            let perspective = camera / (camera + z).max(camera * 0.25);
+            let sx = (center_x + rotated_x * perspective).round() as isize;
+            let sy = (center_y + source_y * perspective).round() as isize;
+
+            if sx < 0 || sy < 0 || sx >= cw as isize || sy >= ch as isize {
+                continue;
+            }
+
+            let idx = sy as usize * cw + sx as usize;
+            let density = ascii_logo_density(ch_value);
+            let cell = LogoCell {
+                ch: ch_value,
+                depth: perspective,
+                density,
+                x_norm,
+                y_norm,
+            };
+            if cells[idx]
+                .map(|existing| cell.depth > existing.depth)
+                .unwrap_or(true)
+            {
+                cells[idx] = Some(cell);
+            }
+        }
+    }
+
+    let face_light = 0.45 + cos_y.abs() * 0.55;
+    let lines: Vec<Line<'static>> = (0..ch)
+        .map(|row| {
+            let spans: Vec<Span<'static>> = (0..cw)
+                .map(|col| {
+                    let Some(cell) = cells[row * cw + col] else {
+                        return Span::raw(" ");
+                    };
+                    let wave =
+                        ((elapsed * 1.8 + cell.x_norm * 4.2 - cell.y_norm * 2.3).sin() * 0.5 + 0.5)
+                            .clamp(0.0, 1.0);
+                    let hue = 36.0 + wave * 11.0 + sin_y * 3.0;
+                    let sat = 0.74 + (1.0 - cell.density) * 0.15;
+                    let val = ((0.25 + cell.density * 0.58) * face_light
+                        + (1.0 - cell.y_norm) * 0.12
+                        + wave * 0.08)
+                        .clamp(0.20, 1.0);
+                    let (r, g, b) = hsv_to_rgb(hue, sat, val);
+                    Span::styled(String::from(cell.ch), Style::default().fg(rgb(r, g, b)))
+                })
+                .collect();
+            Line::from(spans)
+        })
+        .collect();
+
+    frame.render_widget(Paragraph::new(lines), area);
+}
+
+fn ascii_logo_density(ch: char) -> f32 {
+    match ch {
+        '@' => 1.0,
+        '#' => 0.92,
+        '%' => 0.84,
+        '*' => 0.70,
+        '+' => 0.60,
+        '=' => 0.50,
+        '-' => 0.38,
+        ':' => 0.30,
+        '.' => 0.20,
+        _ => 0.65,
+    }
 }
 
 fn sample_donut(
@@ -889,10 +1050,11 @@ mod tests {
     }
 
     #[test]
-    fn idle_variants_keep_normal_donut_and_exclude_cube() {
-        assert!(IDLE_VARIANTS.contains(&"donut"));
+    fn idle_variants_use_rotating_logo_and_exclude_previous_shapes() {
+        assert_eq!(IDLE_VARIANTS, &["minnal_logo"]);
+        assert!(!IDLE_VARIANTS.contains(&"donut"));
         assert!(!IDLE_VARIANTS.contains(&"pulse_donut"));
-        assert!(IDLE_VARIANTS.contains(&"orbit_rings"));
+        assert!(!IDLE_VARIANTS.contains(&"orbit_rings"));
         assert!(!IDLE_VARIANTS.contains(&"three_rings"));
         assert!(!IDLE_VARIANTS.contains(&"cube"));
     }
@@ -906,10 +1068,11 @@ mod tests {
 
     #[test]
     fn variant_selection_avoids_disabled_entries_when_possible() {
-        let disabled = expand_disabled_animation_names(["donut", "three_rings"]);
-        let variant = choose_animation_variant_from_disabled(IDLE_VARIANTS, 7, &disabled);
+        let variants = ["minnal_logo", "donut"];
+        let disabled = expand_disabled_animation_names(["donut"]);
+        let variant = choose_animation_variant_from_disabled(&variants, 7, &disabled);
         assert_ne!(variant, "donut");
-        assert_ne!(variant, "three_rings");
+        assert_eq!(variant, "minnal_logo");
     }
 
     #[test]

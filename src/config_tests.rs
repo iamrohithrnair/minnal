@@ -48,8 +48,8 @@ fn test_generated_default_config_uses_low_openai_reasoning_effort() {
         "generated default config should enable OpenAI fast mode"
     );
     assert!(
-        content.contains("idle_animation = false"),
-        "generated default config should keep idle animation disabled"
+        content.contains("idle_animation = true"),
+        "generated default config should enable the rotating idle animation"
     );
 
     if let Some(prev) = prev_home {

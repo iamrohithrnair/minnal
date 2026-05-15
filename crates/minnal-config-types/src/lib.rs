@@ -501,11 +501,11 @@ pub struct DisplayConfig {
     pub markdown_spacing: MarkdownSpacingMode,
     /// Pin read images to side pane (default: true)
     pub pin_images: bool,
-    /// Show idle animation before first prompt (default: false)
+    /// Show idle animation before first prompt (default: true)
     pub idle_animation: bool,
     /// Briefly animate user prompt line when it enters viewport (default: true)
     pub prompt_entry_animation: bool,
-    /// Disable specific animation variants by name (e.g. ["donut", "orbit_rings"])
+    /// Disable specific animation variants by name (e.g. ["minnal_logo"])
     pub disabled_animations: Vec<String>,
     /// Wrap long lines in the pinned diff pane (default: true)
     pub diff_line_wrap: bool,
@@ -535,7 +535,7 @@ impl Default for DisplayConfig {
             show_thinking: false,
             diagram_mode: DiagramDisplayMode::default(),
             markdown_spacing: MarkdownSpacingMode::default(),
-            idle_animation: false,
+            idle_animation: true,
             prompt_entry_animation: true,
             disabled_animations: Vec::new(),
             diff_line_wrap: true,
