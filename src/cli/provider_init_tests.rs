@@ -60,6 +60,51 @@ fn test_provider_choice_arg_values() {
 }
 
 #[test]
+fn provider_selection_resolves_built_in_aliases_and_named_profiles() {
+    let _guard = lock_env();
+    let _env_guard = crate::storage::lock_test_env();
+    let temp = TempDir::new().expect("temp dir");
+    let previous_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
+
+    let mut cfg = crate::config::Config::default();
+    cfg.providers.insert(
+        "my-api".to_string(),
+        crate::config::NamedProviderConfig {
+            base_url: "https://example.test/v1".to_string(),
+            default_model: Some("example-model".to_string()),
+            ..Default::default()
+        },
+    );
+    cfg.save().expect("save config");
+
+    assert_eq!(provider_choice_from_arg("z.ai"), Some(ProviderChoice::Zai));
+    assert_eq!(
+        provider_choice_from_arg("kimi-for-coding"),
+        Some(ProviderChoice::Kimi)
+    );
+
+    let selection = resolve_provider_selection("my-api", None).expect("named provider");
+    assert_eq!(selection.choice(), &ProviderChoice::OpenaiCompatible);
+    assert_eq!(selection.provider_id(), "my-api");
+    assert_eq!(selection.named_profile(), Some("my-api"));
+
+    let selection =
+        resolve_provider_selection("auto", Some("my-api")).expect("legacy provider profile");
+    assert_eq!(selection.provider_id(), "my-api");
+    assert_eq!(selection.named_profile(), Some("my-api"));
+
+    assert!(resolve_provider_selection("missing-api", None).is_err());
+
+    if let Some(previous_home) = previous_home {
+        crate::env::set_var("MINNAL_HOME", previous_home);
+    } else {
+        crate::env::remove_var("MINNAL_HOME");
+    }
+    crate::config::Config::invalidate_cache();
+}
+
+#[test]
 fn test_server_bootstrap_login_selection_preserves_order() {
     let providers = provider_catalog::server_bootstrap_login_providers();
     assert_eq!(

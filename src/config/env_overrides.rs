@@ -382,7 +382,7 @@ impl Config {
             self.provider.default_model = Some(v);
         }
         if let Ok(v) = std::env::var("MINNAL_PROVIDER") {
-            let trimmed = v.trim().to_lowercase();
+            let trimmed = v.trim().to_string();
             if !trimmed.is_empty() {
                 self.provider.default_provider = Some(trimmed);
             }

@@ -5,6 +5,7 @@ pub(super) use minnal_provider_core::{ActiveProvider, ProviderAvailability};
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ConfigProviderSelection {
     BuiltIn(ActiveProvider),
+    Azure,
     OpenAiCompatibleProfile(&'static str),
     NamedProfile(String),
 }
@@ -13,13 +14,16 @@ impl ConfigProviderSelection {
     pub(crate) fn active_provider(&self) -> ActiveProvider {
         match self {
             Self::BuiltIn(provider) => *provider,
-            Self::OpenAiCompatibleProfile(_) | Self::NamedProfile(_) => ActiveProvider::OpenRouter,
+            Self::Azure | Self::OpenAiCompatibleProfile(_) | Self::NamedProfile(_) => {
+                ActiveProvider::OpenRouter
+            }
         }
     }
 
     pub(crate) fn display_label(&self) -> String {
         match self {
             Self::BuiltIn(provider) => MultiProvider::provider_key(*provider).to_string(),
+            Self::Azure => "Azure OpenAI".to_string(),
             Self::OpenAiCompatibleProfile(profile_id) => {
                 let resolved =
                     crate::provider_catalog::resolve_openai_compatible_profile_selection(
@@ -88,6 +92,7 @@ impl MultiProvider {
             LoginProviderTarget::OpenAi | LoginProviderTarget::OpenAiApiKey => Some("openai"),
             LoginProviderTarget::OpenRouter => Some("openrouter"),
             LoginProviderTarget::Bedrock => Some("bedrock"),
+            LoginProviderTarget::Azure => Some("azure"),
             LoginProviderTarget::OpenAiCompatible(profile) => Some(profile.id),
             LoginProviderTarget::Cursor => Some("cursor"),
             LoginProviderTarget::Copilot => Some("copilot"),
@@ -95,7 +100,6 @@ impl MultiProvider {
             LoginProviderTarget::Antigravity => Some("antigravity"),
             LoginProviderTarget::AutoImport
             | LoginProviderTarget::Minnal
-            | LoginProviderTarget::Azure
             | LoginProviderTarget::Google => None,
         }
     }
@@ -184,6 +188,15 @@ impl MultiProvider {
             return Some(ConfigProviderSelection::OpenAiCompatibleProfile(profile.id));
         }
 
+        if crate::provider_catalog::resolve_login_provider(trimmed).is_some_and(|provider| {
+            matches!(
+                provider.target,
+                crate::provider_catalog::LoginProviderTarget::Azure
+            )
+        }) {
+            return Some(ConfigProviderSelection::Azure);
+        }
+
         if cfg.providers.contains_key(trimmed) {
             return Some(ConfigProviderSelection::NamedProfile(trimmed.to_string()));
         }
@@ -226,7 +239,7 @@ mod tests {
             MultiProvider::config_default_provider_for_login_provider(
                 crate::provider_catalog::AZURE_LOGIN_PROVIDER,
             ),
-            None
+            Some("azure")
         );
     }
 

@@ -330,8 +330,7 @@ async fn recover_reloading_server(
     ));
 
     match crate::cli::dispatch::spawn_server(
-        &crate::cli::provider_init::ProviderChoice::Auto,
-        None,
+        &crate::cli::provider_init::ProviderSelection::auto(),
         None,
     )
     .await

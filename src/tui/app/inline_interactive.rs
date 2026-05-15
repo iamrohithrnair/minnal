@@ -1958,6 +1958,18 @@ impl App {
                         } else {
                             picker_route_model_spec(&entry, route)
                         };
+                        let default_selection =
+                            crate::provider::MultiProvider::default_model_selection_from_route(
+                                &bare_name,
+                                &route.api_method,
+                                &route.provider,
+                            );
+                        let default_model_spec =
+                            if route.api_method == "openrouter" && route.provider == "auto" {
+                                spec.clone()
+                            } else {
+                                default_selection.model_spec
+                            };
 
                         let effort = entry.effort.clone();
                         let notice = format!(
@@ -1984,6 +1996,15 @@ impl App {
                                     self.update_context_limit_for_model(&active_model);
                                     self.session.model = Some(active_model);
                                     let _ = self.session.save();
+                                    if let Err(error) = crate::config::Config::set_default_model(
+                                        Some(&default_model_spec),
+                                        default_selection.provider_key.as_deref(),
+                                    ) {
+                                        crate::logging::warn(&format!(
+                                            "Failed to persist model picker selection: {}",
+                                            error
+                                        ));
+                                    }
                                 }
                                 Err(error) => {
                                     self.push_display_message(DisplayMessage::error(

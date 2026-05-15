@@ -77,6 +77,20 @@ impl MultiProvider {
                 crate::provider_catalog::resolve_openai_compatible_profile_selection(pref)
             {
                 crate::provider_catalog::apply_openai_compatible_profile_env(Some(profile));
+            } else if crate::provider_catalog::resolve_login_provider(pref).is_some_and(
+                |provider| {
+                    matches!(
+                        provider.target,
+                        crate::provider_catalog::LoginProviderTarget::Azure
+                    )
+                },
+            ) {
+                if let Err(err) = crate::provider::activation::apply_azure_openai_runtime() {
+                    crate::logging::warn(&format!(
+                        "Failed to apply default Azure OpenAI provider '{}': {}",
+                        pref, err
+                    ));
+                }
             } else if cfg.providers.contains_key(pref) {
                 match crate::provider_catalog::apply_named_provider_profile_env_from_config(
                     pref, cfg,

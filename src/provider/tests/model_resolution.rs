@@ -78,6 +78,31 @@ fn test_openrouter_catalog_model_id_normalizes_bare_openai_and_claude_models() {
 }
 
 #[test]
+fn openai_compatible_model_prefix_accepts_named_provider_profiles() {
+    with_clean_provider_test_env(|| {
+        let mut cfg = crate::config::Config::default();
+        cfg.providers.insert(
+            "My-Gateway".to_string(),
+            crate::config::NamedProviderConfig {
+                base_url: "https://gateway.example.test/v1".to_string(),
+                ..Default::default()
+            },
+        );
+        cfg.save().expect("save config");
+        crate::config::Config::invalidate_cache();
+
+        match MultiProvider::openai_compatible_model_prefix("My-Gateway:custom-model") {
+            Some(OpenAiCompatibleModelTarget::NamedProfile(profile, model)) => {
+                assert_eq!(profile, "My-Gateway");
+                assert_eq!(model, "custom-model");
+            }
+            _ => panic!("expected named provider profile model target"),
+        }
+    });
+    crate::config::Config::invalidate_cache();
+}
+
+#[test]
 fn test_available_models_display_uses_route_models_and_filters_placeholder_rows() {
     let provider = MultiProvider {
         claude: RwLock::new(None),

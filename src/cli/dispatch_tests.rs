@@ -4,11 +4,11 @@ use crate::transport::Listener;
 #[test]
 fn auth_doctor_provider_focus_uses_global_provider_when_positional_is_absent() {
     assert_eq!(
-        auth_doctor_provider_arg(None, &ProviderChoice::Cerebras),
+        auth_doctor_provider_arg(None, &ProviderSelection::built_in(ProviderChoice::Cerebras)),
         Some("cerebras")
     );
     assert_eq!(
-        auth_doctor_provider_arg(None, &ProviderChoice::Auto),
+        auth_doctor_provider_arg(None, &ProviderSelection::auto()),
         None,
         "auto should keep the default doctor behavior of checking configured providers"
     );
@@ -17,10 +17,79 @@ fn auth_doctor_provider_focus_uses_global_provider_when_positional_is_absent() {
 #[test]
 fn auth_doctor_positional_provider_wins_over_global_provider() {
     assert_eq!(
-        auth_doctor_provider_arg(Some("openai"), &ProviderChoice::Cerebras),
+        auth_doctor_provider_arg(
+            Some("openai"),
+            &ProviderSelection::built_in(ProviderChoice::Cerebras)
+        ),
         Some("openai"),
         "`minnal --provider cerebras auth doctor openai` should diagnose the explicit positional provider"
     );
+}
+
+#[test]
+fn cli_selection_persistence_saves_dynamic_provider_id_and_model() {
+    let _guard = crate::storage::lock_test_env();
+    let temp = tempfile::TempDir::new().expect("temp dir");
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
+
+    let mut cfg = crate::config::Config::default();
+    cfg.providers.insert(
+        "My-Gateway".to_string(),
+        crate::config::NamedProviderConfig {
+            base_url: "https://gateway.example.test/v1".to_string(),
+            ..Default::default()
+        },
+    );
+    cfg.save().expect("save config");
+    crate::config::Config::invalidate_cache();
+
+    let selection =
+        super::provider_init::resolve_provider_selection("My-Gateway", None).expect("selection");
+    maybe_persist_cli_provider_model(&selection, Some("custom-model"));
+
+    let cfg = crate::config::Config::load();
+    assert_eq!(cfg.provider.default_provider.as_deref(), Some("My-Gateway"));
+    assert_eq!(cfg.provider.default_model.as_deref(), Some("custom-model"));
+
+    if let Some(prev_home) = prev_home {
+        crate::env::set_var("MINNAL_HOME", prev_home);
+    } else {
+        crate::env::remove_var("MINNAL_HOME");
+    }
+    crate::config::Config::invalidate_cache();
+}
+
+#[test]
+fn cli_model_persistence_derives_dynamic_provider_from_model_prefix() {
+    let _guard = crate::storage::lock_test_env();
+    let temp = tempfile::TempDir::new().expect("temp dir");
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
+
+    let mut cfg = crate::config::Config::default();
+    cfg.providers.insert(
+        "My-Gateway".to_string(),
+        crate::config::NamedProviderConfig {
+            base_url: "https://gateway.example.test/v1".to_string(),
+            ..Default::default()
+        },
+    );
+    cfg.save().expect("save config");
+    crate::config::Config::invalidate_cache();
+
+    maybe_persist_cli_provider_model(&ProviderSelection::auto(), Some("My-Gateway:custom-model"));
+
+    let cfg = crate::config::Config::load();
+    assert_eq!(cfg.provider.default_provider.as_deref(), Some("My-Gateway"));
+    assert_eq!(cfg.provider.default_model.as_deref(), Some("custom-model"));
+
+    if let Some(prev_home) = prev_home {
+        crate::env::set_var("MINNAL_HOME", prev_home);
+    } else {
+        crate::env::remove_var("MINNAL_HOME");
+    }
+    crate::config::Config::invalidate_cache();
 }
 
 struct ReloadTestEnv {

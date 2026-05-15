@@ -212,6 +212,24 @@ fn test_env_override_auto_server_reload() {
 }
 
 #[test]
+fn test_env_override_provider_preserves_profile_casing() {
+    let _guard = crate::storage::lock_test_env();
+    let prev = std::env::var_os("MINNAL_PROVIDER");
+    crate::env::set_var("MINNAL_PROVIDER", " My-Gateway ");
+
+    let mut cfg = Config::default();
+    cfg.apply_env_overrides();
+
+    assert_eq!(cfg.provider.default_provider.as_deref(), Some("My-Gateway"));
+
+    if let Some(prev) = prev {
+        crate::env::set_var("MINNAL_PROVIDER", prev);
+    } else {
+        crate::env::remove_var("MINNAL_PROVIDER");
+    }
+}
+
+#[test]
 fn test_env_override_native_scrollbars() {
     let _guard = crate::storage::lock_test_env();
     let prev_chat = std::env::var_os("MINNAL_CHAT_NATIVE_SCROLLBAR");

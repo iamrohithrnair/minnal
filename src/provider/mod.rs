@@ -109,6 +109,11 @@ pub(crate) use self::state::{
     ProviderModelSelectionSource, ProviderRuntimeState, ProviderStateEvent,
 };
 
+enum OpenAiCompatibleModelTarget<'a> {
+    BuiltIn(crate::provider_catalog::OpenAiCompatibleProfile, &'a str),
+    NamedProfile(&'a str, &'a str),
+}
+
 /// MultiProvider wraps multiple providers and allows seamless model switching
 pub struct MultiProvider {
     /// Claude Code CLI provider
@@ -319,17 +324,23 @@ impl MultiProvider {
         Err(self.no_provider_available_error(&notes))
     }
 
-    fn openai_compatible_model_prefix(
-        model: &str,
-    ) -> Option<(crate::provider_catalog::OpenAiCompatibleProfile, &str)> {
+    fn openai_compatible_model_prefix(model: &str) -> Option<OpenAiCompatibleModelTarget<'_>> {
         let (prefix, rest) = model.split_once(':')?;
+        let prefix = prefix.trim();
         let rest = rest.trim();
-        if rest.is_empty() {
+        if prefix.is_empty() || rest.is_empty() {
             return None;
         }
 
-        let profile = crate::provider_catalog::openai_compatible_profile_by_id(prefix)?;
-        Some((profile, rest))
+        if let Some(profile) = crate::provider_catalog::openai_compatible_profile_by_id(prefix) {
+            return Some(OpenAiCompatibleModelTarget::BuiltIn(profile, rest));
+        }
+
+        if crate::config::config().providers.contains_key(prefix) {
+            return Some(OpenAiCompatibleModelTarget::NamedProfile(prefix, rest));
+        }
+
+        None
     }
 
     fn ensure_provider_lock_allows_model_target(
@@ -485,6 +496,34 @@ impl MultiProvider {
 
         crate::provider_catalog::force_apply_openai_compatible_profile_env(Some(profile));
         let provider = Arc::new(openrouter::OpenRouterProvider::new()?);
+        provider.set_model(model)?;
+        *self
+            .openrouter
+            .write()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(provider);
+        self.set_active_provider(ActiveProvider::OpenRouter);
+        Ok(())
+    }
+
+    fn set_model_on_named_openai_compatible_profile(
+        &self,
+        profile_name: &str,
+        model: &str,
+    ) -> Result<()> {
+        let model = model.trim();
+        if model.is_empty() {
+            anyhow::bail!("Model cannot be empty");
+        }
+        let cfg = crate::config::config();
+        let profile = cfg
+            .providers
+            .get(profile_name)
+            .ok_or_else(|| anyhow::anyhow!("Unknown provider profile '{}'", profile_name))?;
+        crate::provider_catalog::apply_named_provider_profile_env_from_config(profile_name, cfg)?;
+        let provider = Arc::new(openrouter::OpenRouterProvider::new_named_openai_compatible(
+            profile_name,
+            profile,
+        )?);
         provider.set_model(model)?;
         *self
             .openrouter
@@ -859,10 +898,16 @@ impl Provider for MultiProvider {
             anyhow::bail!("Model cannot be empty");
         }
 
-        if let Some((profile, target_model)) = Self::openai_compatible_model_prefix(requested_model)
-        {
+        if let Some(target) = Self::openai_compatible_model_prefix(requested_model) {
             self.ensure_provider_lock_allows_openai_compatible_profile(requested_model)?;
-            return self.set_model_on_openai_compatible_profile(profile, target_model);
+            return match target {
+                OpenAiCompatibleModelTarget::BuiltIn(profile, target_model) => {
+                    self.set_model_on_openai_compatible_profile(profile, target_model)
+                }
+                OpenAiCompatibleModelTarget::NamedProfile(profile_name, target_model) => {
+                    self.set_model_on_named_openai_compatible_profile(profile_name, target_model)
+                }
+            };
         }
 
         // Provider-prefixed model names are explicit routing directives. They

@@ -1,7 +1,5 @@
 use clap::{Parser, Subcommand, ValueEnum};
 
-use super::provider_init::ProviderChoice;
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq, ValueEnum)]
 pub(crate) enum TranscriptModeArg {
     Insert,
@@ -31,9 +29,9 @@ pub(crate) enum ProviderAuthArg {
 #[command(version = env!("MINNAL_VERSION"))]
 #[command(about = "Minnal: A coding agent using Claude Max or ChatGPT Pro subscriptions")]
 pub(crate) struct Args {
-    /// Provider to use (minnal, claude, openai, openai-api, openrouter, azure, opencode, opencode-go, zai, 302ai, baseten, cortecs, comtegra, deepseek, fpt, firmware, huggingface, moonshotai, nebius, scaleway, stackit, groq, mistral, perplexity, togetherai, deepinfra, xai, lmstudio, ollama, chutes, cerebras, alibaba-coding-plan, openai-compatible, cursor, copilot, gemini, antigravity, google, or auto-detect)
+    /// Provider to use: a built-in id, a [providers.<name>] profile, or auto-detect
     #[arg(short, long, default_value = "auto", global = true)]
-    pub(crate) provider: ProviderChoice,
+    pub(crate) provider: String,
 
     /// Working directory
     #[arg(short = 'C', long, global = true)]
@@ -80,7 +78,7 @@ pub(crate) struct Args {
     pub(crate) model: Option<String>,
 
     /// Named provider profile from [providers.<name>] in config.toml.
-    /// Implies --provider openai-compatible for OpenAI-compatible profiles.
+    /// Deprecated: use --provider <name> instead.
     #[arg(long, global = true)]
     pub(crate) provider_profile: Option<String>,
 

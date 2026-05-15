@@ -392,10 +392,6 @@ fn maybe_persist_default_provider_after_login(
     options: &LoginOptions,
 ) {
     let cfg = crate::config::Config::load();
-    if cfg.provider.default_provider.is_some() {
-        return;
-    }
-
     let provider_id =
         crate::provider::MultiProvider::config_default_provider_for_login_provider(provider);
     let Some(provider_id) = provider_id else {

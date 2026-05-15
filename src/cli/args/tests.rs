@@ -1,33 +1,35 @@
 use super::*;
-use crate::cli::provider_init::ProviderChoice;
-
 #[test]
-fn test_provider_choice_aliases_parse() {
+fn provider_arg_accepts_built_in_aliases_and_dynamic_profile_ids() {
     let args = Args::try_parse_from(["minnal", "--provider", "z.ai", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::Zai);
+    assert_eq!(args.provider, "z.ai");
 
     let args =
         Args::try_parse_from(["minnal", "--provider", "kimi-for-coding", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::Kimi);
+    assert_eq!(args.provider, "kimi-for-coding");
 
     let args =
         Args::try_parse_from(["minnal", "--provider", "cerebrascode", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::Cerebras);
+    assert_eq!(args.provider, "cerebrascode");
 
     let args = Args::try_parse_from(["minnal", "--provider", "compat", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::OpenaiCompatible);
+    assert_eq!(args.provider, "compat");
 
     let args = Args::try_parse_from(["minnal", "--provider", "bailian", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::AlibabaCodingPlan);
+    assert_eq!(args.provider, "bailian");
 
     let args = Args::try_parse_from(["minnal", "--provider", "together", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::TogetherAi);
+    assert_eq!(args.provider, "together");
 
     let args = Args::try_parse_from(["minnal", "--provider", "grok", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::Xai);
+    assert_eq!(args.provider, "grok");
 
     let args = Args::try_parse_from(["minnal", "--provider", "cgc", "run", "smoke"]).unwrap();
-    assert_eq!(args.provider, ProviderChoice::Comtegra);
+    assert_eq!(args.provider, "cgc");
+
+    let args =
+        Args::try_parse_from(["minnal", "--provider", "my-gateway", "run", "smoke"]).unwrap();
+    assert_eq!(args.provider, "my-gateway");
 }
 
 #[test]
@@ -141,7 +143,7 @@ fn login_openai_compatible_scriptable_flags_parse() {
         "DEEPSEEK_API_KEY",
     ])
     .unwrap();
-    assert_eq!(args.provider, ProviderChoice::OpenaiCompatible);
+    assert_eq!(args.provider, "openai-compatible");
     assert_eq!(args.model.as_deref(), Some("deepseek-v4-flash"));
     match args.command {
         Some(Command::Login {
@@ -170,7 +172,7 @@ fn login_openai_compatible_accepts_global_provider_and_model_after_subcommand() 
     ])
     .unwrap();
 
-    assert_eq!(args.provider, ProviderChoice::OpenaiCompatible);
+    assert_eq!(args.provider, "openai-compatible");
     assert_eq!(args.model.as_deref(), Some("deepseek-v4-flash"));
     match args.command {
         Some(Command::Login { api_base, .. }) => {

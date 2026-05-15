@@ -94,6 +94,31 @@ fn uses_scriptable_flow_detects_dash_input_without_consuming_stdin() {
 }
 
 #[test]
+fn login_persistence_replaces_existing_default_provider() {
+    let _guard = crate::storage::lock_test_env();
+    let temp = tempfile::TempDir::new().expect("temp dir");
+    let prev_home = std::env::var_os("MINNAL_HOME");
+    crate::env::set_var("MINNAL_HOME", temp.path());
+
+    let mut cfg = crate::config::Config::default();
+    cfg.provider.default_provider = Some("claude".to_string());
+    cfg.provider.default_model = Some("old-model".to_string());
+    cfg.save().expect("save config");
+
+    maybe_persist_default_provider_after_login(
+        crate::provider_catalog::OPENAI_LOGIN_PROVIDER,
+        &LoginOptions::default(),
+    );
+
+    let cfg = crate::config::Config::load();
+    assert_eq!(cfg.provider.default_provider.as_deref(), Some("openai"));
+    assert_eq!(cfg.provider.default_model.as_deref(), Some("old-model"));
+
+    set_or_clear_env("MINNAL_HOME", prev_home);
+    crate::config::Config::invalidate_cache();
+}
+
+#[test]
 fn auto_scriptable_flow_reason_prefers_non_interactive_for_oauth_provider() {
     let provider =
         crate::provider_catalog::resolve_login_provider("openai").expect("resolve openai provider");

@@ -176,6 +176,22 @@ impl Drop for EnvGuard {
     }
 }
 
+#[test]
+fn persisted_model_switch_default_strips_openai_compatible_prefix() {
+    let (model, provider) =
+        persisted_default_model_selection("cerebras:qwen-test", "qwen-test", "Cerebras");
+    assert_eq!(model, "qwen-test");
+    assert_eq!(provider.as_deref(), Some("cerebras"));
+}
+
+#[test]
+fn persisted_model_switch_default_preserves_builtin_provider_prefix() {
+    let (model, provider) =
+        persisted_default_model_selection("copilot:gpt-5.1-codex", "gpt-5.1-codex", "Copilot");
+    assert_eq!(model, "copilot:gpt-5.1-codex");
+    assert_eq!(provider.as_deref(), Some("copilot"));
+}
+
 #[tokio::test]
 async fn notify_auth_changed_emits_available_models_updated_after_provider_update() {
     let _guard = EnvGuard::save(&[]);

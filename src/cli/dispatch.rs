@@ -16,22 +16,15 @@ use crate::{
 use super::{
     commands, debug, hot_exec, login, output, provider_init, selfdev, terminal, tui_launch,
 };
-use provider_init::ProviderChoice;
+use provider_init::{ProviderChoice, ProviderSelection};
 
 pub(crate) async fn run_main(mut args: Args) -> Result<()> {
     resolve_resume_arg(&mut args)?;
-
-    if let Some(profile_name) = args
-        .provider_profile
-        .as_deref()
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-    {
-        provider_catalog::apply_named_provider_profile_env(profile_name)?;
-        crate::env::set_var("MINNAL_PROVIDER_PROFILE_NAME", profile_name);
-        crate::env::set_var("MINNAL_PROVIDER_PROFILE_ACTIVE", "1");
-        args.provider = ProviderChoice::OpenaiCompatible;
-    }
+    let provider_selection = provider_init::resolve_provider_selection(
+        &args.provider,
+        args.provider_profile.as_deref(),
+    )?;
+    provider_selection.apply_env()?;
 
     match args.command {
         Some(Command::Serve {
@@ -46,7 +39,9 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             }
             let provider_start = Instant::now();
             let provider =
-                provider_init::init_provider(&args.provider, args.model.as_deref()).await?;
+                provider_init::init_provider(provider_selection.choice(), args.model.as_deref())
+                    .await?;
+            maybe_persist_cli_provider_model(&provider_selection, args.model.as_deref());
             let provider_ms = provider_start.elapsed().as_millis();
             let server_new_start = Instant::now();
             let server = server::Server::new(provider);
@@ -68,7 +63,7 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             ndjson,
         }) => {
             commands::run_single_message_command(
-                &args.provider,
+                provider_selection.choice(),
                 args.model.as_deref(),
                 args.resume.as_deref(),
                 &message,
@@ -76,6 +71,7 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
                 ndjson,
             )
             .await?;
+            maybe_persist_cli_provider_model(&provider_selection, args.model.as_deref());
         }
         Some(Command::Login {
             account,
@@ -92,7 +88,7 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             api_key_env,
         }) => {
             login::run_login(
-                &args.provider,
+                provider_selection.choice(),
                 account.as_deref(),
                 login::LoginOptions {
                     no_browser,
@@ -119,9 +115,12 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             .await?;
         }
         Some(Command::Repl) => {
-            let (provider, registry) =
-                provider_init::init_provider_and_registry(&args.provider, args.model.as_deref())
-                    .await?;
+            let (provider, registry) = provider_init::init_provider_and_registry(
+                provider_selection.choice(),
+                args.model.as_deref(),
+            )
+            .await?;
+            maybe_persist_cli_provider_model(&provider_selection, args.model.as_deref());
             let mut agent = agent::Agent::new(provider, registry);
             agent.repl().await?;
         }
@@ -153,7 +152,8 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
                 validate,
                 json,
             } => {
-                let provider_arg = auth_doctor_provider_arg(provider.as_deref(), &args.provider);
+                let provider_arg =
+                    auth_doctor_provider_arg(provider.as_deref(), &provider_selection);
                 commands::run_auth_doctor_command(provider_arg, validate, json).await?
             }
         },
@@ -162,8 +162,14 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
                 commands::run_provider_list_command(json)?;
             }
             ProviderCommand::Current { json } => {
-                commands::run_provider_current_command(&args.provider, args.model.as_deref(), json)
-                    .await?;
+                commands::run_provider_current_command(
+                    provider_selection.choice(),
+                    args.model.as_deref(),
+                    Some(provider_selection.provider_id()),
+                    json,
+                )
+                .await?;
+                maybe_persist_cli_provider_model(&provider_selection, args.model.as_deref());
             }
             ProviderCommand::Add {
                 name,
@@ -282,8 +288,14 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
         }
         Some(Command::Model(subcmd)) => match subcmd {
             ModelCommand::List { json, verbose } => {
-                commands::run_model_command(&args.provider, args.model.as_deref(), json, verbose)
-                    .await?;
+                commands::run_model_command(
+                    provider_selection.choice(),
+                    args.model.as_deref(),
+                    json,
+                    verbose,
+                )
+                .await?;
+                maybe_persist_cli_provider_model(&provider_selection, args.model.as_deref());
             }
         },
         Some(Command::AuthTest {
@@ -296,7 +308,7 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             output,
         }) => {
             commands::run_auth_test_command(
-                &args.provider,
+                provider_selection.choice(),
                 args.model.as_deref(),
                 login,
                 all_configured,
@@ -307,6 +319,7 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
                 output.as_deref(),
             )
             .await?;
+            maybe_persist_cli_provider_model(&provider_selection, args.model.as_deref());
         }
         Some(Command::Restart { action }) => match action {
             RestartCommand::Save { auto_restore } => {
@@ -316,7 +329,7 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
             RestartCommand::Status => commands::run_restart_status_command()?,
             RestartCommand::Clear => commands::run_restart_clear_command()?,
         },
-        None => run_default_command(args).await?,
+        None => run_default_command(args, provider_selection).await?,
     }
 
     Ok(())
@@ -324,15 +337,70 @@ pub(crate) async fn run_main(mut args: Args) -> Result<()> {
 
 fn auth_doctor_provider_arg<'a>(
     positional_provider: Option<&'a str>,
-    global_provider: &'a ProviderChoice,
+    global_provider: &'a ProviderSelection,
 ) -> Option<&'a str> {
     positional_provider.or_else(|| {
-        if *global_provider == ProviderChoice::Auto {
+        if global_provider.is_auto() {
             None
         } else {
-            Some(global_provider.as_arg_value())
+            Some(global_provider.provider_id())
         }
     })
+}
+
+fn maybe_persist_cli_provider_model(provider_selection: &ProviderSelection, model: Option<&str>) {
+    let provider = (!provider_selection.is_auto()).then_some(provider_selection.provider_id());
+    let model = model.map(str::trim).filter(|value| !value.is_empty());
+    let result = match (provider, model) {
+        (Some(provider), Some(model)) => {
+            crate::config::Config::set_default_model(Some(model), Some(provider))
+        }
+        (Some(provider), None) => crate::config::Config::set_default_provider(Some(provider)),
+        (None, Some(model)) => {
+            if let Some((model, provider)) = provider_model_default_from_prefixed_model(model) {
+                crate::config::Config::set_default_model(Some(&model), Some(&provider))
+            } else {
+                crate::config::Config::set_default_model_only(Some(model))
+            }
+        }
+        (None, None) => return,
+    };
+    if let Err(err) = result {
+        crate::logging::warn(&format!(
+            "Failed to persist CLI provider/model selection: {}",
+            err
+        ));
+    }
+}
+
+fn provider_model_default_from_prefixed_model(model: &str) -> Option<(String, String)> {
+    let (prefix, rest) = model.split_once(':')?;
+    let prefix = prefix.trim();
+    let rest = rest.trim();
+    if prefix.is_empty() || rest.is_empty() {
+        return None;
+    }
+    if crate::config::config().providers.contains_key(prefix) {
+        return Some((rest.to_string(), prefix.to_string()));
+    }
+    if let Some(profile) = crate::provider_catalog::openai_compatible_profile_by_id(prefix) {
+        return Some((rest.to_string(), profile.id.to_string()));
+    }
+    provider_key_for_model_prefix(prefix).map(|provider| (model.to_string(), provider.to_string()))
+}
+
+fn provider_key_for_model_prefix(prefix: &str) -> Option<&'static str> {
+    match prefix.trim().to_ascii_lowercase().as_str() {
+        "claude" | "anthropic" => Some("claude"),
+        "openai" => Some("openai"),
+        "copilot" => Some("copilot"),
+        "antigravity" => Some("antigravity"),
+        "gemini" => Some("gemini"),
+        "cursor" => Some("cursor"),
+        "bedrock" => Some("bedrock"),
+        "openrouter" => Some("openrouter"),
+        _ => None,
+    }
 }
 
 fn resolve_resume_arg(args: &mut Args) -> Result<()> {
@@ -410,12 +478,11 @@ fn map_transcript_mode(mode: TranscriptModeArg) -> crate::protocol::TranscriptMo
     }
 }
 
-async fn run_default_command(args: Args) -> Result<()> {
+async fn run_default_command(args: Args, provider_selection: ProviderSelection) -> Result<()> {
     startup_profile::mark("run_main_none_branch");
 
-    let explicit_provider_or_model = args.provider != ProviderChoice::Auto
-        || args.model.is_some()
-        || args.provider_profile.is_some();
+    let explicit_provider_or_model =
+        !provider_selection.is_auto() || args.model.is_some() || args.provider_profile.is_some();
     if args.resume.is_none()
         && !explicit_provider_or_model
         && commands::maybe_run_pending_restart_restore_on_startup().await?
@@ -474,9 +541,10 @@ async fn run_default_command(args: Args) -> Result<()> {
         output::stderr_info(
             "Server already running; provider/model flags only apply when starting a new server.",
         );
+        maybe_persist_cli_provider_model(&provider_selection, args.model.as_deref());
         output::stderr_info(format!(
             "Current server settings control `/model`. Restart server to apply: --provider {}{}",
-            args.provider.as_arg_value(),
+            provider_selection.provider_id(),
             args.model
                 .as_ref()
                 .map(|m| format!(" --model {}", m))
@@ -485,13 +553,8 @@ async fn run_default_command(args: Args) -> Result<()> {
     }
 
     if !server_running {
-        maybe_prompt_server_bootstrap_login(&args.provider).await?;
-        spawn_server(
-            &args.provider,
-            args.model.as_deref(),
-            args.provider_profile.as_deref(),
-        )
-        .await?;
+        maybe_prompt_server_bootstrap_login(provider_selection.choice()).await?;
+        spawn_server(&provider_selection, args.model.as_deref()).await?;
     }
 
     startup_profile::mark("pre_tui_client");
@@ -716,9 +779,8 @@ async fn detect_bootstrap_credentials() -> BootstrapCredentialState {
 }
 
 pub(crate) async fn spawn_server(
-    provider_choice: &ProviderChoice,
+    provider_selection: &ProviderSelection,
     model: Option<&str>,
-    provider_profile: Option<&str>,
 ) -> Result<()> {
     let socket_path = server::socket_path();
     if server_is_running_at(&socket_path).await {
@@ -756,10 +818,7 @@ pub(crate) async fn spawn_server(
     if client_requested_selfdev {
         cmd.env("MINNAL_DEBUG_CONTROL", "1");
     }
-    cmd.arg("--provider").arg(provider_choice.as_arg_value());
-    if let Some(provider_profile) = provider_profile {
-        cmd.arg("--provider-profile").arg(provider_profile);
-    }
+    cmd.arg("--provider").arg(provider_selection.provider_id());
     if let Some(model) = model {
         cmd.arg("--model").arg(model);
     }

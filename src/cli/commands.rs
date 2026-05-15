@@ -710,9 +710,10 @@ pub fn run_provider_list_command(emit_json: bool) -> Result<()> {
 pub async fn run_provider_current_command(
     choice: &super::provider_init::ProviderChoice,
     model: Option<&str>,
+    requested_provider: Option<&str>,
     emit_json: bool,
 ) -> Result<()> {
-    report_info::run_provider_current_command(choice, model, emit_json).await
+    report_info::run_provider_current_command(choice, model, requested_provider, emit_json).await
 }
 
 pub fn run_version_command(emit_json: bool) -> Result<()> {
@@ -1230,11 +1231,15 @@ pub async fn run_model_command(
     }
 
     if emit_json {
-        let provider_label = super::provider_init::login_provider_for_choice(choice)
-            .map(|provider| provider.display_name.to_string())
-            .unwrap_or_else(|| {
-                crate::provider_catalog::runtime_provider_display_name(provider.name())
-            });
+        let provider_label = if std::env::var_os("MINNAL_NAMED_PROVIDER_PROFILE").is_some() {
+            crate::provider_catalog::runtime_provider_display_name(provider.name())
+        } else {
+            super::provider_init::login_provider_for_choice(choice)
+                .map(|provider| provider.display_name.to_string())
+                .unwrap_or_else(|| {
+                    crate::provider_catalog::runtime_provider_display_name(provider.name())
+                })
+        };
         let report = ModelListReport {
             provider: provider_label,
             selected_model: provider.model(),

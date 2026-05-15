@@ -48,6 +48,82 @@ fn available_models_updated_event_from_agent(agent: &Agent) -> ServerEvent {
     AvailableModelsSnapshot::from_agent(agent).into_event()
 }
 
+fn persist_model_switch_default(requested_model: &str, active_model: &str, provider_name: &str) {
+    let (model, provider_key) =
+        persisted_default_model_selection(requested_model, active_model, provider_name);
+    if let Err(err) =
+        crate::config::Config::set_default_model(Some(&model), provider_key.as_deref())
+    {
+        crate::logging::warn(&format!(
+            "Failed to persist model switch default '{}': {}",
+            model, err
+        ));
+    }
+}
+
+fn persisted_default_model_selection(
+    requested_model: &str,
+    active_model: &str,
+    provider_name: &str,
+) -> (String, Option<String>) {
+    let requested_model = requested_model.trim();
+    if let Some((prefix, rest)) = requested_model.split_once(':') {
+        let prefix = prefix.trim();
+        let rest = rest.trim();
+        if !prefix.is_empty() && !rest.is_empty() {
+            let cfg = crate::config::config();
+            if cfg.providers.contains_key(prefix) {
+                return (rest.to_string(), Some(prefix.to_string()));
+            }
+            if let Some(profile) = crate::provider_catalog::openai_compatible_profile_by_id(prefix)
+            {
+                return (rest.to_string(), Some(profile.id.to_string()));
+            }
+            if let Some(provider_key) = provider_key_for_model_prefix(prefix) {
+                return (requested_model.to_string(), Some(provider_key.to_string()));
+            }
+        }
+    }
+
+    (
+        active_model.to_string(),
+        provider_key_for_display_name(provider_name),
+    )
+}
+
+fn provider_key_for_model_prefix(prefix: &str) -> Option<&'static str> {
+    match prefix.trim().to_ascii_lowercase().as_str() {
+        "claude" | "anthropic" => Some("claude"),
+        "openai" => Some("openai"),
+        "copilot" => Some("copilot"),
+        "antigravity" => Some("antigravity"),
+        "gemini" => Some("gemini"),
+        "cursor" => Some("cursor"),
+        "bedrock" => Some("bedrock"),
+        "openrouter" => Some("openrouter"),
+        _ => None,
+    }
+}
+
+fn provider_key_for_display_name(provider_name: &str) -> Option<String> {
+    let provider_name = provider_name.trim();
+    if provider_name.is_empty() {
+        return None;
+    }
+    if crate::config::config()
+        .providers
+        .contains_key(provider_name)
+    {
+        return Some(provider_name.to_string());
+    }
+    if let Some(profile_id) =
+        crate::provider_catalog::openai_compatible_profile_id_for_display_name(provider_name)
+    {
+        return Some(profile_id.to_string());
+    }
+    provider_key_for_model_prefix(provider_name).map(ToString::to_string)
+}
+
 async fn available_models_snapshot(agent: &Arc<Mutex<Agent>>) -> AvailableModelsSnapshot {
     let agent_guard = agent.lock().await;
     AvailableModelsSnapshot::from_agent(&agent_guard)
@@ -285,6 +361,7 @@ pub(super) async fn handle_cycle_model(
     match result {
         Ok((updated, pname)) => {
             crate::telemetry::record_model_switch();
+            persist_model_switch_default(&next_model, &updated, &pname);
             let _ = client_event_tx.send(ServerEvent::ModelChanged {
                 id,
                 model: updated,
@@ -359,6 +436,7 @@ pub(super) async fn handle_set_model(
     match result {
         Ok((updated, pname)) => {
             crate::telemetry::record_model_switch();
+            persist_model_switch_default(&model, &updated, &pname);
             let _ = client_event_tx.send(ServerEvent::ModelChanged {
                 id,
                 model: updated,

@@ -388,11 +388,14 @@ pub(super) fn run_provider_list_command(emit_json: bool) -> Result<()> {
 pub(super) async fn run_provider_current_command(
     choice: &ProviderChoice,
     model: Option<&str>,
+    requested_provider: Option<&str>,
     emit_json: bool,
 ) -> Result<()> {
     let provider = provider_init::init_provider_quiet(choice, model).await?;
     let report = ProviderCurrentReport {
-        requested_provider: choice.as_arg_value().to_string(),
+        requested_provider: requested_provider
+            .map(str::to_string)
+            .unwrap_or_else(|| choice.as_arg_value().to_string()),
         requested_model: model.map(str::to_string),
         resolved_provider: crate::provider_catalog::runtime_provider_display_name(provider.name()),
         selected_model: provider.model(),
@@ -587,7 +590,7 @@ pub(super) fn list_cli_providers() -> Vec<ProviderListEntry> {
         ProviderChoice::Auto,
     ];
 
-    choices
+    let mut providers = choices
         .into_iter()
         .map(|choice| {
             if let Some(provider) = provider_init::login_provider_for_choice(&choice) {
@@ -614,7 +617,33 @@ pub(super) fn list_cli_providers() -> Vec<ProviderListEntry> {
                 }
             }
         })
-        .collect()
+        .collect::<Vec<_>>();
+
+    let named = crate::config::Config::load()
+        .providers
+        .into_iter()
+        .map(|(id, profile)| {
+            let auth_kind = match profile.auth {
+                crate::config::NamedProviderAuth::None => "none",
+                crate::config::NamedProviderAuth::Bearer => "bearer",
+                crate::config::NamedProviderAuth::Header => "api key",
+            };
+            let detail = profile
+                .default_model
+                .as_deref()
+                .map(|model| format!("{} · default model {}", profile.base_url, model))
+                .unwrap_or(profile.base_url);
+            ProviderListEntry {
+                id: id.clone(),
+                display_name: id,
+                auth_kind: Some(auth_kind.to_string()),
+                recommended: false,
+                aliases: Vec::new(),
+                detail: Some(detail),
+            }
+        });
+    providers.extend(named);
+    providers
 }
 
 fn auth_state_label(state: crate::auth::AuthState) -> &'static str {

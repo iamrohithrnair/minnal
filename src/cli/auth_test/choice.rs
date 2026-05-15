@@ -25,6 +25,35 @@ pub(crate) async fn auth_test_choice_plan(
         });
     }
 
+    if let Some(profile_name) = active_named_provider_profile() {
+        let cfg = crate::config::config();
+        let profile = cfg.providers.get(&profile_name).ok_or_else(|| {
+            anyhow::anyhow!("Unknown provider profile '{}'", profile_name)
+        })?;
+        if profile
+            .default_model
+            .as_deref()
+            .map(str::trim)
+            .is_some_and(|model| !model.is_empty())
+        {
+            return Ok(AuthTestChoicePlan::Run { model: None });
+        }
+        if let Some(model) = profile
+            .models
+            .iter()
+            .map(|model| model.id.trim())
+            .find(|model| !model.is_empty())
+        {
+            return Ok(AuthTestChoicePlan::Run {
+                model: Some(model.to_string()),
+            });
+        }
+        return Ok(AuthTestChoicePlan::Skip(format!(
+            "Skipped: provider profile '{}' has no default model. Re-run `minnal auth-test --provider {} --model <model>` or set providers.{}.default_model first.",
+            profile_name, profile_name, profile_name
+        )));
+    }
+
     let Some(profile) = super::provider_init::profile_for_choice(choice) else {
         return Ok(AuthTestChoicePlan::Run { model: None });
     };
@@ -44,6 +73,13 @@ pub(crate) async fn auth_test_choice_plan(
         resolved.display_name,
         choice.as_arg_value()
     )))
+}
+
+fn active_named_provider_profile() -> Option<String> {
+    std::env::var("MINNAL_NAMED_PROVIDER_PROFILE")
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
 }
 
 async fn discover_openai_compatible_validation_model(

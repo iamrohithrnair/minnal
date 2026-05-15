@@ -165,6 +165,115 @@ impl ProviderChoice {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ProviderSelection {
+    choice: ProviderChoice,
+    provider_id: String,
+    named_profile: Option<String>,
+}
+
+impl ProviderSelection {
+    pub(crate) fn auto() -> Self {
+        Self::built_in(ProviderChoice::Auto)
+    }
+
+    pub(crate) fn built_in(choice: ProviderChoice) -> Self {
+        Self {
+            choice,
+            provider_id: choice.as_arg_value().to_string(),
+            named_profile: None,
+        }
+    }
+
+    fn from_named_profile(profile_name: &str) -> Self {
+        Self {
+            choice: ProviderChoice::OpenaiCompatible,
+            provider_id: profile_name.to_string(),
+            named_profile: Some(profile_name.to_string()),
+        }
+    }
+
+    pub(crate) fn choice(&self) -> &ProviderChoice {
+        &self.choice
+    }
+
+    pub(crate) fn provider_id(&self) -> &str {
+        &self.provider_id
+    }
+
+    pub(crate) fn named_profile(&self) -> Option<&str> {
+        self.named_profile.as_deref()
+    }
+
+    pub(crate) fn is_auto(&self) -> bool {
+        matches!(self.choice, ProviderChoice::Auto) && self.named_profile.is_none()
+    }
+
+    pub(crate) fn apply_env(&self) -> Result<()> {
+        if let Some(profile_name) = self.named_profile() {
+            crate::provider_catalog::apply_named_provider_profile_env(profile_name)?;
+            crate::env::set_var("MINNAL_PROVIDER_PROFILE_NAME", profile_name);
+            crate::env::set_var("MINNAL_PROVIDER_PROFILE_ACTIVE", "1");
+        }
+        Ok(())
+    }
+}
+
+pub(crate) fn resolve_provider_selection(
+    provider_arg: &str,
+    provider_profile: Option<&str>,
+) -> Result<ProviderSelection> {
+    if let Some(profile_name) = provider_profile
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        ensure_named_provider_profile_exists(profile_name)?;
+        return Ok(ProviderSelection::from_named_profile(profile_name));
+    }
+
+    let provider_arg = provider_arg.trim();
+    if provider_arg.is_empty() {
+        anyhow::bail!("Provider cannot be empty");
+    }
+
+    if let Some(choice) = provider_choice_from_arg(provider_arg) {
+        return Ok(ProviderSelection::built_in(choice));
+    }
+
+    if crate::config::config().providers.contains_key(provider_arg) {
+        return Ok(ProviderSelection::from_named_profile(provider_arg));
+    }
+
+    anyhow::bail!(
+        "Unknown provider '{}'. Run `minnal provider list` to see built-in and configured provider ids, or `minnal provider add {}` to create a custom profile.",
+        provider_arg,
+        provider_arg
+    );
+}
+
+fn ensure_named_provider_profile_exists(profile_name: &str) -> Result<()> {
+    if crate::config::config().providers.contains_key(profile_name) {
+        Ok(())
+    } else {
+        anyhow::bail!(
+            "Unknown provider profile '{}'. Add [providers.{}] to config.toml or run `minnal provider add {}`.",
+            profile_name,
+            profile_name,
+            profile_name
+        )
+    }
+}
+
+#[allow(deprecated)]
+pub(crate) fn provider_choice_from_arg(value: &str) -> Option<ProviderChoice> {
+    <ProviderChoice as clap::ValueEnum>::from_str(value, true)
+        .ok()
+        .or_else(|| {
+            crate::provider_catalog::resolve_login_provider(value)
+                .and_then(choice_for_login_provider)
+        })
+}
+
 #[allow(deprecated)]
 const PROVIDER_CHOICE_LOGIN_PROVIDERS: &[(ProviderChoice, LoginProviderDescriptor)] = &[
     (
@@ -1548,10 +1657,7 @@ async fn init_provider_with_options(
 
     if let Some(model_name) = model {
         if let Err(e) = provider.set_model(model_name) {
-            init_notice(&format!(
-                "Warning: failed to set model '{}': {}",
-                model_name, e
-            ));
+            anyhow::bail!("Failed to set model '{}': {}", model_name, e);
         } else {
             init_notice(&format!("Using model: {}", model_name));
         }

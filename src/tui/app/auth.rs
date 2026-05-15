@@ -2077,6 +2077,23 @@ impl App {
             }
         }
         if login.success {
+            if let Some((provider_id, model)) = self
+                .pending_login
+                .as_ref()
+                .and_then(default_from_pending_login)
+            {
+                let result = if let Some(model) = model.as_deref() {
+                    crate::config::Config::set_default_model(Some(model), Some(&provider_id))
+                } else {
+                    crate::config::Config::set_default_provider(Some(&provider_id))
+                };
+                if let Err(error) = result {
+                    crate::logging::warn(&format!(
+                        "Failed to persist login provider selection '{}': {}",
+                        provider_id, error
+                    ));
+                }
+            }
             self.recent_authenticated_provider = Some((login.provider.clone(), Instant::now()));
             self.invalidate_model_picker_cache();
             self.push_display_message(DisplayMessage::system(login.message));
@@ -2200,6 +2217,32 @@ impl App {
                 auth_note,
             ),
         }));
+    }
+}
+
+fn default_from_pending_login(pending: &PendingLogin) -> Option<(String, Option<String>)> {
+    match pending {
+        PendingLogin::ApiKeyProfile {
+            provider_id,
+            default_model,
+            ..
+        } if provider_id != "minnal" => Some((provider_id.clone(), default_model.clone())),
+        PendingLogin::OpenAiCompatibleApiBase { profile } => {
+            let resolved = crate::provider_catalog::resolve_openai_compatible_profile(*profile);
+            Some((resolved.id, resolved.default_model))
+        }
+        PendingLogin::OpenAiAccount { .. } => Some(("openai".to_string(), None)),
+        PendingLogin::Gemini { .. } => Some(("gemini".to_string(), None)),
+        PendingLogin::Antigravity { .. } => Some(("antigravity".to_string(), None)),
+        PendingLogin::CursorApiKey => Some(("cursor".to_string(), None)),
+        PendingLogin::Copilot => Some(("copilot".to_string(), None)),
+        PendingLogin::AzureEndpoint
+        | PendingLogin::AzureModel { .. }
+        | PendingLogin::AzureAuthChoice { .. }
+        | PendingLogin::AzureApiKey { .. } => Some(("azure".to_string(), None)),
+        PendingLogin::ClaudeAccount { .. }
+        | PendingLogin::AutoImportSelection { .. }
+        | PendingLogin::ApiKeyProfile { .. } => None,
     }
 }
 
