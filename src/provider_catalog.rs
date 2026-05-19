@@ -366,8 +366,16 @@ pub fn openai_compatible_profile_model_supports_chat(profile_id: &str, model: &s
     let profile_id = profile_id.trim().to_ascii_lowercase();
     let model = model.trim().to_ascii_lowercase();
 
+    if let Some(profile) = openai_compatible_profile_by_id(&profile_id) {
+        let allowlist = openai_compatible_profile_model_allowlist(profile);
+        if !allowlist.is_empty() {
+            return allowlist
+                .iter()
+                .any(|candidate| openai_compatible_model_allowlist_matches(candidate, &model));
+        }
+    }
+
     match profile_id.as_str() {
-        "zai" => model.starts_with("glm-"),
         // Cerebras currently exposes these preview/reasoning IDs from GET /models
         // for some keys, but POST /chat/completions returns model_not_found for
         // the same key. Keep them out of the picker until the provider catalog
@@ -377,8 +385,36 @@ pub fn openai_compatible_profile_model_supports_chat(profile_id: &str, model: &s
     }
 }
 
-pub fn openai_compatible_profile_uses_static_model_allowlist(profile_id: &str) -> bool {
-    matches!(profile_id.trim().to_ascii_lowercase().as_str(), "zai")
+pub fn openai_compatible_profile_uses_model_allowlist(profile_id: &str) -> bool {
+    openai_compatible_profile_by_id(profile_id)
+        .map(openai_compatible_profile_model_allowlist)
+        .is_some_and(|models| !models.is_empty())
+}
+
+fn openai_compatible_profile_model_allowlist(profile: OpenAiCompatibleProfile) -> Vec<String> {
+    let mut models = openai_compatible_profile_static_models(profile);
+    if let Some(model) = profile
+        .default_model
+        .map(str::trim)
+        .filter(|model| !model.is_empty())
+        && !models
+            .iter()
+            .any(|candidate| candidate.eq_ignore_ascii_case(model))
+    {
+        models.push(model.to_string());
+    }
+    models
+}
+
+fn openai_compatible_model_allowlist_matches(candidate: &str, model: &str) -> bool {
+    let candidate = candidate.trim().to_ascii_lowercase();
+    let model = model.trim().to_ascii_lowercase();
+    candidate == model
+        || (candidate.contains('/')
+            && candidate
+                .rsplit('/')
+                .next()
+                .is_some_and(|bare| bare == model))
 }
 
 pub fn openai_compatible_profile_static_context_limits(

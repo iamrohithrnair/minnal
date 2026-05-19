@@ -938,13 +938,13 @@ impl OpenRouterProvider {
         // the provider rejects at chat time, which is especially confusing for
         // direct providers such as Cerebras.
         //
-        // Preserve static models for OpenRouter itself and for custom/named
-        // profiles, where the user supplied the list explicitly and there may be
-        // no provider-side catalog contract.
+        // Preserve static models for OpenRouter itself, custom/named profiles,
+        // and curated direct profiles whose live catalog should not expand the
+        // supported model set beyond the profile-scoped allowlist.
         self.supports_provider_features
             || self.profile_id.is_none()
             || self.profile_id.as_deref().is_some_and(
-                crate::provider_catalog::openai_compatible_profile_uses_static_model_allowlist,
+                crate::provider_catalog::openai_compatible_profile_uses_model_allowlist,
             )
     }
 

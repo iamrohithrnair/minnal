@@ -915,7 +915,7 @@ fn direct_zai_profile_filters_live_catalog_and_keeps_static_models() {
                     created: None,
                 },
                 ModelInfo {
-                    id: "glm-4.7-live".to_string(),
+                    id: "glm-4.7".to_string(),
                     name: String::new(),
                     context_length: None,
                     pricing: ModelPricing::default(),
@@ -931,11 +931,47 @@ fn direct_zai_profile_filters_live_catalog_and_keeps_static_models() {
     let display = provider.available_models_display();
     assert!(display.iter().any(|model| model == "glm-4.5"));
     assert!(display.iter().any(|model| model == "glm-5.1"));
-    assert!(display.iter().any(|model| model == "glm-4.7-live"));
+    assert!(display.iter().any(|model| model == "glm-4.7"));
     assert!(
         !display.iter().any(|model| model.contains("claude")),
         "Z.AI direct picker should not advertise Claude routes from a broad live catalog: {display:?}"
     );
+}
+
+#[test]
+fn direct_default_only_profile_filters_live_catalog_to_curated_model() {
+    let provider = OpenRouterProvider {
+        model: Arc::new(RwLock::new("llama-3.1-8b-instant".to_string())),
+        supports_provider_features: false,
+        supports_model_catalog: true,
+        profile_id: Some("groq".to_string()),
+        static_models: Vec::new(),
+        send_openrouter_headers: false,
+        models_cache: Arc::new(RwLock::new(ModelsCache {
+            models: vec![
+                ModelInfo {
+                    id: "anthropic/claude-opus-4-7".to_string(),
+                    name: String::new(),
+                    context_length: None,
+                    pricing: ModelPricing::default(),
+                    created: None,
+                },
+                ModelInfo {
+                    id: "llama-3.1-8b-instant".to_string(),
+                    name: String::new(),
+                    context_length: None,
+                    pricing: ModelPricing::default(),
+                    created: None,
+                },
+            ],
+            fetched: true,
+            cached_at: Some(1),
+        })),
+        ..make_custom_compatible_provider()
+    };
+
+    let display = provider.available_models_display();
+    assert_eq!(display, vec!["llama-3.1-8b-instant".to_string()]);
 }
 
 #[test]

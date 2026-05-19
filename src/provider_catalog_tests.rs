@@ -109,22 +109,56 @@ fn auth_issue_profile_metadata_matches_direct_provider_endpoints() {
 }
 
 #[test]
-fn zai_profile_chat_support_filters_to_glm_models() {
+fn supported_openai_compatible_profiles_use_curated_model_allowlists() {
+    for profile in openai_compatible_profiles() {
+        let static_models = openai_compatible_profile_static_models(*profile);
+        let has_curated_models = !static_models.is_empty()
+            || profile
+                .default_model
+                .map(str::trim)
+                .is_some_and(|model| !model.is_empty());
+
+        assert_eq!(
+            openai_compatible_profile_uses_model_allowlist(profile.id),
+            has_curated_models,
+            "profile {} allowlist state should match curated static/default models",
+            profile.id
+        );
+
+        if !has_curated_models {
+            continue;
+        }
+
+        let expected_model = static_models
+            .first()
+            .map(String::as_str)
+            .or(profile.default_model)
+            .expect("curated model");
+        assert!(
+            openai_compatible_profile_model_supports_chat(profile.id, expected_model),
+            "profile {} should accept its curated model {}",
+            profile.id,
+            expected_model
+        );
+        assert!(
+            !openai_compatible_profile_model_supports_chat(profile.id, "anthropic/claude-opus-4-7"),
+            "profile {} should reject a foreign broad-catalog model",
+            profile.id
+        );
+    }
+}
+
+#[test]
+fn default_only_openai_compatible_profiles_are_also_profile_scoped() {
+    assert!(openai_compatible_profile_uses_model_allowlist("groq"));
     assert!(openai_compatible_profile_model_supports_chat(
-        "zai", "glm-4.7"
-    ));
-    assert!(openai_compatible_profile_model_supports_chat(
-        "zai", "GLM-5.1"
+        "groq",
+        "llama-3.1-8b-instant"
     ));
     assert!(!openai_compatible_profile_model_supports_chat(
-        "zai",
-        "claude-opus-4-7"
-    ));
-    assert!(!openai_compatible_profile_model_supports_chat(
-        "zai",
+        "groq",
         "anthropic/claude-opus-4-7"
     ));
-    assert!(openai_compatible_profile_uses_static_model_allowlist("zai"));
 }
 
 #[test]
