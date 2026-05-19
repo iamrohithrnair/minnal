@@ -475,7 +475,13 @@ pub(super) fn draw_inline_interactive(frame: &mut Frame, app: &dyn TuiState, are
     }
 
     let mut meta_parts = String::new();
-    if !picker.filter.is_empty() {
+    if picker.kind == crate::tui::PickerKind::Model {
+        if picker.filter.is_empty() {
+            meta_parts.push_str("  search:model/provider");
+        } else {
+            meta_parts.push_str(&format!("  search:\"{}\"", picker.filter));
+        }
+    } else if !picker.filter.is_empty() {
         meta_parts.push_str(&format!("  \"{}\"", picker.filter));
     }
     let count_str = if filtered_count == total {

@@ -2044,7 +2044,7 @@ impl App {
             }
             KeyCode::Char(c) => {
                 if let Some(ref mut picker) = self.inline_interactive_state
-                    && !c.is_whitespace()
+                    && !c.is_control()
                 {
                     picker.filter.push(c);
                     Self::apply_inline_interactive_filter(picker);
@@ -2172,5 +2172,93 @@ impl App {
             picker.filter = first_original[..prefix_len].to_string();
             Self::apply_inline_interactive_filter(picker);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tui::{InlineInteractiveState, PickerEntry, PickerKind, PickerOption};
+
+    fn model_entry(name: &str, provider: &str, api_method: &str, detail: &str) -> PickerEntry {
+        PickerEntry {
+            name: name.to_string(),
+            options: vec![PickerOption {
+                provider: provider.to_string(),
+                api_method: api_method.to_string(),
+                available: true,
+                detail: detail.to_string(),
+                estimated_reference_cost_micros: None,
+            }],
+            action: PickerAction::Model,
+            selected_option: 0,
+            is_current: false,
+            is_default: false,
+            recommended: false,
+            recommendation_rank: usize::MAX,
+            old: false,
+            created_date: None,
+            effort: None,
+        }
+    }
+
+    fn model_picker(entries: Vec<PickerEntry>) -> InlineInteractiveState {
+        let entry_count = entries.len();
+        InlineInteractiveState {
+            kind: PickerKind::Model,
+            filtered: (0..entry_count).collect(),
+            entries,
+            selected: 0,
+            column: 0,
+            filter: String::new(),
+            preview: false,
+        }
+    }
+
+    fn filtered_names(picker: &InlineInteractiveState) -> Vec<&str> {
+        picker
+            .filtered
+            .iter()
+            .map(|idx| picker.entries[*idx].name.as_str())
+            .collect()
+    }
+
+    #[test]
+    fn model_picker_search_matches_provider_display_aliases() {
+        let mut picker = model_picker(vec![
+            model_entry(
+                "claude-opus-4-7",
+                "Anthropic",
+                "openrouter",
+                "premium route",
+            ),
+            model_entry("gpt-5.5", "OpenAI", "openai-oauth", ""),
+        ]);
+
+        picker.filter = "openrouter/anthropic".to_string();
+        App::apply_inline_interactive_filter(&mut picker);
+
+        assert_eq!(filtered_names(&picker), vec!["claude-opus-4-7"]);
+    }
+
+    #[test]
+    fn model_picker_search_matches_provider_names_with_spaces() {
+        let mut picker = model_picker(vec![
+            model_entry(
+                "us.anthropic.claude-sonnet-4-5",
+                "AWS Bedrock",
+                "bedrock",
+                "",
+            ),
+            model_entry("glm-4.6", "Z.AI", "openai-compatible:zai", ""),
+        ]);
+
+        picker.filter = "aws bedrock".to_string();
+        App::apply_inline_interactive_filter(&mut picker);
+
+        assert_eq!(
+            filtered_names(&picker),
+            vec!["us.anthropic.claude-sonnet-4-5"]
+        );
     }
 }

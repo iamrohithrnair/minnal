@@ -638,50 +638,51 @@ impl PickerKind {
             Self::Account => {
                 let provider = entry
                     .active_option()
-                    .map(|option| option.provider.as_str())
-                    .unwrap_or("");
+                    .map(picker_option_filter_text)
+                    .unwrap_or_default();
                 let state = entry.account_state_label().unwrap_or("");
                 format!("{} {} {}", entry.name, provider, state)
             }
             Self::Login => {
-                let auth_kind = entry
+                let option_text = entry
                     .active_option()
-                    .map(|option| option.provider.as_str())
-                    .unwrap_or("");
-                let state = entry
-                    .active_option()
-                    .map(|option| option.api_method.as_str())
-                    .unwrap_or("");
-                let detail = entry
-                    .active_option()
-                    .map(|option| option.detail.as_str())
-                    .unwrap_or("");
-                format!("{} {} {} {}", entry.name, auth_kind, state, detail)
+                    .map(picker_option_filter_text)
+                    .unwrap_or_default();
+                format!("{} {}", entry.name, option_text)
             }
             Self::Usage => {
-                let status = entry
+                let option_text = entry
                     .active_option()
-                    .map(|option| option.provider.as_str())
-                    .unwrap_or("");
-                let window = entry
-                    .active_option()
-                    .map(|option| option.api_method.as_str())
-                    .unwrap_or("");
-                let detail = entry
-                    .active_option()
-                    .map(|option| option.detail.as_str())
-                    .unwrap_or("");
-                format!("{} {} {} {}", entry.name, status, window, detail)
+                    .map(picker_option_filter_text)
+                    .unwrap_or_default();
+                format!("{} {}", entry.name, option_text)
             }
             Self::Model => {
-                let route = entry.active_option();
-                let provider = route.map(|option| option.provider.as_str()).unwrap_or("");
-                let method = route.map(|option| option.api_method.as_str()).unwrap_or("");
-                let detail = route.map(|option| option.detail.as_str()).unwrap_or("");
-                format!("{} {} {} {}", entry.name, provider, method, detail)
+                let options = entry
+                    .options
+                    .iter()
+                    .map(picker_option_filter_text)
+                    .collect::<Vec<_>>()
+                    .join(" ");
+                format!("{} {}", entry.name, options)
             }
         }
     }
+}
+
+fn picker_option_filter_text(option: &PickerOption) -> String {
+    let provider_display = if option.api_method == "openrouter"
+        && option.provider != "auto"
+        && !option.provider.contains("OpenRouter")
+    {
+        format!(" OpenRouter/{}", option.provider)
+    } else {
+        String::new()
+    };
+    format!(
+        "{} {}{} {}",
+        option.provider, option.api_method, provider_display, option.detail
+    )
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
