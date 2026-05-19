@@ -941,7 +941,11 @@ impl OpenRouterProvider {
         // Preserve static models for OpenRouter itself and for custom/named
         // profiles, where the user supplied the list explicitly and there may be
         // no provider-side catalog contract.
-        self.supports_provider_features || self.profile_id.is_none()
+        self.supports_provider_features
+            || self.profile_id.is_none()
+            || self.profile_id.as_deref().is_some_and(
+                crate::provider_catalog::openai_compatible_profile_uses_static_model_allowlist,
+            )
     }
 
     pub(crate) fn filter_profile_chat_supported_models(&self, models: Vec<String>) -> Vec<String> {

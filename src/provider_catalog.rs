@@ -367,6 +367,7 @@ pub fn openai_compatible_profile_model_supports_chat(profile_id: &str, model: &s
     let model = model.trim().to_ascii_lowercase();
 
     match profile_id.as_str() {
+        "zai" => model.starts_with("glm-"),
         // Cerebras currently exposes these preview/reasoning IDs from GET /models
         // for some keys, but POST /chat/completions returns model_not_found for
         // the same key. Keep them out of the picker until the provider catalog
@@ -374,6 +375,10 @@ pub fn openai_compatible_profile_model_supports_chat(profile_id: &str, model: &s
         "cerebras" if matches!(model.as_str(), "gpt-oss-120b" | "zai-glm-4.7") => false,
         _ => true,
     }
+}
+
+pub fn openai_compatible_profile_uses_static_model_allowlist(profile_id: &str) -> bool {
+    matches!(profile_id.trim().to_ascii_lowercase().as_str(), "zai")
 }
 
 pub fn openai_compatible_profile_static_context_limits(

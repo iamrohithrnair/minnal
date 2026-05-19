@@ -109,6 +109,25 @@ fn auth_issue_profile_metadata_matches_direct_provider_endpoints() {
 }
 
 #[test]
+fn zai_profile_chat_support_filters_to_glm_models() {
+    assert!(openai_compatible_profile_model_supports_chat(
+        "zai", "glm-4.7"
+    ));
+    assert!(openai_compatible_profile_model_supports_chat(
+        "zai", "GLM-5.1"
+    ));
+    assert!(!openai_compatible_profile_model_supports_chat(
+        "zai",
+        "claude-opus-4-7"
+    ));
+    assert!(!openai_compatible_profile_model_supports_chat(
+        "zai",
+        "anthropic/claude-opus-4-7"
+    ));
+    assert!(openai_compatible_profile_uses_static_model_allowlist("zai"));
+}
+
+#[test]
 fn auth_issue_lan_openai_compatible_bases_are_valid_for_local_model_servers() {
     assert_eq!(
         normalize_api_base("http://100.103.78.84:11434/v1").as_deref(),

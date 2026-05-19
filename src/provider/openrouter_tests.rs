@@ -887,6 +887,58 @@ fn built_in_openai_compatible_static_models_drop_out_after_live_catalog() {
 }
 
 #[test]
+fn direct_zai_profile_filters_live_catalog_and_keeps_static_models() {
+    let static_models = crate::provider_catalog::openai_compatible_profile_static_models(
+        minnal_provider_metadata::ZAI_PROFILE,
+    );
+    let provider = OpenRouterProvider {
+        model: Arc::new(RwLock::new("glm-4.5".to_string())),
+        supports_provider_features: false,
+        supports_model_catalog: true,
+        profile_id: Some("zai".to_string()),
+        static_models,
+        send_openrouter_headers: false,
+        models_cache: Arc::new(RwLock::new(ModelsCache {
+            models: vec![
+                ModelInfo {
+                    id: "claude-opus-4-7".to_string(),
+                    name: String::new(),
+                    context_length: None,
+                    pricing: ModelPricing::default(),
+                    created: None,
+                },
+                ModelInfo {
+                    id: "anthropic/claude-opus-4-7".to_string(),
+                    name: String::new(),
+                    context_length: None,
+                    pricing: ModelPricing::default(),
+                    created: None,
+                },
+                ModelInfo {
+                    id: "glm-4.7-live".to_string(),
+                    name: String::new(),
+                    context_length: None,
+                    pricing: ModelPricing::default(),
+                    created: None,
+                },
+            ],
+            fetched: true,
+            cached_at: Some(1),
+        })),
+        ..make_custom_compatible_provider()
+    };
+
+    let display = provider.available_models_display();
+    assert!(display.iter().any(|model| model == "glm-4.5"));
+    assert!(display.iter().any(|model| model == "glm-5.1"));
+    assert!(display.iter().any(|model| model == "glm-4.7-live"));
+    assert!(
+        !display.iter().any(|model| model.contains("claude")),
+        "Z.AI direct picker should not advertise Claude routes from a broad live catalog: {display:?}"
+    );
+}
+
+#[test]
 fn cerebras_chat_unavailable_catalog_models_are_rejected_on_explicit_switch() {
     let provider = OpenRouterProvider {
         supports_provider_features: false,

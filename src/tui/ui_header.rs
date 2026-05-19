@@ -57,7 +57,16 @@ fn format_gpt_name(short: &str) -> String {
     format!("GPT-{}", rest)
 }
 
+#[cfg(test)]
 pub(super) fn build_auth_status_line(auth: &AuthStatus, max_width: usize) -> Line<'static> {
+    build_auth_status_line_with_openrouter_label(auth, max_width, None)
+}
+
+fn build_auth_status_line_with_openrouter_label(
+    auth: &AuthStatus,
+    max_width: usize,
+    openrouter_label_override: Option<&str>,
+) -> Line<'static> {
     fn dot_color(state: AuthState) -> Color {
         match state {
             AuthState::Available => rgb(100, 200, 100),
@@ -118,9 +127,29 @@ pub(super) fn build_auth_status_line(auth: &AuthStatus, max_width: usize) -> Lin
         provider_label("ge", auth.gemini, None)
     };
 
+    let openrouter_label = openrouter_label_override
+        .map(str::trim)
+        .filter(|label| !label.is_empty())
+        .unwrap_or("openrouter")
+        .to_string();
+    let openrouter_compact_label = if openrouter_label == "openrouter" {
+        "or".to_string()
+    } else {
+        openrouter_label
+            .chars()
+            .filter(|ch| ch.is_ascii_alphanumeric())
+            .take(4)
+            .collect::<String>()
+    };
+    let openrouter_compact_label = if openrouter_compact_label.is_empty() {
+        "or".to_string()
+    } else {
+        openrouter_compact_label
+    };
+
     let full_specs: Vec<(String, AuthState)> = vec![
         (anthropic_label, auth.anthropic.state),
-        ("openrouter".to_string(), auth.openrouter),
+        (openrouter_label, auth.openrouter),
         (openai_label, auth.openai),
         (provider_label("cursor", auth.cursor, None), auth.cursor),
         (provider_label("copilot", auth.copilot, None), auth.copilot),
@@ -139,7 +168,7 @@ pub(super) fn build_auth_status_line(auth: &AuthStatus, max_width: usize) -> Lin
             provider_label("an", auth.anthropic.state, None),
             auth.anthropic.state,
         ),
-        ("or".to_string(), auth.openrouter),
+        (openrouter_compact_label, auth.openrouter),
         (provider_label("oa", auth.openai, None), auth.openai),
         (provider_label("cu", auth.cursor, None), auth.cursor),
         (provider_label("cp", auth.copilot, None), auth.copilot),
@@ -184,6 +213,19 @@ pub(super) fn build_auth_status_line(auth: &AuthStatus, max_width: usize) -> Lin
     }
 
     Line::from(spans)
+}
+
+fn auth_status_openrouter_label_for_provider(provider_name: &str) -> Option<String> {
+    let trimmed = provider_name.trim();
+    if trimmed.is_empty() || trimmed.eq_ignore_ascii_case("openrouter") {
+        return None;
+    }
+    if trimmed.eq_ignore_ascii_case("openai-compatible")
+        || crate::provider_catalog::openai_compatible_profile_id_for_display_name(trimmed).is_some()
+    {
+        return Some(trimmed.to_ascii_lowercase());
+    }
+    None
 }
 
 fn header_provider_auth_tag(name: &str, auth: &AuthStatus) -> &'static str {
@@ -513,7 +555,11 @@ pub(crate) fn build_header_lines(app: &dyn TuiState, width: u16) -> Vec<Line<'st
         );
     }
 
-    let auth_line = build_auth_status_line(&auth, w);
+    let auth_line = build_auth_status_line_with_openrouter_label(
+        &auth,
+        w,
+        auth_status_openrouter_label_for_provider(&provider_name).as_deref(),
+    );
     if !auth_line.spans.is_empty() {
         lines.push(auth_line.alignment(align));
     }
@@ -850,6 +896,26 @@ mod tests {
         assert!(!rendered.contains("openrouter"), "rendered: {rendered}");
         assert!(!rendered.contains("copilot"), "rendered: {rendered}");
         assert!(!rendered.contains("cursor"), "rendered: {rendered}");
+    }
+
+    #[test]
+    fn auth_status_line_can_label_direct_openai_compatible_profile() {
+        let auth = AuthStatus {
+            openrouter: AuthState::Available,
+            copilot: AuthState::Available,
+            ..AuthStatus::default()
+        };
+
+        let line = build_auth_status_line_with_openrouter_label(&auth, 120, Some("z.ai"));
+        let rendered = line
+            .spans
+            .iter()
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+
+        assert!(rendered.contains("z.ai"), "rendered: {rendered}");
+        assert!(rendered.contains("copilot"), "rendered: {rendered}");
+        assert!(!rendered.contains("openrouter"), "rendered: {rendered}");
     }
 
     #[test]
