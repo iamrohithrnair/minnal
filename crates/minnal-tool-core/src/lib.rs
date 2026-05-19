@@ -10,6 +10,8 @@ use std::path::{Path, PathBuf};
 pub enum CommandPermissionScope {
     Once,
     Session,
+    Folder,
+    Project,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

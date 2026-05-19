@@ -95,6 +95,30 @@ impl Config {
         Self::set_default_model(model, cfg.provider.default_provider.as_deref())
     }
 
+    /// Update the persisted Anthropic account selection.
+    pub fn set_active_anthropic_account(label: Option<&str>) -> anyhow::Result<()> {
+        let mut cfg = Self::load();
+        cfg.provider.active_anthropic_account = label.map(|s| s.to_string());
+        cfg.save()?;
+        crate::logging::info(&format!(
+            "Saved active_anthropic_account to config: {}",
+            label.unwrap_or("(none)")
+        ));
+        Ok(())
+    }
+
+    /// Update the persisted OpenAI account selection.
+    pub fn set_active_openai_account(label: Option<&str>) -> anyhow::Result<()> {
+        let mut cfg = Self::load();
+        cfg.provider.active_openai_account = label.map(|s| s.to_string());
+        cfg.save()?;
+        crate::logging::info(&format!(
+            "Saved active_openai_account to config: {}",
+            label.unwrap_or("(none)")
+        ));
+        Ok(())
+    }
+
     /// Update the persisted OpenAI reasoning effort preference.
     pub fn set_openai_reasoning_effort(value: Option<&str>) -> anyhow::Result<()> {
         let mut cfg = Self::load();

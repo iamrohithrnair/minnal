@@ -3,9 +3,11 @@ use crate::tool::{
     CommandPermissionDecision, CommandPermissionRequest, CommandPermissionScope, ToolContext,
 };
 use anyhow::Result;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashSet;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::{LazyLock, Mutex};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,6 +26,20 @@ pub enum CommandPermissionVerdict {
 struct ApprovalKey {
     session_id: String,
     cwd: Option<String>,
+    command: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum PersistedApprovalScope {
+    Folder,
+    Project,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+struct PersistedCommandApproval {
+    scope: PersistedApprovalScope,
+    path: String,
     command: String,
 }
 
@@ -73,7 +89,7 @@ pub async fn authorize_tool_execution(
         .working_dir
         .as_ref()
         .map(|path| path.display().to_string());
-    if is_session_approved(&ctx.session_id, cwd.as_deref(), command) {
+    if is_preapproved(&ctx.session_id, cwd.as_deref(), command) {
         return Ok(());
     }
 
@@ -103,8 +119,14 @@ pub async fn authorize_tool_execution(
 
     match response_rx.await {
         Ok(CommandPermissionDecision::Approved { scope }) => {
-            if scope == CommandPermissionScope::Session {
-                remember_session_approval(&ctx.session_id, cwd.as_deref(), command);
+            match scope {
+                CommandPermissionScope::Once => {}
+                CommandPermissionScope::Session => {
+                    remember_session_approval(&ctx.session_id, cwd.as_deref(), command);
+                }
+                CommandPermissionScope::Folder | CommandPermissionScope::Project => {
+                    remember_persisted_approval(scope, cwd.as_deref(), command)?;
+                }
             }
             Ok(())
         }
@@ -130,6 +152,10 @@ fn log_permission_mode(mode: &str, command: &str, risk: &CommandRisk) {
     ));
 }
 
+fn is_preapproved(session_id: &str, cwd: Option<&str>, command: &str) -> bool {
+    is_session_approved(session_id, cwd, command) || is_persisted_approved(cwd, command)
+}
+
 fn is_session_approved(session_id: &str, cwd: Option<&str>, command: &str) -> bool {
     let key = ApprovalKey {
         session_id: session_id.to_string(),
@@ -151,6 +177,121 @@ fn remember_session_approval(session_id: &str, cwd: Option<&str>, command: &str)
     if let Ok(mut approvals) = SESSION_APPROVALS.lock() {
         approvals.insert(key);
     }
+}
+
+fn is_persisted_approved(cwd: Option<&str>, command: &str) -> bool {
+    let Some(cwd) = cwd.and_then(normalize_cwd) else {
+        return false;
+    };
+
+    let project = project_root_for_dir(&cwd).unwrap_or_else(|| cwd.clone());
+    load_persisted_approvals().into_iter().any(|approval| {
+        approval.command == command
+            && match approval.scope {
+                PersistedApprovalScope::Folder => approval.path == cwd,
+                PersistedApprovalScope::Project => approval.path == project,
+            }
+    })
+}
+
+fn remember_persisted_approval(
+    scope: CommandPermissionScope,
+    cwd: Option<&str>,
+    command: &str,
+) -> Result<()> {
+    let Some(cwd) = cwd.and_then(normalize_cwd) else {
+        anyhow::bail!("Cannot persist command approval without a working directory");
+    };
+
+    let approval = match scope {
+        CommandPermissionScope::Folder => PersistedCommandApproval {
+            scope: PersistedApprovalScope::Folder,
+            path: cwd,
+            command: command.to_string(),
+        },
+        CommandPermissionScope::Project => PersistedCommandApproval {
+            scope: PersistedApprovalScope::Project,
+            path: project_root_for_dir(&cwd).unwrap_or(cwd),
+            command: command.to_string(),
+        },
+        CommandPermissionScope::Once | CommandPermissionScope::Session => return Ok(()),
+    };
+
+    let mut approvals = load_persisted_approvals();
+    if !approvals.contains(&approval) {
+        approvals.push(approval);
+        approvals.sort_by(|a, b| {
+            (&a.path, &a.command, persisted_scope_sort_key(&a.scope)).cmp(&(
+                &b.path,
+                &b.command,
+                persisted_scope_sort_key(&b.scope),
+            ))
+        });
+        save_persisted_approvals(&approvals)?;
+    }
+    Ok(())
+}
+
+fn persisted_scope_sort_key(scope: &PersistedApprovalScope) -> u8 {
+    match scope {
+        PersistedApprovalScope::Folder => 0,
+        PersistedApprovalScope::Project => 1,
+    }
+}
+
+fn persisted_approvals_path() -> Result<PathBuf> {
+    Ok(crate::storage::minnal_dir()?
+        .join("safety")
+        .join("command-approvals.json"))
+}
+
+fn load_persisted_approvals() -> Vec<PersistedCommandApproval> {
+    let Ok(path) = persisted_approvals_path() else {
+        return Vec::new();
+    };
+    if !path.exists() {
+        return Vec::new();
+    }
+    crate::storage::read_json(&path).unwrap_or_default()
+}
+
+fn save_persisted_approvals(approvals: &[PersistedCommandApproval]) -> Result<()> {
+    let path = persisted_approvals_path()?;
+    crate::storage::write_json(&path, approvals)
+}
+
+fn normalize_cwd(cwd: &str) -> Option<String> {
+    let path = Path::new(cwd.trim());
+    if path.as_os_str().is_empty() {
+        return None;
+    }
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir().ok()?.join(path)
+    };
+    Some(
+        std::fs::canonicalize(&absolute)
+            .unwrap_or(absolute)
+            .to_string_lossy()
+            .to_string(),
+    )
+}
+
+fn project_root_for_dir(cwd: &str) -> Option<String> {
+    let output = Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .current_dir(cwd)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if root.is_empty() {
+        return None;
+    }
+    normalize_cwd(&root)
 }
 
 pub fn classify_command(command: &str) -> CommandPermissionVerdict {
@@ -647,6 +788,29 @@ mod tests {
         }
     }
 
+    struct EnvVarGuard {
+        key: &'static str,
+        previous: Option<std::ffi::OsString>,
+    }
+
+    impl EnvVarGuard {
+        fn set_path(key: &'static str, value: &Path) -> Self {
+            let previous = std::env::var_os(key);
+            crate::env::set_var(key, value);
+            Self { key, previous }
+        }
+    }
+
+    impl Drop for EnvVarGuard {
+        fn drop(&mut self) {
+            if let Some(previous) = &self.previous {
+                crate::env::set_var(self.key, previous);
+            } else {
+                crate::env::remove_var(self.key);
+            }
+        }
+    }
+
     #[test]
     fn allows_common_read_only_commands() {
         allow("pwd");
@@ -693,5 +857,38 @@ mod tests {
     fn ignores_quoted_dangerous_words() {
         allow("printf 'rm -rf /'");
         allow("grep 'git push' README.md");
+    }
+
+    #[test]
+    fn folder_approvals_persist_for_matching_directory_only() {
+        let _guard = crate::storage::lock_test_env();
+        let temp = tempfile::TempDir::new().unwrap();
+        let _home = EnvVarGuard::set_path("MINNAL_HOME", temp.path());
+        let allowed_dir = temp.path().join("allowed");
+        let other_dir = temp.path().join("other");
+        std::fs::create_dir_all(&allowed_dir).unwrap();
+        std::fs::create_dir_all(&other_dir).unwrap();
+
+        let command = "rm -rf target";
+        assert!(!is_persisted_approved(
+            Some(&allowed_dir.display().to_string()),
+            command
+        ));
+
+        remember_persisted_approval(
+            CommandPermissionScope::Folder,
+            Some(&allowed_dir.display().to_string()),
+            command,
+        )
+        .unwrap();
+
+        assert!(is_persisted_approved(
+            Some(&allowed_dir.display().to_string()),
+            command
+        ));
+        assert!(!is_persisted_approved(
+            Some(&other_dir.display().to_string()),
+            command
+        ));
     }
 }

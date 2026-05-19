@@ -875,6 +875,12 @@ pub(super) async fn handle_command_permission_response(
                 crate::protocol::CommandPermissionScope::Session => {
                     crate::tool::CommandPermissionScope::Session
                 }
+                crate::protocol::CommandPermissionScope::Folder => {
+                    crate::tool::CommandPermissionScope::Folder
+                }
+                crate::protocol::CommandPermissionScope::Project => {
+                    crate::tool::CommandPermissionScope::Project
+                }
             };
             crate::tool::CommandPermissionDecision::Approved { scope }
         } else {

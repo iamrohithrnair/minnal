@@ -590,8 +590,12 @@ impl Default for FeatureConfig {
 pub struct ProviderConfig {
     /// Default model to use (e.g. "claude-opus-4-6", "copilot:claude-opus-4.6")
     pub default_model: Option<String>,
-    /// Default provider to use (claude|openai|copilot|openrouter)
+    /// Default provider to prefer on startup.
     pub default_provider: Option<String>,
+    /// Active Anthropic account label selected from the terminal.
+    pub active_anthropic_account: Option<String>,
+    /// Active OpenAI account label selected from the terminal.
+    pub active_openai_account: Option<String>,
     /// Reasoning effort for OpenAI Responses API (none|low|medium|high|xhigh)
     pub openai_reasoning_effort: Option<String>,
     /// OpenAI transport mode (auto|websocket|https)
@@ -617,6 +621,8 @@ impl Default for ProviderConfig {
         Self {
             default_model: None,
             default_provider: None,
+            active_anthropic_account: None,
+            active_openai_account: None,
             openai_reasoning_effort: Some("low".to_string()),
             openai_transport: None,
             openai_service_tier: Some("priority".to_string()),

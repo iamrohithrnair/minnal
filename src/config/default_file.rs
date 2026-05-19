@@ -152,9 +152,12 @@ update_channel = "stable"
 # Default model (optional, uses provider default if not set)
 # Set via /model picker with Ctrl+D to save as default
 # default_model = "claude-opus-4-6"
-# Default provider (optional: claude|openai|copilot|openrouter)
+# Default provider (optional: claude|openai|copilot|gemini|antigravity|cursor|bedrock|openrouter, an OpenAI-compatible profile, or a named provider)
 # When set, this provider is preferred on startup if available
 # default_provider = "copilot"
+# Last selected account labels (written by /account switch)
+# active_anthropic_account = "claude-1"
+# active_openai_account = "openai-1"
 # OpenAI reasoning effort (none|low|medium|high|xhigh)
 openai_reasoning_effort = "low"
 # OpenAI transport mode (auto|websocket|https)

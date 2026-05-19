@@ -167,6 +167,13 @@ fn multi_account_active_switch_works() {
     assert_eq!(active_account_label().as_deref(), Some("openai-1"));
     set_active_account("openai-2").unwrap();
     assert_eq!(active_account_label().as_deref(), Some("openai-2"));
+    assert_eq!(
+        crate::config::Config::load()
+            .provider
+            .active_openai_account
+            .as_deref(),
+        Some("openai-2")
+    );
 
     let creds = load_credentials().unwrap();
     assert_eq!(creds.access_token, "at_work");

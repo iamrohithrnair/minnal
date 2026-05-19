@@ -2266,10 +2266,31 @@ async fn handle_command_permission_key(
             None,
             "Command approved for this session",
         )),
+        KeyCode::Char('s') | KeyCode::Char('S') => Some((
+            true,
+            CommandPermissionScope::Session,
+            None,
+            "Command approved for this session",
+        )),
+        KeyCode::Char('f') | KeyCode::Char('F') => Some((
+            true,
+            CommandPermissionScope::Folder,
+            None,
+            "Command approved for this folder",
+        )),
+        KeyCode::Char('p') | KeyCode::Char('P') => Some((
+            true,
+            CommandPermissionScope::Project,
+            None,
+            "Command approved for this project",
+        )),
         KeyCode::Char('a')
             if !modifiers.contains(KeyModifiers::CONTROL)
                 && !modifiers.contains(KeyModifiers::SHIFT) =>
         {
+            Some((true, CommandPermissionScope::Once, None, "Command approved"))
+        }
+        KeyCode::Char('o') | KeyCode::Char('O') => {
             Some((true, CommandPermissionScope::Once, None, "Command approved"))
         }
         KeyCode::Char('c') if modifiers.contains(KeyModifiers::CONTROL) => Some((
@@ -2278,11 +2299,15 @@ async fn handle_command_permission_key(
             Some("Cancelled in TUI".to_string()),
             "Command denied",
         )),
-        KeyCode::Char('d') | KeyCode::Char('D') | KeyCode::Esc => Some((
+        KeyCode::Char('d')
+        | KeyCode::Char('D')
+        | KeyCode::Char('r')
+        | KeyCode::Char('R')
+        | KeyCode::Esc => Some((
             false,
             CommandPermissionScope::Once,
-            Some("Denied in TUI".to_string()),
-            "Command denied",
+            Some("Rejected in TUI".to_string()),
+            "Command rejected",
         )),
         _ => None,
     };
@@ -2296,6 +2321,6 @@ async fn handle_command_permission_key(
         return Ok(true);
     }
 
-    app.set_status_notice("Permission required: a approve, A approve session, d deny");
+    app.set_status_notice("Permission required: a once, s session, f folder, p project, r reject");
     Ok(true)
 }

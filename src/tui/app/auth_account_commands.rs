@@ -125,8 +125,7 @@ fn parse_account_command(trimmed: &str) -> Option<Result<AccountCommand, String>
         "default-provider" => {
             if remainder.is_empty() {
                 return Some(Err(
-                    "Usage: `/account default-provider <claude|openai|copilot|gemini|openrouter|auto>`"
-                        .to_string(),
+                    "Usage: `/account default-provider <provider|auto>`".to_string()
                 ));
             }
             return Some(Ok(AccountCommand::SetDefaultProvider(
@@ -557,15 +556,13 @@ fn normalize_normal_mode_value(value: &str) -> Option<String> {
 }
 
 fn save_default_provider_setting(app: &mut App, provider: Option<&str>) {
-    let normalized = provider.map(|provider| provider.trim().to_ascii_lowercase());
-    let provider = match normalized.as_deref() {
-        None => None,
-        Some("auto") => None,
-        Some("claude" | "openai" | "copilot" | "gemini" | "openrouter") => normalized,
-        Some(other) => {
+    let provider = match normalize_default_provider_setting(provider) {
+        Ok(provider) => provider,
+        Err(message) => {
             app.push_display_message(DisplayMessage::error(format!(
-                "Unsupported default provider `{}`. Use claude, openai, copilot, gemini, openrouter, or auto.",
-                other
+                "Unsupported default provider `{}`. {}",
+                provider.unwrap_or_default().trim(),
+                message
             )));
             return;
         }
@@ -584,6 +581,37 @@ fn save_default_provider_setting(app: &mut App, provider: Option<&str>) {
             err
         ))),
     }
+}
+
+fn normalize_default_provider_setting(provider: Option<&str>) -> Result<Option<String>, String> {
+    let Some(provider) = provider
+        .map(str::trim)
+        .filter(|provider| !provider.is_empty())
+    else {
+        return Ok(None);
+    };
+
+    let normalized = provider.to_ascii_lowercase();
+    if normalized == "auto" {
+        return Ok(None);
+    }
+
+    let cfg = crate::config::Config::load();
+    if cfg.providers.contains_key(provider) {
+        return Ok(Some(provider.to_string()));
+    }
+    if cfg.providers.contains_key(&normalized) {
+        return Ok(Some(normalized));
+    }
+
+    if let Some(descriptor) = resolve_account_provider_descriptor(&normalized)
+        && let Some(provider_key) =
+            crate::provider::MultiProvider::config_default_provider_for_login_provider(descriptor)
+    {
+        return Ok(Some(provider_key.to_string()));
+    }
+
+    Err("Use a configured provider id, named provider profile, or `auto`.".to_string())
 }
 
 fn save_default_model_setting(app: &mut App, model: Option<&str>) {
@@ -943,10 +971,7 @@ fn render_provider_settings_markdown(app: &App, provider_id: &str) -> String {
                 .as_deref()
                 .unwrap_or("(provider default)")
         ));
-        lines.push(
-            "- `/account default-provider <claude|openai|copilot|gemini|openrouter|auto>`"
-                .to_string(),
-        );
+        lines.push("- `/account default-provider <provider|auto>`".to_string());
         lines.push("- `/account default-model <model|clear>`".to_string());
     }
 
@@ -1062,6 +1087,28 @@ mod tests {
             parse_account_command("/account openai doctor"),
             Some(Ok(AccountCommand::Doctor { provider_id: Some(provider_id) })) if provider_id == "openai"
         ));
+    }
+
+    #[test]
+    fn default_provider_accepts_all_runtime_provider_keys() {
+        for (input, expected) in [
+            ("claude", Some("claude")),
+            ("openai", Some("openai")),
+            ("copilot", Some("copilot")),
+            ("gemini", Some("gemini")),
+            ("antigravity", Some("antigravity")),
+            ("cursor", Some("cursor")),
+            ("bedrock", Some("bedrock")),
+            ("openrouter", Some("openrouter")),
+            ("auto", None),
+        ] {
+            assert_eq!(
+                normalize_default_provider_setting(Some(input))
+                    .unwrap()
+                    .as_deref(),
+                expected
+            );
+        }
     }
 
     #[test]

@@ -50,6 +50,8 @@ pub enum CommandPermissionScope {
     #[default]
     Once,
     Session,
+    Folder,
+    Project,
 }
 
 /// A message in conversation history (for sync)

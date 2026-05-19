@@ -40,7 +40,10 @@ impl App {
         if !pending.reasons.is_empty() {
             lines.push(format!("Reason: {}", pending.reasons.join("; ")));
         }
-        lines.push("Press a=approve once, A=approve for session, d=deny.".to_string());
+        lines.push(
+            "Press a/o=allow once, s/A=allow session, f=allow folder, p=allow project, r/d=reject."
+                .to_string(),
+        );
         let status = if pending.tool_call_id.trim().is_empty() {
             pending.tool_name.clone()
         } else {
@@ -54,7 +57,9 @@ impl App {
             lines,
         });
         self.pending_command_permission = Some(pending);
-        self.set_status_notice("Permission required: a approve, A approve session, d deny");
+        self.set_status_notice(
+            "Permission required: a once, s session, f folder, p project, r reject",
+        );
     }
 
     pub(in crate::tui::app) fn clear_command_permission_prompt(&mut self) {

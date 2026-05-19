@@ -110,6 +110,20 @@ pub fn primary_account_label() -> String {
     crate::auth::account_store::canonical_account_label(ACCOUNT_LABEL_PREFIX, 1)
 }
 
+fn config_active_account_label(accounts: &[AnthropicAccount]) -> Option<String> {
+    let label = crate::config::Config::load()
+        .provider
+        .active_anthropic_account?;
+    let label = label.trim();
+    if label.is_empty() {
+        return None;
+    }
+    accounts
+        .iter()
+        .any(|account| account.label == label)
+        .then(|| label.to_string())
+}
+
 pub fn next_account_label() -> Result<String> {
     let auth = load_auth_file()?;
     Ok(crate::auth::account_store::next_account_label(
@@ -120,10 +134,12 @@ pub fn next_account_label() -> Result<String> {
 
 pub fn login_target_label(requested: Option<&str>) -> Result<String> {
     let auth = load_auth_file()?;
+    let active_label =
+        config_active_account_label(&auth.anthropic_accounts).or(auth.active_anthropic_account);
     Ok(crate::auth::account_store::login_target_label(
         ACCOUNT_LABEL_PREFIX,
         requested,
-        auth.active_anthropic_account,
+        active_label,
         &auth.anthropic_accounts,
         |account| account.label.as_str(),
     ))
@@ -259,9 +275,11 @@ pub fn list_accounts() -> Result<Vec<AnthropicAccount>> {
 /// Get the label of the currently active account (runtime override > file > first account).
 pub fn active_account_label() -> Option<String> {
     let auth = load_auth_file().ok()?;
+    let active_label =
+        config_active_account_label(&auth.anthropic_accounts).or(auth.active_anthropic_account);
     crate::auth::account_store::active_account_label(
         get_active_account_override(),
-        auth.active_anthropic_account,
+        active_label,
         &auth.anthropic_accounts,
         |account| account.label.as_str(),
     )
@@ -278,6 +296,7 @@ pub fn set_active_account(label: &str) -> Result<()> {
         |account| account.label.as_str(),
     )?;
     save_auth_file(&auth)?;
+    crate::config::Config::set_active_anthropic_account(Some(label))?;
     set_active_account_override(Some(label.to_string()));
     Ok(())
 }
@@ -293,7 +312,9 @@ pub fn upsert_account(account: AnthropicAccount) -> Result<String> {
         |account| account.label.as_str(),
         |account, label| account.label = label,
     );
+    let active_label = auth.active_anthropic_account.clone();
     save_auth_file(&auth)?;
+    crate::config::Config::set_active_anthropic_account(active_label.as_deref())?;
     Ok(label)
 }
 
@@ -311,6 +332,7 @@ pub fn remove_account(label: &str) -> Result<()> {
     }
 
     save_auth_file(&auth)?;
+    crate::config::Config::set_active_anthropic_account(auth.active_anthropic_account.as_deref())?;
 
     if get_active_account_override().as_deref() == Some(label) {
         set_active_account_override(auth.active_anthropic_account.clone());

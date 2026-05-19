@@ -76,6 +76,20 @@ pub fn primary_account_label() -> String {
     crate::auth::account_store::canonical_account_label(ACCOUNT_LABEL_PREFIX, 1)
 }
 
+fn config_active_account_label(accounts: &[OpenAiAccount]) -> Option<String> {
+    let label = crate::config::Config::load()
+        .provider
+        .active_openai_account?;
+    let label = label.trim();
+    if label.is_empty() {
+        return None;
+    }
+    accounts
+        .iter()
+        .any(|account| account.label == label)
+        .then(|| label.to_string())
+}
+
 pub fn next_account_label() -> Result<String> {
     let auth = load_auth_file()?;
     Ok(crate::auth::account_store::next_account_label(
@@ -86,10 +100,12 @@ pub fn next_account_label() -> Result<String> {
 
 pub fn login_target_label(requested: Option<&str>) -> Result<String> {
     let auth = load_auth_file()?;
+    let active_label =
+        config_active_account_label(&auth.openai_accounts).or(auth.active_openai_account);
     Ok(crate::auth::account_store::login_target_label(
         ACCOUNT_LABEL_PREFIX,
         requested,
-        auth.active_openai_account,
+        active_label,
         &auth.openai_accounts,
         |account| account.label.as_str(),
     ))
@@ -200,9 +216,11 @@ pub fn list_accounts() -> Result<Vec<OpenAiAccount>> {
 
 pub fn active_account_label() -> Option<String> {
     let auth = load_auth_file().ok()?;
+    let active_label =
+        config_active_account_label(&auth.openai_accounts).or(auth.active_openai_account);
     crate::auth::account_store::active_account_label(
         get_active_account_override(),
-        auth.active_openai_account,
+        active_label,
         &auth.openai_accounts,
         |account| account.label.as_str(),
     )
@@ -218,6 +236,7 @@ pub fn set_active_account(label: &str) -> Result<()> {
         |account| account.label.as_str(),
     )?;
     save_auth_file(&auth)?;
+    crate::config::Config::set_active_openai_account(Some(label))?;
     set_active_account_override(Some(label.to_string()));
     Ok(())
 }
@@ -232,7 +251,9 @@ pub fn upsert_account(account: OpenAiAccount) -> Result<String> {
         |account| account.label.as_str(),
         |account, label| account.label = label,
     );
+    let active_label = auth.active_openai_account.clone();
     save_auth_file(&auth)?;
+    crate::config::Config::set_active_openai_account(active_label.as_deref())?;
     Ok(label)
 }
 
@@ -250,6 +271,7 @@ pub fn remove_account(label: &str) -> Result<()> {
     }
 
     save_auth_file(&auth)?;
+    crate::config::Config::set_active_openai_account(auth.active_openai_account.as_deref())?;
 
     if get_active_account_override().as_deref() == Some(label) {
         set_active_account_override(auth.active_openai_account.clone());
@@ -411,6 +433,7 @@ fn load_minnal_credentials() -> Result<CodexCredentials> {
     }
 
     let active_label = get_active_account_override()
+        .or_else(|| config_active_account_label(&auth.openai_accounts))
         .or(auth.active_openai_account)
         .unwrap_or_else(primary_account_label);
 

@@ -156,6 +156,45 @@ fn minnal_auth_file_multi_account() {
 }
 
 #[test]
+fn set_active_account_persists_config_label() {
+    let _lock = crate::storage::lock_test_env();
+    let temp = tempfile::TempDir::new().unwrap();
+    let _home = EnvVarGuard::set("MINNAL_HOME", temp.path());
+    set_active_account_override(None);
+
+    upsert_account(AnthropicAccount {
+        label: "ignored".to_string(),
+        access: "acc_personal".to_string(),
+        refresh: "ref_personal".to_string(),
+        expires: 1000,
+        email: None,
+        subscription_type: Some("pro".to_string()),
+        scopes: Vec::new(),
+    })
+    .unwrap();
+    upsert_account(AnthropicAccount {
+        label: "ignored".to_string(),
+        access: "acc_work".to_string(),
+        refresh: "ref_work".to_string(),
+        expires: 2000,
+        email: None,
+        subscription_type: Some("max".to_string()),
+        scopes: Vec::new(),
+    })
+    .unwrap();
+
+    set_active_account("claude-2").unwrap();
+    assert_eq!(active_account_label().as_deref(), Some("claude-2"));
+    assert_eq!(
+        crate::config::Config::load()
+            .provider
+            .active_anthropic_account
+            .as_deref(),
+        Some("claude-2")
+    );
+}
+
+#[test]
 fn minnal_auth_file_legacy_migration_format() {
     let legacy_json = r#"{
         "anthropic": {
